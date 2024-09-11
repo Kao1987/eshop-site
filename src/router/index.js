@@ -29,7 +29,8 @@ import UserLogin from '../views/UserLogin.vue';
     {
         path: '/MembersPage',
         name: 'MembersPage',
-        component: MembersPage
+        component: MembersPage,
+        meta:{requiresAuth: true}
     },
     {
         path: '/AboutUsPage',
@@ -63,6 +64,15 @@ import UserLogin from '../views/UserLogin.vue';
 const router = createRouter({
     history: createWebHistory(),
     routes,
+    });
+    router.beforeEach((to,from,next)=>{
+        const isLoggedIn = !!localStorage.getItem('auth') //檢查是某有登入
+        if(to.matched.some(record => record.meta.requiresAuth)&&!isLoggedIn){
+            next({path:'/UserLogin',query:{redirect:to.fullPath}});
+        }else{
+                next();
+            
+        }
     });
     
     export default router;
