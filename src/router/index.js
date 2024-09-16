@@ -1,4 +1,4 @@
-// src/router/index.js
+// src/router/views FrontStages
 import { createRouter, createWebHistory } from 'vue-router';
 import HomePage from '../views/HomePage.vue';
 import AboutUsPage from '../views/AboutUsPage.vue';
@@ -9,6 +9,12 @@ import ContactUs from '../views/ContactUs.vue';
 import SearchResults from '../views/SearchResults.vue';
 import UserRegister from '../views/UserRegister.vue';
 import UserLogin from '../views/UserLogin.vue';
+// src/router/view/admin BackStages
+import AdminDashboard from '../views/admin/AdminDashBoard.vue';
+import AdminProducts from '../views/admin/AdminProduct.vue';
+import AdminUsers from '../views/admin/AdminUsers.vue';
+import AdminOrders from '../views/admin/AdminOrders.vue';
+
 
     const routes = [
     {
@@ -16,6 +22,33 @@ import UserLogin from '../views/UserLogin.vue';
         name: 'HomePage',
         component: HomePage
     },
+    {
+        path: '/admin',
+        name: 'AdminDashboard',
+        component: AdminDashboard,
+        meta:{requiresAuth: true,role:'admin'}
+    },
+    {
+        path: '/admin/Products',
+        name: 'AdminProducts',
+        component: AdminProducts,
+        meta:{requiresAuth: true,role:'admin'}
+    },
+    {
+        path: '/admin/Users',
+        name: 'AdminUsers',
+        component: AdminUsers,
+        meta:{requiresAuth: true,role:'admin'}
+
+    },
+    {
+        path: '/admin/Orders',
+        name: 'AdminOrders',
+        component: AdminOrders,
+        meta:{requiresAuth: true,role:'admin'}
+
+    },
+    
     {
         path: '/ShopCart',
         name: 'ShopCart',
@@ -66,14 +99,22 @@ const router = createRouter({
     routes,
     });
     router.beforeEach((to,from,next)=>{
-        const isLoggedIn = !!localStorage.getItem('auth') //檢查是某有登入
+        const isLoggedIn = !!localStorage.getItem('auth'); //檢查是某有登入
+        const userRole = localStorage.getItem('role');
+
         if(to.matched.some(record => record.meta.requiresAuth)&&!isLoggedIn){
-            next({path:'/UserLogin',query:{redirect:to.fullPath}});
-        }else{
+            if(!isLoggedIn){
+                next({path:'/UserLogin',});
+            }else if(to.meta.role && to.meta.role !== userRole){
+                alert('你沒有權限進入此頁面');
+                next({path:'/'});
+            }else{
                 next();
-            
+            }
+        }
+        else{
+            next();
         }
     });
-    
     export default router;
     

@@ -10,5 +10,4 @@ export default {
 </script>
 
 <style scoped>
-/* 同樣的樣式，保留在這裡 */
 </style>
