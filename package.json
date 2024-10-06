@@ -5,13 +5,22 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "json-server": "json-server --watch db.json --port 3000",
+    "dev": "concurrently \"yarn serve\" \"yarn json-server\""
   },
   "dependencies": {
+    "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
+    "bootstrap-vue-3": "^0.5.1",
+    "chart.js": "^4.4.4",
     "core-js": "^3.8.3",
+    "cors": "^2.8.5",
     "element-plus": "^2.8.1",
+    "json-server-auth": "^2.1.0",
+    "lodash.debounce": "^4.0.8",
     "vue": "^3.2.13",
+    "vue-multiselect": "^3.1.0",
     "vue-router": "^4.0.13"
   },
   "devDependencies": {
@@ -20,6 +29,7 @@
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
+    "concurrently": "^9.0.1",
     "eslint": "^7.32.0",
     "eslint-plugin-vue": "^8.0.3"
   },

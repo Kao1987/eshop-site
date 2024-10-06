@@ -14,11 +14,17 @@
             </thead>
             <tbody>
                 <tr v-for="(item, index) in cartItems" :key="index">
-                    <td><img :src="item.image" alt="商品圖片" class="product-image"/></td>
+                    <!-- 商品圖片，若無法家則顯示預設圖片 -->
+                    <td>
+                        <img :src="item.image" alt="商品圖片" class="product-image"/>
+                    </td>
                     <td>{{ item.name }}</td>
                     <td>{{ item.price }}元</td>
+                    <!-- 使用＠input即時更新數量 -->
                     <td>
-                        <input type="number" class="form-control quantity-input" v-model.number="item.quantity" @change="updateQuantity(index,item.quantity)" min="1" />
+                        <input type="number" class="form-control quantity-input" 
+                        v-model.number="item.quantity" 
+                        @input="updateQuantity(index,item.quantity)" min="1" />
                     </td>
                     <td>{{ item.quantity * item.price }}元</td>
                     <td>
@@ -35,14 +41,13 @@
 </template>
 
 <script>
+import axios from'axios';
+
     export default {
     name: 'ShopCart',
     data(){
         return {
-            cartItems:[
-                {name:'商品1',price: 300,quantity:1,image:'/path/to/image1.jpg'},
-                {name:'商品2',price: 150,quantity:2,image:'/path/to/image2.jpg'},
-            ],
+            cartItems:[],
         };
     },
     computed:{
@@ -66,12 +71,30 @@
         removeItem(index){
             this.cartItems.splice(index,1);
         },
-        // 結帳
-        checkouot(){
+        // 結帳並成訂單
+        async checkouot(){
             if(this.cartItems.length > 0){
-                alert(`總計 ${this.totalAmount}元,準備結帳！`);
+                const orderData = {
+                    userID:1,
+                    orderDate:new Date().toISOString().split('T')[0],
+                    total:this.totalAmount,
+                    items:this.cartItems.map(item=>({
+                        productID:item.productId,
+                        productName:item.name,
+                        quantity:item.quantity,
+                        price:item.price,
+                    })),
+                };
+                try{
+                    const response = await axios.post('/api/orders',orderData);
+                    console.log('訂單已成功提交',response.data);
+                    alert(`總計 ${this.totalAmount}元,準備結帳！`);
+                }catch(error){
+                    console.error('提交訂單時出錯',error);
+                    alert('提交訂單失敗，請稍候再試！');
+                }
             }else{
-                alert('購物車沒有商品，無法結帳！')
+                alert('購物車沒有商品，無法結帳！');
             }
         },
     } ,

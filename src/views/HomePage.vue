@@ -1,30 +1,27 @@
 <template>
     <div class="homepage container mt-5">
         <!-- 圖片輪播 -->
-        <div id="carouselEaxmpleIndicators" class="carousel slide" data-bs-ride="carousel">
+        <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-indicators">
-                <button type="button" data-bs-target="#carouselEaxmpleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-                <button type="button" data-bs-target="#carouselEaxmpleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
-                <button type="button" data-bs-target="#carouselEaxmpleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                <button v-for="(image, index) in carouselImages" 
+                :key="index" :data-bs-slide-to="index" 
+                :class="{active: index === 0}">
+                </button>
             </div>
             <div class="carousel-inner">
-                <div class="carousel-item active">
-                    <img src="/path/to/image1.jpg" class="d-block w-100" alt="商品1">
-                </div>
-                <div class="carousel-item active">
-                    <img src="/path/to/image2.jpg" class="d-block w-100" alt="商品2">
-                </div>
-                <div class="carousel-item active">
-                    <img src="/path/to/image3.jpg" class="d-block w-100" alt="商品3">
+                <div v-for="(image, index) in carouselImages" 
+                :key="index" 
+                :class="['carousel-item',{active:index === 0}]">
+                    <img :src="image.url" class="d-block w-100" :alt="'圖片' + (index +1)">
                 </div>
             </div>
             <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                 <span class="visually-hidden">Previous</span>
             </button>
-            <button>
-                <span class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next" ></span>
-                <span class="viusally-hidden">Next</span>
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next" >
+                <span class="carousel-control-next-icon" aria-hidden="true" ></span>
+                <span class="visually-hidden">Next</span>
             </button>
         </div>
     </div>
@@ -32,8 +29,11 @@
     <div class="sales-ranking mt-5">
         <h3>過去7日銷售排行</h3>
         <div class="product-list">
-            <div v-for="(product,index) in sevenDaySalesRanking" :key="index">
-                {{ index + 1 }}.{{ product.name }} - 賣出 {{ product.sales }}件
+            <div v-for="(product,index) in processedSevenDaySalesRanking" 
+                :key="index" class="product-item"
+                >
+                <div>{{ index + 1 }}.{{ product.name }} </div>
+                <div>賣出 {{ product.quantity_sold }}件</div> 
             </div>
         </div>
     </div>
@@ -42,8 +42,11 @@
     <div class="sales-ranking mt-5">
         <h3>過去30日銷售排行</h3>
         <div class="product-list">
-            <div v-for="(product,index) in monthSalesRanking" :key="index">
-                {{ index + 1 }}.{{ product.name }} - 賣出 {{ product.sales }}件
+            <div v-for="(product,index) in processedMonthSalesRanking" 
+                :key="index"
+                class="product-item">
+                <div>{{ index + 1 }}.{{ product.name }}</div> 
+                <div>賣出{{ product.quantity_sold }}件</div>
             </div>
         </div>
     </div>
@@ -52,54 +55,148 @@
     <div class="countdown-special-offers mt-4">
         <h3>特價倒數計時商品</h3>
         <div class="product-list">
-            <div v-for="(item, index) in speciaOffers" :key="index">
-                {{ item.name }} - 價格 {{ item.price }}元
-                <span class="countdown-timer">倒數{{ item.countdown }}秒</span>
+            <div v-for="(offer, index) in processedSpecialOffers" 
+                :key="index" class="product-item">
+                <div>{{ offer.name }} </div>
+                <div>特價 {{ offer.price }}元</div>
+                <div class="countdown-timer">
+                    倒數{{ formatTime(offer.countdown) }}秒
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
     name: 'HomePage',
     data() {
-    return {
-        // 七日銷售排行
-        sevenDaySalesRanking: [
-            { name: '商品1', sales: 100 },
-            { name: '商品2', sales: 200 },
-            { name: '商品3', sales: 300 },
-
-        ],
-        // 月銷售排行
-        monthSalesRanking: [
-            { name: '商品1', sales: 500 },
-            { name: '商品2', sales: 600 },
-            { name: '商品3', sales: 700 },
-            
-        ],
-        // 特價商品
-        speciaOffers: [
-            { name: '特價商品1', price: 1000, countdown: 120 },
-            { name: '特價商品2', price: 2000, countdown: 180 },
-            { name: '特價商品3', price: 5000, countdown:1000},
-    ],
-    };
+        return {
+            // 七日銷售排行
+            sevenDaySalesRanking: [ ],
+            // 月銷售排行
+            monthSalesRanking: [ ],
+            // 特價商品
+            specialOffers: [ ],
+            // 輪播圖片
+            carouselImages: [], 
+            // 產品列表
+            products:[],
+            // 儲存倒數計時
+            countdownIntervals: [],
+        };
+    },
+    async mounted(){
+        await this.loadHomePageData();
+        this.startCountdown();
     },
     methods: {
+        async loadHomePageData(){
+            try{
+                const [salesResponse, offersResponse,carouselResponse,productsResponse] = await Promise.all([
+                    axios.get('/api/sales'),
+                    axios.get('/api/special-offers'),
+                    axios.get('/api/carousel-images'),
+                    axios.get('/api/products'),
+                ]);
+
+                this.carouselImages = carouselResponse.data || [];
+                this.products = productsResponse.data || [];
+                this.specialOffers = offersResponse.data || [];
+
+                const sales = salesResponse.data || [];
+                this.processAndSetSalesRanking(sales);
+            }catch(error){
+                console.error('加載主頁時error', error);
+            }
+        },
+        processAndSetSalesRanking(sales){
+            const now = new Date();
+            const sevenDayAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+            const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+            const sevenDaysSales = {};
+            const monthSales = {};
+
+            sales.forEach(sale=>{
+                const saleDate = new Date(sale.sale_date);
+                if(saleDate >= sevenDayAgo){
+                    sevenDaysSales[sale.product_id] = (sevenDaysSales[sale.product_id] || 0) + sale.quantity_sold;
+                }
+                if(saleDate >= thirtyDaysAgo){
+                    monthSales[sale.product_id] = (monthSales[sale.product_id] || 0) + sale.quantity_sold;
+                }
+            });
+            this.sevenDaySalesRanking = this.convertToSortedArray(sevenDaysSales);
+            this.monthSalesRanking = this.convertToSortedArray(monthSales);
+        },
+        convertToSortedArray(salesObject){
+            return Object.entries(salesObject)
+                    .map(([product_id,quantity_sold])=>({
+                        product_id,
+                        quantity_sold
+                    }))
+                    .sort((a, b)=>b.quantity_sold - a.quantity_sold)
+                    .slice(0,5);
+        },
         startCountdown(){
-            this.speciaOffers.forEach((item, index)=>{
-                const timer = setInterval(()=> {
-                    if(item.countdown > 0){
-                        this.speciaOffers[index].countdown--;
+            this.clearCountdownIntervals();
+            this.specialOffers.forEach((offer, index)=>{
+                const interval = setInterval(()=> {
+                    if(this.specialOffers[index].countdown > 0){
+                        this.specialOffers[index].countdown--;
                     }else{
-                        clearInterval(timer);
+                        clearInterval(interval);
                         }
                     },1000);
+                    this.clearCountdownIntervals.push(interval);
             });
-        }
+        },
+        clearCountdownIntervals() {
+            this.countdownIntervals.forEach(interval => clearInterval(interval));
+            this.countdownIntervals = [];
+        },
+        formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const remainingSeconds = seconds % 60;
+            return `${hours}時${minutes}分${remainingSeconds}秒`;
+        },
+        beforeDestroy() {
+            this.clearCountdownIntervals();
+        },
+
     },
+    computed:{
+        processedSevenDaySalesRanking() {
+        return this.sevenDaySalesRanking.map(sale => {
+            const product = this.products.find(p => p.id === sale.product_id);
+            return {
+                ...sale,
+                name: product ? product.name : '未知商品'
+            };
+        });
+        },
+        processedMonthSalesRanking() {
+            return this.monthSalesRanking.map(sale => {
+                const product = this.products.find(p => p.id === sale.product_id);
+                return {
+                    ...sale,
+                    name: product ? product.name : '未知商品'
+                };
+            });
+        },
+        processedSpecialOffers() {
+            return this.specialOffers.map(offer => {
+                const product = this.products.find(p => p.id === offer.product_id);
+                return {
+                    ...offer,
+                    name: product ? product.name : '未知商品'
+                };
+            });
+        },
+    }
 };
 
 </script>
@@ -117,7 +214,7 @@ export default {
 
 .product-item{
     border:1px solid #ddd;
-    padding:10 px;
+    padding:10px;
     width:150px;
     text-align:center;
 }

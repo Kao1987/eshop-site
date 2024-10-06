@@ -5,8 +5,10 @@
         <div class="card mb-3">
             <div class="card-body">
             <h5 class="card-title">會員基本資料</h5>
-            <p class="card-text">使用者名稱：{{ userInfo.username }} </p>
+            <p class="card-text">使用者名稱：{{ userInfo.name }} </p>
             <p class="card-text">電子郵件：{{ userInfo.email }} </p>
+            <p class="card-text">電話：{{ userInfo.phone }} </p>
+            <p class="card-text">住址: {{ userInfo.address }} </p>
             </div>
         </div>
     <!--收件人資料 -->
@@ -52,14 +54,15 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="(order, index) in userInfo.orders" :key="index">
-                    <td>{{ order.orderID }}</td>
+                <tr v-for="(order,index) in orders" :key="index">
+                    <td>{{ order.id }}</td>
                     <td>{{ order.total }}</td>
                     <td>{{ order.date }}</td>
                     <td>
                         <button class="btn btn-link" @click="toggleOrderDetails(index)">展開/收起</button>
                     </td>
                 </tr>
+                <!-- 訂單展開 -->
                 <tr v-if="expanderOrder === index">
                     <td colspan="4">
                         <table class="table">
@@ -118,6 +121,8 @@
 
 <script>
 import { Modal } from 'bootstrap';
+import axios from 'axios';
+
 export default {
 name: "MemberPage",
 data() {
@@ -132,21 +137,56 @@ data() {
         },
         editingIndex:-1,
         userInfo:{
-            username:"測試用戶",
-            email:"test@ecshop.com",
-            recipients:[
-                {name:"測試收件人1",phone:"0912345678",address:"台北市林森北路"},
-                {name:"收件人2",phone:"0987654321",address:"桃園市中央山脈"}
-            ],
-                orders:[
-                    {
-                        orderID:12345,total:2000,date:"2024-09-10",
-                        items:[{name:"商品1",quantity:2,price:500}]}
-                ],
+            name:" ",
+            email:" ",
+            recipients:[ ],
             },
+        orders:[ ],
         };
     },
+mounted(){
+        this.loadUserInfo();
+        this.loadOrders();
+    },
 methods: {
+    async loadUserInfo(){
+        try{
+            const userID = localStorage.getItem('userID');
+            console.log("用戶 ID:", userID); // 日誌用戶 ID
+            if(!userID){
+                console.error("用戶ID無效");  
+                return;
+            }
+            const response = await axios.get(`/api/users/${userID}`); //請求API
+            this.userInfo = response.data;
+            console.log("用戶資料",this.userInfo);
+        }catch (error){
+            console.error("加載用戶信息時出錯:", error);
+            console.error('錯誤回應:', error.response);
+            console.error('請求細節:', error.config);
+            alert("加載用戶信息失敗，請重試。");
+        }
+
+    },
+    async loadOrders(){
+        try{
+            const userID = localStorage.getItem('userID');
+            console.log("用戶訂單ID：",userID); //檢查用戶
+            if(!userID){
+                console.error("用戶ID無效");  
+                return;
+            }
+            const response = await axios.get(`/api/orders`,{
+                params: {
+                    userId: userID
+                }
+            });
+            this.orders = response.data;   
+        }catch(error){
+            console.error("加載訂單時出錯：",error);
+            alert("加載訂單失敗，請稍候再試");
+        }
+    },
     toggleRecipient(){
         this.showRecipient = !this.showRecipient;
     },
@@ -161,12 +201,14 @@ methods: {
         this.editRecipient = {...this.userInfo.recipients[index]};
         this.showModal();
     },
-    saveRecipient(){
+    async saveRecipient(){
         if(this.isEditing){
             this.userInfo.recipients[this.editingIndex] = {...this.editRecipient };
         }else{
             this.userInfo.recipients.push({...this.editRecipient});
         }
+        const userID = localStorage.getItem('userID');
+        await axios.put(`/api/users/${userID}`,this.userInfo);
         this.hideModal();
     },
     toggleOrderDetails(index){
@@ -183,11 +225,15 @@ methods: {
     logout() {
     // 模擬登出流程
     console.log("已登出");
-    this.$router.push("/login"); // 登出後導向登入頁面
+    alert("已成功登出！");
+    localStorage.clear();
+    this.$router.push("/UserLogin"); // 登出後導向登入頁面
+    }
     }
 }
-};
+
 </script>
+
 <style scoped>
     .card {
     margin-bottom: 1rem;
