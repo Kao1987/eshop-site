@@ -8,18 +8,20 @@
                 <BNavbarToggle @click="toggleNav"></BNavbarToggle>
             </div>
             <!-- 導覽左 -->
-            <BCollapse id="nav-collapse" v-model="isNavCollapsed" is-nav>
+            <BCollapse id="nav-collapse" v-model="isNavOpen" is-nav>
                 <div class="nav-content d-flex w-100 align-items-center justify-content-between">
                     <BNavbarNav class="nav-links me-lg-3">
                         <!-- 功能導航欄 -->
-                        <BNavItem
+                        <div
                             v-for = "item in navItems"
                             :key="item.path"
                             :to="item.path"
-                            class="nav-item-customer"
-                            @click="closeNav">
-                            <span class="nav-link-text">{{ item.text }}</span>
-                        </BNavItem>
+                            class="nav-item-container"
+                            >
+                            <router-link :to="item.path" class="nav-link-text" @click="closeNav"
+                            >
+                            {{ item.text }}</router-link>
+                    </div>
                     </BNavbarNav>
                         <!-- 搜尋欄—置中 -->
                         <div class="search-container d-flex mx-lg-3">
@@ -37,14 +39,22 @@
                         </div>
                     <!-- 導覽右—快捷 -->
                     <div class="cartmember d-flex">
-                        <router-link class="cart-item me-3" to="/ShopCart">
+                        <router-link class="cart-item me-3" to="/ShopCart" @click="closeNav">
                             <img src="/img/shopping_cart.png" alt="購物車" class="icon-img">
                             <span class="text-link">購物車</span>
                         </router-link>
-                        <router-link class="cart-item" to="/UserLogin">
+                        <template v-if="isLoggedIn">
+                            <div class="cart-item">
+                                <span class="text-link">歡迎 {{ userName }}</span>
+                                <button class="btn btn-link" @click="logout">會員登出</button>
+                            </div>
+                        </template>
+                        <template v-else>
+                            <router-link class="cart-item" to="/UserLogin" @click="closeNav">
                             <img src="/img/member_login.png" alt="會員登入" class="icon-img">
                             <span class="text-link">會員登入</span>                            
-                        </router-link>
+                            </router-link>
+                        </template>
                     </div>
                 </div>
             </BCollapse>
@@ -54,13 +64,12 @@
 </template>
 
 <script>
-
 export default {
     name: 'MainHeader',
     data(){
         return{
             searchQuery:'',
-            isNavCollapsed:window.innerWidth < 992,
+            isNavOpen:window.innerWidth < 992,
             navItems: [
                 { path: '/', text: '首頁' },
                 { path: '/MembersPage', text: '會員中心' },
@@ -70,6 +79,14 @@ export default {
                 { path: '/admin', text: '後台' }
             ] 
         };
+    },
+    computed:{
+        isLoggedIn(){
+            return this.$store.state.auth.isLoggedIn;
+        },
+        userName(){
+            return this.$store.state.auth.user ? this.$store.state.auth.user.name:'';
+        }
     },
     methods:{
         handleSearch(){
@@ -82,22 +99,26 @@ export default {
             }
         },
         toggleNav(){
-            this.isNavCollapsed = !this.isNavCollapsed;                
+            this.isNavOpen = !this.isNavOpen;                
         },
         closeNav(){
-            if(window.innerWidth<992) {
-                this.isNavCollapsed = true;
+            if(window.innerWidth < 992) {
+                this.isNavOpen = false;
             }
         },        
         checkScreenSize(){
             if (window.innerWidth >= 992) {
-            this.isNavCollapsed = false;
+            this.isNavOpen = true;
             } else {
-            this.isNavCollapsed = true;
+            this.isNavOpen = false;
         }
         },
         handleResize(){
             this.checkScreenSize();
+        },
+        logout(){
+            this.$store.dispatch('auth/logout');
+            this.$router.push({path:'/'});
         }
     },
     mounted(){
@@ -107,8 +128,12 @@ export default {
     beforeUnmount(){
         window.removeEventListener('resize', this.handleResize);
     },
+    watch:{
+        '$route'(){
+            this.closeNav();
+        }
+    }
 };
-
 </script>
 <style scoped>
 .header-container{
@@ -138,25 +163,15 @@ export default {
     color: #333;
     position: relative;
     text-decoration: none;
+    cursor:pointer;
 }
 .nav-link-text::after {
-    content: '';
-    position: absolute;
-    bottom: -5px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background-color: #0056b3;
-    transition: width 0.3s ease;
-}
-.nav-item-customer:hover .nav-link-text::after {
     width: 100%;
 }
-.nav-item-customer{
-    position: relative;
-    white-space: nowrap;
-    padding: 0.5rem 1rem;;
-    transition: all 0.3s ease;
+.nav-item-container {
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
 }
 .search-input-wrapper{
     position: relative;
@@ -206,13 +221,6 @@ export default {
     background-color: red;
     transform: translateY(-2px);
 }
-/* .cart-link .member-link{
-    display: flex;
-    align-items:center;
-    margin:0 0.5rem;
-    color: brown;
-    text-decoration: none;
-} */
 .icon-img{
     width:24px;
     height:24px;
@@ -248,15 +256,17 @@ export default {
 @media (max-width: 991px) {
     .nav-content{
         flex-direction: column;
+        align-items:center;
     }
     .nav-links{
         justify-content: center;
         margin-bottom: 1rem;
         width: 100%;
     }
-    .nav-item-customer{
+    .nav-item-container{
         margin:0.25rem 0.5rem;
         text-align:center;
+        justify-content: center;
     }
     .search-container {
         margin:0.5rem 0;
@@ -269,6 +279,9 @@ export default {
     }
     .cart-item{
         margin-left: 0.5rem;
+    }
+    .nav-link-text{
+        text-align: center;
     }
 }
 @media (max-width: 576px) {
@@ -306,5 +319,35 @@ export default {
         width: 100%;
     }
 }
-
+@media (min-width: 992px) and (max-width: 1121px) {
+    .nav-content {
+        justify-content: space-between;
+        flex-wrap: nowrap; /* 防止項目換行 */
+    }
+    .cartmember {
+        white-space: nowrap;
+        flex-shrink: 0; /* 防止購物車和登入按鈕縮小 */
+    }
+    .nav-links {
+        flex-shrink: 1; /* 允許導航鏈接縮小以適應空間 */
+    }
+    .search-container {
+        margin: 0 1rem; /* 在兩側添加一些間距 */
+        min-width: 200px; /* 設置最小寬度 */
+        flex-shrink: 1; /* 允許搜索框縮小 */
+    }
+    .nav-item-container {
+        padding: 0.5rem; /* 稍微減少水平內邊距 */
+    }
+    /* 可能需要調整搜索框的樣式 */
+    .search-input-wrapper {
+        max-width: 100%; /* 允許搜索框完全縮小到容器寬度 */
+    }
+    .search-box {
+        padding-right: 90px; /* 稍微減少右側內邊距 */
+    }
+    .search-button {
+        padding: 0.375rem 1rem; /* 稍微減少按鈕的內邊距 */
+    }
+}
 </style>

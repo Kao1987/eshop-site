@@ -42,13 +42,13 @@
     </div>
     <!-- 圖片選擇功能 -->
     <div class="mb-3">
-        <label for="productImage" class="form-control" ></label>
+        <label for="productImage" class="form-label"></label>
         <input type="file" class="form-control" id="productImage" @change="selectImage" accept="image/*"/>
     </div>
     <!-- 圖片預覽功能 -->
-    <div v-if="productForm.image">
+    <div v-if="productForm.imagePreview">
         <h5>圖片預覽</h5>
-        <img :src="productForm.image" alt="商品圖片" style="max-width:200px;"/>
+        <img :src="productForm.imagePreview" alt="商品圖片" style="max-width:200px;"/>
     </div>
     <button type="submit" class="btn btn-primary">新增商品</button>
     </form>
@@ -75,7 +75,8 @@ data() {
         brand_id: null,
         tag_ids:[],
         created_at: '',
-        image:''
+        imageFile: null,
+        imagePreview: '',
     },
     brands:[],
     tags: [],
@@ -116,15 +117,26 @@ methods: {
         // 自動添加當前日期作為 created_at
         const currentDate = new Date().toISOString().split('T')[0]; // 獲取當前日期（yyyy-mm-dd 格式）
         this.productForm.created_at = currentDate;
-
-        //構建提交數據
-        const productData = {
-            ...this.productForm,
-            tag_ids: this.productForm.tag_ids.map((tag)=>tag.id || tag)
-        };
+        //構建表單數據，使用 FormData 來處理圖片上傳
+        const formData = new FormData();
+        formData.append('name',this.productForm.name);
+        formData.append('description',this.productForm.description);
+        formData.append('price',this.productForm.price);
+        formData.append('stock',this.productForm.stock);
+        formData.append('brand_id', this.productForm.brand_id);
+        formData.append('tag_ids', JSON.stringify(this.productForm.tag_ids.map(tag => tag.id || tag)));
+        formData.append('created_at', this.productForm.created_at);
+         // 添加圖片檔案
+        if (this.productForm.imageFile) {
+                formData.append('image', this.productForm.imageFile);
+        }
 
         // 發送 POST 請求到後端
-        const response = await axios.post('/api/products',productData);
+        const response = await axios.post('/api/products',formData, {
+            headers:{
+                'Content-Type':'multipart/form-data',
+            },
+        }); 
         console.log('伺服器回應：',response.data);
         alert('商品新增成功');
         this.$router.push('/admin/products'); // 回到商品列表頁面
@@ -138,6 +150,8 @@ methods: {
         const file = event.target.files[0];
         if(file) {
             // 將選取的圖片轉存路徑，儲存在public/img/public下
+            this.productForm.imageFile = file;
+            // 預覽圖片
             this.productForm.image = URL.createObjectURL(file);
         }
     },

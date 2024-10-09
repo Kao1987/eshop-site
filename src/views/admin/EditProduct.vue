@@ -1,5 +1,4 @@
 <template>
-<template>
     <div class="container mt-5">
         <h2 class="text-center">編輯產品資訊</h2>
         <form @submit.prevent="updateProduct">
@@ -44,41 +43,44 @@
         </div>
         <div class="mb-3">
             <label for="productBrand" class="form-label">廠牌</label>
-            <select
-            id="productBrand"
-            class="form-select"
-            v-model="product.brand_id"
+            <v-select
+            :options="brands"
+            label="name"
+            placeholder="請選擇廠牌"
+            :reduce="brand => brand.id"
+            @input="updateBrandId"
             required
             >
-            <option v-for="brand in brands" :key="brand.id" :value="brand.id">
-                {{ brand.name }}
-            </option>
-            </select>
+            </v-select>
         </div>
         <div class="mb-3">
             <label for="productTags" class="form-label">標籤</label>
-            <select
-            id="productTags"
-            class="form-select"
-            v-model="product.tag_ids"
+            <v-select
+            options="tags"
+            label="name"
+            v-model="selectedTags"
+            placeholder="請選擇標籤"
             multiple
+            :reduce="tag => tag.id"
+            @input="updateTagIds"
             >
-            <option v-for="tag in tags" :key="tag.id" :value="tag.id">
-                {{ tag.name }}
-            </option>
-            </select>
+
+            </v-select>
         </div>
         <button type="submit" class="btn btn-primary">更新產品</button>
         </form>
     </div>
 </template>
-    
-</template>
 <script>
 import axios from 'axios';
+import vSelect from 'vue-select';
+import 'vue-select/dist/vue-select.css';
 
 export default{
-    nemr:'EditProducts',
+    name:'EditProduct',
+    components:{
+        vSelect,
+    },
     data(){
         return{
             product:{
@@ -92,12 +94,17 @@ export default{
             },
             brands: [],
             tags: [],
+            selectedBrand:null,
+            selectedTags:[],
         };
     },
-    mounted(){
-        this.loadProduct();
-        this.loadBrands();
-        this.loadTags();
+    async mounted(){
+        await Promise.all([
+        this.loadProduct(),
+        this.loadBrands(),
+        this.loadTags(),
+        ]);
+
     },
     methods:{
         async loadProduct(){
@@ -105,38 +112,68 @@ export default{
             try{
                 const response = await axios.get(`/api/products/${productId}`);
                 this.product = response.data;
+
+                this.selectedBrand = this.brands.find(brand => brand.id === this.product.brand_id)||null;
+                this.selectedTags = this.tags.filter(tag => this.product.tag_ids.includes(tag.id));
             }catch(error){
-                console.error('加載產品時出錯,error');
+                console.error('加載產品時出錯',error);
+                alert('加載產品時出錯，請稍候再試！');
             }
         },
         async loadBrands(){
             try{
                 const response = await axios.get('/api/brands');
                 this.brands = response.data;
+
+                if(this.product.brand_id){
+                    this.selectedBrand = this.brands.find(brand => brand.id === this.product.brand.id) || null;
+                }
             }catch(error){
-                console.error('加載廠牌時出錯,error');
+                console.error('加載廠牌時出錯',error);
             }
         },
         async loadTags(){
             try{
                 const response = await axios.get('/api/tags');
                 this.tags = response.data;
+
+                if(this.product.tag_ids.length > 0){
+                    this.selectedTags = this.tags.filter(tag => this.product.tag_ids.includes(tag.id));
+                }
             }catch(error){
-                console.error('加載標籤時錯誤,error');
+                console.error('加載標籤時錯誤',error);
+                alert('加載標籤時出錯，請稍候再試！');
             }
         },
         async updateProduct(){
             try{
                 await axios.put(`/api/products/${this.product.id}`,this.product);
                 alert('產品更新成功！');
-                this.$router.push('/admin/AdminProducts');
+                this.$router.push({name:'AdminProducts'});
             }catch(error){
-                console.error('更新商品時出錯,error');
+                console.error('更新商品時出錯',error);
                 alert('商品更新失敗！');
             }
+        },
+        updateBrandId(selectedBrand){
+            this.product.brand_id = selectedBrand; 
+        },
+        updateTagIds(selectedTags){
+            this.product.tag_ids = selectedTags;
+        },
+    },
+    watch:{
+        brand(newBrands){
+            if(this.product.brand_id){
+                this.selectedBrand = newBrands.find(brand => brand.id === this.product.brand_id) || null;
+            }
+        },
+        tags(newTags){
+            if (this.product.tag_ids.length > 0) {
+                this.selectedTags = newTags.filter(tag => this.product.tag_ids.includes(tag.id));
+            }
         }
-
-    }
+    },  
 };
 </script>
 <style>

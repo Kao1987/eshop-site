@@ -63,7 +63,7 @@
                     </td>
                 </tr>
                 <!-- 訂單展開 -->
-                <tr v-if="expanderOrder === index">
+                <tr v-if="expandedOrder === index">
                     <td colspan="4">
                         <table class="table">
                             <tbody>
@@ -121,6 +121,7 @@
 
 <script>
 import { Modal } from 'bootstrap';
+import {mapState , mapActions} from 'vuex';
 import axios from 'axios';
 
 export default {
@@ -128,7 +129,7 @@ name: "MemberPage",
 data() {
     return {
         showRecipient:false,
-        expanderOrder:null,
+        expandedOrder:null,
         isEditing:false,
         editRecipient:{
             name: ' ',
@@ -139,19 +140,32 @@ data() {
         userInfo:{
             name:" ",
             email:" ",
+            phone:'',
+            address:'',
             recipients:[ ],
             },
         orders:[ ],
         };
     },
+computed:{
+    ...mapState({
+        isLoggedIn:state => state.auth.isLoggedIn,
+        user: state => state.auth.user
+    })
+},
 mounted(){
+    if(!this.isLoggedIn){
+        alert('請先登入會員！');
+        this.$router.push('/UserLogin');
+        return;
+    }
         this.loadUserInfo();
         this.loadOrders();
     },
 methods: {
     async loadUserInfo(){
         try{
-            const userID = localStorage.getItem('userID');
+            const userID = this.user.id;
             console.log("用戶 ID:", userID); // 日誌用戶 ID
             if(!userID){
                 console.error("用戶ID無效");  
@@ -170,7 +184,7 @@ methods: {
     },
     async loadOrders(){
         try{
-            const userID = localStorage.getItem('userID');
+            const userID = this.userID;
             console.log("用戶訂單ID：",userID); //檢查用戶
             if(!userID){
                 console.error("用戶ID無效");  
@@ -207,12 +221,12 @@ methods: {
         }else{
             this.userInfo.recipients.push({...this.editRecipient});
         }
-        const userID = localStorage.getItem('userID');
+        const userID = this.user.id;
         await axios.put(`/api/users/${userID}`,this.userInfo);
         this.hideModal();
     },
     toggleOrderDetails(index){
-        this.expanderOrder = this.expanderOrder === index? null : index;
+        this.expandedOrder = this.expandedOrder === index? null : index;
     },
     showModal() {
         const modal = new Modal(document.getElementById('recipientModal'));
@@ -221,17 +235,15 @@ methods: {
     hideModal(){
         const modal = Modal.getInstance(document.getElementById('recipientModal'));
         modal.hide();
-    },
-    logout() {
-    // 模擬登出流程
-    console.log("已登出");
-    alert("已成功登出！");
-    localStorage.clear();
-    this.$router.push("/UserLogin"); // 登出後導向登入頁面
+    },    
+    ...mapActions('auth',['logout']),
+    async logout(){
+        await this.logout();
+        alert("已成功登出!");
+        this.$router.push("/UserLogin"); // 登出後導向登入頁面
     }
     }
 }
-
 </script>
 
 <style scoped>

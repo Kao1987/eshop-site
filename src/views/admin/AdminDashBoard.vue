@@ -99,40 +99,54 @@ export default{
                     const carouselResponse = await axios.get('/api/carousel_images');
                     this.carouselImages = carouselResponse.data || [];
                     // 加載各項數據
-                    const [salesResponse,orderResponse,membersResponse] = await Promise.all([
+                    const [salesResponse,orderResponse,membersResponse,productsResponse] = await Promise.all([
                         axios.get('/api/sales'),
-                        axios.get('api/orders'),
-                        axios.get('/api/members')
+                        axios.get('/api/orders'),
+                        axios.get('/api/users'),
+                        axios.get('/api/products'),
                     ]);
                     const sales = salesResponse.data;
                     const orders = orderResponse.data;
                     const members = membersResponse.data;
-                    this.todaySales = sales.today;
-                    this.yesterdaySales = sales.yesterday;
-                    this.last7DaySales = sales.last7Days;
+                    const products = productsResponse.data;
+                    this.products = products; 
                     // 今日訂單數量
-                    const today = new Date().toISOString().split('T')[0];
-                    this.todayOrders = orders.filter(order =>order.orderDate === today).length;
+                    const today = new Date();
+                    const todayStr = today.toISOString().split('T')[0];
                     // 計算今日跟昨日銷售金額
                     const yesterday = new Date();
                     yesterday.setDate(yesterday.getDate()-1);
-                    // const yesterdayStr = yesterday.toISOString().split('T')[0];
-                    
-                    // this.todaySales = orders
-                    //     .filter(order => order.orderDate === today)
-                    //     .reduce((sum,order) => sum + order.total,0);
-                    
-                    // this.yesterdaySales = orders
-                    //     .filter(order => order.orderDate === yesterdayStr)
-                    //     .reduce((sum, order) => sum + order.total,0);
+                    const yesterdayStr = yesterday.toISOString().split('T')[0];
                     // 計算過去七日銷售金額
                     const sevenDaysAgo = new Date();
                     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
                     const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+                    
+                    this.todaySales = sales
+                    .filter(sale => sale.sale_date.split('T')[0] === todayStr)
+                    .reduce((sum, sale) => sum + sale.total_amount, 0);
 
-                    // this.last7DaySales = orders
-                    //     .filter(order => order.orderDate >= sevenDaysAgoStr && order.orderDate <= today)
-                    //     .reduce((sum, order) => sum + order.total,0);
+                    this.yesterdaySales = sales
+                    .filter(sale => sale.sale_date.split('T')[0] === yesterdayStr)
+                    .reduce((sum, sale) => sum + sale.total_amount, 0);
+
+                    this.last7DaySales = sales
+                    .filter(sale => sale.sale_date.split('T')[0] >= sevenDaysAgoStr && sale.sale_date.split('T')[0] <= todayStr)
+                    .reduce((sum, sale) => sum + sale.total_amount, 0);
+                    // 准备销售数据以绘制图表
+                    const salesDataMap = {};
+                    sales.forEach(sale => {
+                        const saleDate = sale.sale_date.split('T')[0];
+                        if(salesDataMap[saleDate]){
+                            salesDataMap[saleDate] += sale.total_amount;
+                        } else {
+                            salesDataMap[saleDate] = sale.total_amount;
+                        }
+                    });
+                    // 将 salesDataMap 转换为数组并按日期排序
+                    this.salesData = Object.keys(salesDataMap)
+                        .map(date => ({ date: date, amount: salesDataMap[date] }))
+                        .sort((a, b) => new Date(a.date) - new Date(b.date));
                     // 計算七日銷售排行
                     const recentOrders = orders.filter(order =>order.orderDate >=sevenDaysAgoStr && order.orderDate <= today);
                     const salesMap ={};
@@ -171,27 +185,17 @@ export default{
                     this.todayNewMembers = todayNewMembers;
                     this.totalMembers = members.length;
                     // 低庫存產品提醒
-                    this.lowStockProducts =orders.flatMap(order=>order.items)
-                        .reduce((map,item)=>{
-                            if(!map[item.productId]){
-                                map[item.productId]= {name:item.productName,sales:item.quantity,stock:this.getProductStock(item.productId)};
-                            }else{
-                                map[item.productId].sales += item.quantity;
-                            }
-                            return map;
-                        },{});
                         this.lowStockProducts = this.products.filter(product=>product.stock<=10)
                             .map(product =>{
-                                const totalSales = orders.flatMap(order => order.items)
-                                    .filter(item => item.productId === product.id)  
-                                    .reduce((sum,item) => sum + item.quantity,0);
+                                const totalSales = sales
+                                    .filter(sale => sale.product_Id === product.id)  
+                                    .reduce((sum,sale) => sum + sale.quantity_sold,0);
                                     return {
                                         name:product.name,
                                         sales: totalSales,
                                         stock: product.stock
                                     };
                             });
-                        this.salesData = salesResponse.data.dailySales;
                 }catch(error){
                     console.error(error);
                 }
@@ -236,7 +240,7 @@ export default{
                 }
             },
             renderSalesChart(){
-                if(!this.salesDate || this.salesData.length === 0 ){
+                if(!this.salesData || this.salesData.length === 0 ){
                     console.error("銷售數據未加載！");
                     return;
                 }                
@@ -284,9 +288,9 @@ export default{
                         alert('圖片刪除失敗！請稍後再試。');
                     });
                 }
-            }
+            },
         }
-    }
+}
 
 </script>
 

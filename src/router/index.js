@@ -4,6 +4,7 @@ import HomePage from '../views/HomePage.vue';
 import AboutUsPage from '../views/AboutUsPage.vue';
 import ShopCart from '../views/ShopCart.vue';
 import ProductsList from '../views/ProductsList.vue';
+import ProductDetail from '../views/ProductDetail.vue';
 import MembersPage from '../views/MembersPage.vue';
 import ContactUs from '../views/ContactUs.vue';
 import SearchResults from '../views/SearchResults.vue';
@@ -70,7 +71,7 @@ import SpecialOffers from '../views/admin/SpecialOffers.vue';
         // meta:{requiresAuth: true,role:'admin'}
     },
     {
-        path: '/admin/EditProduct',
+        path: '/admin/EditProduct/:id',
         name: 'EditProduct',
         component: EditProduct,
         // meta:{requiresAuth: true,role:'admin'}
@@ -138,7 +139,12 @@ import SpecialOffers from '../views/admin/SpecialOffers.vue';
         path: '/ForgotPwd',
         name: 'ForgotPwd',
         component: ForgotPwd
-    }
+    },
+    {
+        path: '/ProductDetail/:id',
+        name: 'ProductDetail',
+        component: ProductDetail
+    },
 
 
   // Add more routes as needed

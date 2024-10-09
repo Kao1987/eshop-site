@@ -19,9 +19,13 @@
     "element-plus": "^2.8.1",
     "json-server-auth": "^2.1.0",
     "lodash.debounce": "^4.0.8",
+    "multer": "^1.4.5-lts.1",
     "vue": "^3.2.13",
     "vue-multiselect": "^3.1.0",
-    "vue-router": "^4.0.13"
+    "vue-router": "^4.0.13",
+    "vue-select": "^4.0.0-beta.6",
+    "vuex": "4",
+    "vuex-persistedstate": "^4.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",

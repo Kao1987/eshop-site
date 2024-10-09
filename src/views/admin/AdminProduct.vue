@@ -6,22 +6,46 @@
             <router-link to="/admin/SpecialOffers" class="btn btn-primary">特價商品管理</router-link>
         </div>
         <!-- 商品管理 -->
-        <div class="accordion" id="productAccordion">
+        <div v-if="isSectionOpen.products" class="accordion" id="productAccordion">
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingProducts">
                     <button 
-                    class="accordion-button collapsed" 
+                    class="accordion-button" 
                     type="button"
-                    data-bs-toggle="collapse" 
-                    data-bs-target="#collapseProducts" 
-                    aria-expanded="true" 
-                    aria-controls="collapseProducts"
+                    @click="toggleSection('products')"
                     >
                         商品管理
                     </button>
                 </h2>            
-                <div id="collapseProducts" class="accordion-collapse collapse show" aria-labelledby="headingProducts" data-bs-parent="#productAccordion">
+                <div class="accordion-collapse collapse show" 
+                    :class="{show:isSectionOpen.products}"
+                        aria-labelledby="headingProducts" 
+                        data-bs-parent="#productAccordion">
                     <div class="accordion-body">
+                        <!-- 換頁控制區 -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <label for="itemsPerPage">每頁顯示：</label>
+                                <select v-model.number="itemsPerPage" id="itemsPerPage">
+                                    <option v-for="option in itemsPerPageOptions" :key="option" :value="option">{{ option }}</option>
+                                </select>
+                            </div>
+                            <div>
+                                <button 
+                                    class="btn btn-primary btn-sm me-2" 
+                                    :disabled="currentPage === 1" 
+                                    @click="currentPage--"
+                                >上一頁
+                                </button>
+                                <span>第 {{ currentPage }} 頁，共 {{ totalPages }} 頁</span>
+                                <button 
+                                    class="btn btn-primary btn-sm ms-2" 
+                                    :disabled="currentPage === totalPages" 
+                                    @click="currentPage++"
+                                >下一頁
+                                </button>
+                            </div>
+                        </div>
                         <table class="table">
                             <thead>
                                 <tr>
@@ -33,13 +57,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="(product,index) in products" :key="product.id">
+                                <tr v-for="(product,index) in paginatedProducts" :key="product.id">
                                 <td>{{ product.name }}</td>
                                 <td>{{ product.price }}</td>
                                 <td>{{ product.stock }}</td>
                                 <td>{{ product.description }}</td>
                                 <td>
-                                    <router-link :to="{ name:'EditProduct', params: { id:product.id } }" class="btn btn-warning btn-sm" >編輯</router-link>
+                                    <router-link :to="{ name:'EditProduct', params: { id: product.id } }" class="btn btn-warning btn-sm" >編輯</router-link>
                                     <button class="btn btn-danger btn-sm ms-2" @click="deleteProduct(product.id, index)">刪除</button>
                                 </td>
                                 </tr>
@@ -57,17 +81,17 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingTags">
                             <button 
-                            class="accordion-button collapsed" 
+                            class="accordion-button" 
                             type="button" 
-                            data-bs-toggle="collapse" 
-                            data-bs-target="#collapseTags" 
-                            aria-expanded="false" 
-                            aria-controls="collapseTags"
+                            @click="toggleSection('tags')"
                             >
                                 標籤管理
                             </button>
                         </h2>
-                        <div id="collapseTags" class="accordion-collapse collapse" aria-labelledby="headingTags" data-bs-parent="#tagAccordion">
+                        <div class="accordion-collapse collapse" 
+                            :class="{show:isSectionOpen.tags}" 
+                            aria-labelledby="headingTags" 
+                            data-bs-parent="#tagAccordion">
                             <div class="accordion-body">
                                 <div class="d-flex justify-content-end mb-3">
                                     <button class="btn btn-success" @click="openCreateTagModal">新增標籤</button>
@@ -100,17 +124,17 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingBrands">
                             <button 
-                            class="accordion-button collapsed" 
+                            class="accordion-button" 
                             type="button" 
-                            data-bs-toggle="collapse" 
-                            data-bs-target="#collapseBrands" 
-                            aria-expanded="false" 
-                            aria-controls="collapseBrands"
+                            @click="toggleSection('brands')"
                             >
                                 廠牌管理
                             </button>
                         </h2>
-                        <div id="collapseBrands" class="accordion-collapse collapse" aria-labelledby="headingBrands" data-bs-parent="#brandAccordion">
+                        <div class="accordion-collapse collapse"
+                            :class="{show:isSectionOpen.brands}" 
+                            aria-labelledby="headingBrands" 
+                            data-bs-parent="#brandAccordion">
                             <div class="accordion-body">
                                 <div class="d-flex justify-content-end mb-3">
                                     <button class="btn btn-success" @click="openCreateBrandModal">
@@ -182,12 +206,6 @@
 <script>
 import axios from 'axios';
 import { Modal } from 'bootstrap';
-// import * as bootstrap from 'bootstrap';
-
-
-
-
-
 
     export default{
         name:'AdminProducts',
@@ -203,6 +221,14 @@ import { Modal } from 'bootstrap';
                 currentIndex: null,
                 isEditingTag: false,
                 isEditingBrand: false,
+                currentPage:1,
+                itemsPerPage:10,
+                itemsPerPageOptions:[10,20,50],
+                isSectionOpen:{
+                    products:true,
+                    tags:false,
+                    brands:false,
+                }
             };
         },
         mounted(){
@@ -211,12 +237,29 @@ import { Modal } from 'bootstrap';
             this.loadBrands();
 
         },
+        computed:{
+            paginatedProducts(){
+                const start = (this.currentPage - 1) * this.itemsPerPage;
+                const end = start + this.itemsPerPage;
+                return this.products.slice(start, end);
+            },
+            totalPages(){
+                return Math.ceil(this.products.length / this.itemsPerPage);
+            }
+        },      
         methods:{
+            toggleSection(section){
+                this.isSectionOpen[section] = !this.isSectionOpen[section];
+            },
             // 加載產品列表
             async loadProducts(){
                 try{
                     const response = await axios.get(`/api/products`);
                     this.products = response.data;
+
+                    if(this.currentPage > this.totalPages){
+                        this.currentPage = this.totalPages || 1;
+                    }
                 }catch(error){
                     console.error('加載產品時出錯',error);
                     alert('加載產品時出錯，請稍候再試！');
@@ -341,12 +384,7 @@ import { Modal } from 'bootstrap';
             const modal = new Modal(this.$refs.brandModal);
             modal.show();
             },
-            // //關閉彈出視窗
-            // closeModal(){
-            //     const modalInstance = Modal.getInstance(this.$refs.productModal);
-            //     modal.hide();
-            // },
-            // 關閉標籤 Modal
+
             closeTagModal() {
                 const modalInstance = Modal.getInstance(this.$refs.tagModal);
                 if (modalInstance) {
@@ -360,22 +398,20 @@ import { Modal } from 'bootstrap';
                     modalInstance.hide();
                 }
             },
-            // toggleCollapse(id){
-            //     const collapseElement = document.getElementById(id);
-            //     if(collapseElement){
-            //         /* eslint-disable no-undef */
-            //         const bsCollapse = new bootstrap.Collapse(collapseElement,{
-            //             toggle:true});
-            //             bsCollapse.toggle();
-            //     }
-            // }
-    },
+        },
+        watch:{
+            itemsPerPage(){
+                this.currentPage = 1;
+            }
+        },
+
 };
 </script>
 <style scoped>
 .admin-dashboard{
     max-width:1200px;
     margin:0 auto;
+    min-height:100vh;
 }
 .admin-products{
     max-width:800px;

@@ -63,7 +63,7 @@
       ]
     },
     {
-      "id": "1312",
+      "id": "4",
       "name": "123",
       "phone": "0912345678",
       "address": "123",
@@ -84,7 +84,7 @@
       ]
     },
     {
-      "id": "de66",
+      "id": "5",
       "name": "456",
       "phone": "0912345678",
       "address": "456",
@@ -112,11 +112,11 @@
       "description": "IPHONE19",
       "price": 19999,
       "stock": 10,
-      "tag_id": "001",
-      "brand_id": "001",
+      "tag_id": 1,
+      "brand_id": 1,
       "created_at": "2025-09-09",
       "updated_at": "2025-09-09",
-      "image": "blob:http://localhost:8080/4bfc69e1-ab09-42aa-ae24-438ec1f1db0f"
+      "image": "1.png"
     },
     {
       "id": "2",
@@ -124,11 +124,11 @@
       "description": "IPHONE20",
       "price": 29999,
       "stock": 20,
-      "tag_id": "001",
-      "brand_id": "001",
+      "tag_id": 1,
+      "brand_id": 1,
       "created_at": "2025-09-09",
       "updated_at": "2025-09-09",
-      "image": "blob:http://localhost:8080/4bfc69e1-ab09-42aa-ae24-438ec1f1db0f"
+      "image": "2.png"
     },
     {
       "id": "3",
@@ -136,11 +136,11 @@
       "description": "IPHONE39",
       "price": 39999,
       "stock": 10,
-      "tag_id": "001",
-      "brand_id": "001",
+      "tag_id": 1,
+      "brand_id": 1,
       "created_at": "2025-09-09",
       "updated_at": "2025-09-09",
-      "image": "blob:http://localhost:8080/4bfc69e1-ab09-42aa-ae24-438ec1f1db0f"
+      "image": "3.jpg"
     },
     {
       "id": "4",
@@ -148,43 +148,24 @@
       "description": "IPHONE40",
       "price": 49999,
       "stock": 20,
-      "tag_id": "001",
-      "brand_id": "001",
+      "tag_id": 1,
+      "brand_id": 1,
       "created_at": "2025-09-09",
       "updated_at": "2025-09-09",
-      "image": "blob:http://localhost:8080/4bfc69e1-ab09-42aa-ae24-438ec1f1db0f"
+      "image": "4.jpg"
     },
     {
-      "id": "e847",
+      "id": "5",
       "name": "王三",
       "description": "是王八",
       "price": 999,
       "stock": 10,
-      "brand_id": {
-        "id": "c9d0",
-        "name": "共碩"
-      },
+      "brand_id": 5,
       "tag_ids": [
-        "5fa8",
-        "103"
+        5,
+        3
       ],
       "created_at": "2024-09-25",
-      "image": "blob:http://localhost:8080/4bfc69e1-ab09-42aa-ae24-438ec1f1db0f"
-    },
-    {
-      "id": "fd50",
-      "name": "海豹",
-      "description": "海豹",
-      "price": 9999,
-      "stock": 100,
-      "brand_id": {
-        "id": "004",
-        "name": "Sony"
-      },
-      "tag_ids": [
-        "103"
-      ],
-      "created_at": "2024-09-26",
       "image": "blob:http://localhost:8080/4bfc69e1-ab09-42aa-ae24-438ec1f1db0f"
     }
   ],
@@ -256,62 +237,62 @@
   "sales": [
     {
       "id": "1",
-      "product_id": "1",
+      "product_id": 1,
       "quantity_sold": 2,
       "total_amount": 39998,
       "sale_date": "2025-09-10T10:30:00",
-      "customer_id": "123"
+      "customer_id": 1
     },
     {
       "id": "2",
-      "product_id": "2",
+      "product_id": 2,
       "quantity_sold": 1,
       "total_amount": 29999,
       "sale_date": "2025-09-11T14:20:00",
-      "customer_id": "124"
+      "customer_id": 2
     }
   ],
   "brands": [
     {
-      "id": "001",
+      "id": "1",
       "name": "Apple"
     },
     {
-      "id": "002",
+      "id": "2",
       "name": "Samsung"
     },
     {
-      "id": "003",
+      "id": "3",
       "name": "Asus"
     },
     {
-      "id": "004",
+      "id": "4",
       "name": "Sony"
     },
     {
-      "id": "c9d0",
+      "id": "5",
       "name": "共碩"
     }
   ],
   "tags": [
     {
-      "id": "101",
+      "id": "1",
       "name": "電子產品"
     },
     {
-      "id": "102",
+      "id": "2",
       "name": "家電"
     },
     {
-      "id": "103",
+      "id": "3",
       "name": "手機"
     },
     {
-      "id": "104",
+      "id": "4",
       "name": "電腦"
     },
     {
-      "id": "5fa8",
+      "id": "5",
       "name": "大恐龍"
     }
   ],
@@ -335,14 +316,14 @@
   "special_offers": [
     {
       "id": "1",
-      "product_id": "1",
+      "product_id": 1,
       "price": 15000,
       "countdown": 3600,
       "created_at": "2024-09-20"
     },
     {
       "id": "2",
-      "product_id": "2",
+      "product_id": 2,
       "price": 25000,
       "countdown": 7200,
       "created_at": "2024-09-21"

@@ -8,11 +8,13 @@ import 'bootstrap';
 import BootstrapVue3 from 'bootstrap-vue-3';
 import router from './router';
 import axios from 'axios';
+import store from './store';
 
 
 
 
 const app = createApp(App);
+app.use(store);
 app.use(ElementPlus);
 app.use(router);
 app.use(BootstrapVue3);
