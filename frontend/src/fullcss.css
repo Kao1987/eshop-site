@@ -1,0 +1,29 @@
+/* RWD字體縮放 */
+/* 針對PC（大於1200px） */
+@media (min-width: 1200px) {
+    body {
+        font-size: 1.75rem;
+        
+    }
+}
+
+/* 針對NB（大於768px） */
+@media (min-width: 992px) {
+    body {
+        font-size: 1.5rem;
+    }
+}
+
+/* 針對平板（大於576px，小於768px） */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    body {
+        font-size: 1.2rem;
+    }
+}
+
+/* 針對手機（小於576px） */
+@media (max-width: 575.98px) {
+    body {
+        font-size: 1rem;
+    }
+}
