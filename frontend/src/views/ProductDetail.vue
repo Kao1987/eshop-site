@@ -47,6 +47,15 @@ export default {
         const isLoggedIn = computed(()=>store.state.auth.isLoggedIn);
 
         const fetchProduct = async() =>{
+            if (!isProductIdValid.value) {
+                console.error('商品ID格式不正確:', productId.value);
+                store.dispatch('notifications/showNotification', {
+                    type: 'error',
+                    message: '商品ID格式不正確，無法加載商品詳情。',
+                });
+                router.go(-1); // 返回上一頁
+                return;
+            }
             try {
                 const response = await axios.get(`/api/products/${productId.value}`);
                 product.value = response.data;
@@ -78,6 +87,12 @@ export default {
                 timeout:2000,
             });
         };
+        const isProductIdValid = computed(() => {
+            // 假設 productId 應為正整數
+            const id = productId.value;
+            return /^[1-9]\d*$/.test(id); // 檢查是否為正整數
+        });
+
         const goBack = () => {
             router.go(-1);
         };

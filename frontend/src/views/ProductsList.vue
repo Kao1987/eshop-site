@@ -65,6 +65,7 @@ export default {
         const loading = ref(false);
         const error = ref(null);
         const maxPrice = computed(()=>{
+            if (!Array.isArray(products.value)) return 1000000;
             const prices = products.value.map(product => Number(product.price));
             return prices.length ? Math.max(...prices) : 1000000;
         });
@@ -84,6 +85,7 @@ export default {
         const searchQuery = ref('');
         
         const filteredProducts = computed(() => {
+            if (!Array.isArray(products.value)) return [];
             return products.value.filter(product => {
                 const productPrice = Number(product.price);
                 const nameMatch = product.name.toLowerCase().includes(searchQuery.value.toLowerCase());
@@ -100,12 +102,17 @@ export default {
 
             try {
                 const response = await axios.get('/api/products');
+                if (!Array.isArray(response.data)) {
+                    throw new Error("API 返回的數據格式不正確，預期為陣列");
+                }
                 console.log("商品數據:", response.data);
 
-                products.value = response.data.map(product => ({
-                    ...product,
-                    id: String(product.id).trim(),
-                }));
+                products.value = Array.isArray(response.data)
+                    ? response.data.map(product => ({ ...product, id: String(product.id).trim() }))
+                    : [];
+                if (products.value.length === 0) {
+                    console.warn("商品數據為空或格式錯誤");
+                }
                 console.log("處理後的商品數據:",products.value);
 
                 priceRange.value = maxPrice.value;
@@ -160,8 +167,8 @@ export default {
         // 在組件掛載時加載商品
         onMounted(() => {
             searchQuery.value = route.query.search || '';
-            loadProducts().then(()=>{
-                console.log('加載後的商品列表：',products.value);
+            loadProducts().then(() => {
+                console.log('加載後的商品列表:', products.value);
             });
         });
         watch(

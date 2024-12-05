@@ -16,7 +16,15 @@ import 'bootstrap-vue-3/dist/bootstrap-vue-3.css'
 
 const app = createApp(App);
 
-axios.defaults.baseURL = process.env.VUE_APP_API_URL || 'http://localhost:5001';
+axios.defaults.baseURL = '/api';
+// // 添加錯誤攔截器進行全域錯誤處理
+// axios.interceptors.response.use(config=>{
+//     if (config.url.startsWith('/api/')) {
+//         config.url = config.url.slice(5);
+//     }
+//     return config;
+// });
+
 app.config.globalProperties.$axios = axios;
 
 app.use(router);

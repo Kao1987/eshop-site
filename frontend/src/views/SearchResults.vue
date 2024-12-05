@@ -10,9 +10,10 @@
 export default {
     name: 'SearchResults',
     computed: {
-    searchQuery() {
-        return this.$route.query.q;  // 從 URL 的 query 參數中獲取搜尋關鍵字
+        searchQuery() {
+        return this.$route.query.q || '未指定';  // 預設顯示 "未指定"
     }
-    }
+    },
+    
 };
 </script>

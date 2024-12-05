@@ -2,14 +2,14 @@
     <div class="homepage container mt-5">
         <!-- 圖片輪播 -->
         <div class="carousel-section">
-            <div v-if="isLoading.carousel && carouselImages.length"
+            <div v-if="isLoading.carousel"
             id="mainCarousel"
             class="carousel slide"
             >
             <!-- 指示器 -->
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">加載中...</span>
-            </div>
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">加載中...</span>
+                </div>
             </div>
             <div v-else-if="errors.carousel" class="alert alert-warning">
                 {{ errors.carousel }} 
@@ -17,20 +17,20 @@
             <div v-else-if="carouselImages && carouselImages.length" id="carouselExampleIndicators" class="carousel slide position-relative" data-bs-ride="carousel">
                 <div class="carousel-indicators">
                     <button v-for="(image,index) in carouselImages"
-                            :key="'indicator-'+index"
-                            type="button"
-                            data-bs-target="#carouselExampleIndicators"
-                            :data-bs-slide-to="index"
-                            :class="{active:index===0}"
-                            :aria-current="index===0"
-                            :aria-labe="'Slide' + (index +1)"
-                            >
+                        :key="'indicator-'+index"
+                        type="button"
+                        data-bs-target="#carouselExampleIndicators"
+                        :data-bs-slide-to="index"
+                        :class="{active:index===0}"
+                        :aria-current="index===0"
+                        :aria-label="'Slide' + (index +1)"
+                        >
                     </button>
                 </div>
                 <div class="carousel-inner">
                     <div v-for="(image, index) in carouselImages" 
-                    :key="index" 
-                    :class="['carousel-item',{active:index === 0}]">
+                        :key="index" 
+                        :class="['carousel-item',{active:index === 0}]">
                         <img :src="getImageUrl(image.url)" class="d-block w-100" :alt="'圖片' + (index +1)">
                     </div>
                 </div>
@@ -48,7 +48,7 @@
     </div>
     <!-- 隨機推薦商品 -->
     <div class="sales-ranking mt-5" v-if="randomProducts && randomProducts.length > 0">
-        <h3>為您推薦</h3>
+        <h2>為您推薦</h2>
         <div class="product-list">
             <div v-for="(product,index) in randomProducts"
                 :key="index"
@@ -61,7 +61,7 @@
     </div>
     <!-- 七日銷售排行 -->
     <div class="sales-ranking mt-5" v-if="sevenDaySalesRanking && sevenDaySalesRanking.length >0">
-        <h3>過去7日銷售排行</h3>
+        <h2>過去7日銷售排行</h2>
         <div class="product-list">
             <div v-for="(product, index) in sevenDaySalesRanking"
                 :key="index" 
@@ -75,7 +75,7 @@
 
     <!-- 月銷售排行 -->
     <div class="sales-ranking mt-5" v-if=" monthSalesRanking && monthSalesRanking.length>0">
-        <h3>過去30日銷售排行</h3>
+        <h2>過去30日銷售排行</h2>
         <div class="product-list">
                 <div v-for="(product,index) in monthSalesRanking" 
                     :key="index"
@@ -90,7 +90,7 @@
 
     <!-- 特價商品倒數計時 -->
     <div class="countdown-special-offers mt-4" v-if="processedSpecialOffers.length > 0">
-        <h3>特價倒數計時商品</h3>
+        <h2>特價倒數計時商品</h2>
         <div class="product-list">
                 <div v-for="(offer, index) in processedSpecialOffers" 
                 :key="index" class="product-item">
@@ -160,36 +160,37 @@ export default {
             this.randomProducts = this.getRandomProducts();
             this.$nextTick(()=>{
                 this.startCountdown();
-
-                const carouselEl = document.getElementById('carouselExampleIndicators');
-                if(carouselEl){
-                    new bootstrap.Carousel(carouselEl,{
-                        interval:5000,
-                        ride:true
-                    });
-                }
+                this.initializeCarousel();
             });
         }catch(error){
             console.error('Failed to load home page data',error);
         }
     },
     methods: {
-        handleError(section,error){
-            console.error(`Error in ${section}:`,error);
-            this.errors[section] = `無法加載${section}數據`
+        handleError(section, error) {
+            console.error(`Error in ${section}:`, error.message || error);
+            this.errors[section] = `無法加載 ${section} 數據，請稍後再試。`;
+            if (section === 'carousel') {
+                this.carouselImages = FALLBACK_DATA.carouselImages;
+            }
         },
         async loadHomePageData(){
-            // 重置錯誤狀態
-            Object.keys(this.errors).forEach(key=>{
-                this.errors[key] = null;
-            });
+                // // 重置錯誤狀態
+                // Object.keys(this.errors).forEach(key=>{
+                //     this.errors[key] = null;
+                // });
             // 並行加載所有數據
-            await this.loadProductsData();
-            await Promise.all([
+            try{
+                await this.loadProductsData();
+
+                await Promise.allSettled([
                 this.loadSalesData(),
                 this.loadOffersData(),
                 this.loadCarouselData(),
-            ])
+                ]);
+            }catch (error) {
+                console.error('讀取主頁資料失敗', error);
+            }
         },
         async loadSalesData(){
             this.isLoading.sales = true;
@@ -270,33 +271,6 @@ export default {
                 this.isLoading.products = false;
             }
         },
-        // processAndSetSalesRanking(sales){
-        //     const now = new Date();
-        //     const sevenDayAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
-        //     const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
-        //     // 使用物件來追蹤銷售量
-        //     const sevenDaysSales = {};
-        //     const monthSales = {};
-
-        //     sales.forEach(sale=>{
-        //         const saleDate = new Date(sale.sale_date);
-        //         const productId = Number(sale.product_id);
-        //         // 七天銷售排行
-        //         if(saleDate >= sevenDayAgo){
-        //             sevenDaysSales[productId] = (sevenDaysSales[productId] || 0) + sale.quantity_sold;
-        //         }
-        //         // 月銷售排行
-        //         if(saleDate >= thirtyDaysAgo){
-        //             monthSales[productId] = (monthSales[productId] || 0) + sale.quantity_sold;
-        //         }
-        //     });
-
-        //     console.log('Seven Days Sales:', sevenDaysSales);
-        //     console.log('Month Sales:', monthSales);
-        //     // 將銷售量轉換為排序後的陣列，並加入商品資訊
-        //     this.sevenDaySalesRanking = this.convertToSortedRankingWithProducts(sevenDaysSales);
-        //     this.monthSalesRanking = this.convertToSortedRankingWithProducts(monthSales);
-        // },
         convertToSortedRankingWithProducts(salesObject){
             return Object.entries(salesObject)
                     .map(([product_id,quantity_sold])=>{
@@ -317,15 +291,18 @@ export default {
             if(!this.specialOffers || this.specialOffers.length === 0) return;
     
             this.specialOffers.forEach((offer, index)=>{
-                if(!offer.countdown)return;
+                if (!offer.countdown) return;
 
                 const interval = setInterval(()=> {
-                    if(this.specialOffers[index].countdown && this.specialOffers[index].countdown > 0){
-                        this.specialOffers[index].countdown--;
-                    }else{
-                        clearInterval(interval);
-                        }
-                    },1000);
+                    if (offer.countdown > 0) {
+                this.$set(this.specialOffers, index, {
+                    ...offer,
+                    countdown: offer.countdown - 1,
+                });
+            } else {
+                clearInterval(interval);
+            }
+        }, 1000);
                     this.countdownIntervals.push(interval);
             });
         },
@@ -348,15 +325,26 @@ export default {
             return product && product.image ? `api${product.image}` : '/img/default-product.jpg';
         },
         getRandomProducts(count = 5){
-            if(!this.products || this.products.length === 0) return [];
-            const shuffled = [...this.products].sort(()=> 0.5 - Math.random());
-
+            const shuffled = [...this.products];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
             return shuffled.slice(0, count).map(product =>({
                 product_id:product.id,
                 name: product.name,
                 image: this.getProductImage(product.id),
                 quantity_sold:'-'
             }));
+        },
+        initializeCarousel() {
+            const carouselEl = document.getElementById('carouselExampleIndicators');
+            if (carouselEl) {
+                new bootstrap.Carousel(carouselEl, {
+                    interval: 5000,
+                    ride: true
+                });
+            }
         }
     },
     computed:{
@@ -523,6 +511,16 @@ export default {
 
     .carousel-control-next {
         right: 10px;
+    }
+}
+@media (max-width: 767px) {
+    .product-list {
+        flex-direction: column;
+        align-items: center;
+    }
+    .product-item {
+        width: 100%;
+        max-width: 300px;
     }
 }
 

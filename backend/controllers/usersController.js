@@ -1,6 +1,6 @@
 // backend/controllers/usersController.js
 const pool = require('../config/db');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // 登入使用者
 exports.login = async (req, res)=>{

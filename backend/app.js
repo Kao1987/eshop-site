@@ -25,16 +25,25 @@ const app = express();
 
 // 中介軟體
 app.use(cors({
-    origin: 'http://localhost:8081',
+    // origin: ['http://localhost:8081','http://34.169.83.101'],
+    origin: '*', // 暫時允許所有來源
     methods:'GET,HEAD,PUT,POST,DELETE',
     credentials:true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 
+// 全域設置 Content-Type 為 application/json
+app.use((req, res, next) => {
+    res.setHeader('Content-Type', 'application/json');
+    next();
+});
+
 // 設置靜態資源路徑
 app.use('/img',express.static(path.join(__dirname, 'public','img')));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'dist')));
+
 
 
 // 路由
@@ -50,13 +59,29 @@ app.use('/api/tags', tagsRoutes);
 app.use('/api/users', usersRoutes);
 
 // 根路由
+app.use('/api', (req, res,) => {
+    // 如果找不到對應 API 的請求，返回 404 錯誤
+    res.status(404).json({ message: 'API 路徑未找到' });
+});
+app.use((err, req, res, next) => {
+    console.error('未處理的錯誤:', err);
+    if(!res.headersSent){
+        res.status(500).json({
+            message: '內部伺服器錯誤',
+            error: process.env.NODE_ENV === 'production' ? {} : err.message
+            });
+        }else{
+            next(err);
+        }
+    });
+// 捕獲所有其他前端路由
 app.get('*', (req, res) => {
-res.sendFile(path.join(__dirname,'public','index.html'));
+    res.sendFile(path.join(__dirname, 'dist/index.html'));
 });
 
 // 啟動伺服器
 const PORT = process.env.PORT || 5001;
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0',() => {
 console.log(`Server is running on port ${PORT}`);
 });

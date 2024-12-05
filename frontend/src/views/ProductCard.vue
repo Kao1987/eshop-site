@@ -24,7 +24,7 @@ export default {
         type: Object,
         required: true,
         validator: function(obj) {
-            return obj.id && obj.name && obj.price;
+            return obj.id && obj.name && obj.price && obj.image;
         }
         }
     },
@@ -34,8 +34,15 @@ export default {
         const productId = computed(() => String(props.product.id).trim());
         const productImageUrl = computed(() => `/api/${props.product.image}`);
         const formattedPrice = computed(() =>{
-            const price = parseInt(props.product.price);
-            return isNaN(price) ? 0 : price;
+            const price = parseFloat(props.product.price);
+                return isNaN(price) 
+            ? '0 元' 
+            : new Intl.NumberFormat('zh-TW', { 
+                style: 'currency', 
+                currency: 'TWD', 
+                minimumFractionDigits: 0, 
+                maximumFractionDigits: 0 
+            }).format(price);
         })
         // 方法
         const handleAddToCart = () => {

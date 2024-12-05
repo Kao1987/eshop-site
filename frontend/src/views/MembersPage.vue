@@ -96,6 +96,12 @@
     <!-- 編輯收件人 -->
     <div class="modal fade" id="recipientModal" ref="recipientModal" tabindex="-1" aria-labelledby="recipientModalLabel" aria-hidden="true">
         <div class="modal-dialog">
+            <div v-if="isLoadingRecipients" class="text-center">
+                <p>正在加載收件人資料...</p>
+            </div>
+            <div v-else-if="!recipients.length" class="text-center">
+                <p>目前尚未有收件人資料。</p>
+            </div>
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="recipientModalLabel">{{ isEditing ? '編輯收件人':'新增收件人' }}</h5>
@@ -136,7 +142,8 @@ export default {
         return {
             showRecipient:false,
             expandedOrder:null,
-            isEditing:false,            
+            isEditing:false,    
+            isLoadingRecipients:false,        
             recipients:[],
             editRecipient:{
                 name: ' ',
@@ -191,7 +198,6 @@ export default {
         async loadOrders(){
             try{
                 const userID = this.user.id;
-                console.log("用戶訂單ID：",userID); //檢查用戶
                 if(!userID){
                     console.error("用戶ID無效");  
                     return;
@@ -203,27 +209,42 @@ export default {
                 });
                 this.orders = response.data;   
             }catch(error){
-                console.error("加載訂單時出錯：",error);
-                alert("加載訂單失敗，請稍候再試");
+                console.error(
+            process.env.NODE_ENV === "development"
+                ? `加載訂單失敗：${error.message}`
+                : "加載訂單失敗，請稍候再試。"
+            );                
+            alert("加載訂單失敗，請稍候再試");
             }
         },
         async loadRecipients(){
+            this.isLoadingRecipients = true;
+
             try{
                 const userID = this.user.id;
                 const response = await axios.get(`/api/recipients`,{
-                    params: {
-                        user_id: userID,
-                    }
+                    params: {user_id: userID,}
                 });
                 this.recipients = response.data;
             }catch(error){
                 console.error('加載收件人時錯誤：',error);
+                this.recipients = [];
                 alert('加載收件人失敗，請稍候再試。')
+            }finally{
+                this.isLoadingRecipients = false;
             }
         },
         async saveRecipient(){
             try{
                 const userID = this.user.id;
+                const isRecipientValid = (recipient) => {
+                    const phoneRegex = /^[0-9]{10}$/; // 假設電話為 10 碼數字
+                    return recipient.name.trim() && phoneRegex.test(recipient.phone) && recipient.address.trim();
+                };
+                if (!isRecipientValid(this.editRecipient)) {
+                    alert('請檢查收件人資料是否完整且格式正確！');
+                    return;
+                }
                 if(this.isEditing){
                     // 編輯收件人
                     await axios.put(`/api/recipients/${this.editRecipient.id}`,{
@@ -270,6 +291,18 @@ export default {
             this.showModal();
         },
         toggleOrderDetails(index){
+            const order = this.orders[index];
+            if (!order.items || !order.items.length) {
+            alert('該訂單無法顯示細節！');
+            return;
+            }
+            // 確保所有訂單項目數據正確
+            const isOrderItemValid = (item) =>
+                item.name && item.quantity > 0 && item.price >= 0;
+            if (!order.items.every(isOrderItemValid)) {
+                alert('該訂單數據不完整，無法展開！');
+                return;
+            }
             this.expandedOrder = this.expandedOrder === index? null : index;
         },
         showModal() {
@@ -318,10 +351,22 @@ export default {
     .table td {
     vertical-align: middle;
     }
+    .table td:last-child {
+    width: 100px;
+    text-align: center;
+    }
+
 
     .modal-content {
     padding: 1rem;
     }
+    .modal-body.error-highlight {
+    border: 2px solid red;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #ffe6e6;
+}
+
     .product-thumbnail {
     max-width: 100px;  /* 限制圖片寬度 */
     max-height: 100px; /* 限制圖片高度 */

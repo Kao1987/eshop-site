@@ -1,7 +1,7 @@
 // backend/routes/tagsRoutes.js
 const express = require('express');
 const router = express.Router();
-const tagsController = require('../controllers/TagsController');
+const tagsController = require('../controllers/tagsController');
 
 // 獲取所有Tag
 router.get('/', tagsController.getAlltags);

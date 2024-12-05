@@ -19,7 +19,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(item, index) in cartItems" :key="item.id">
+                    <tr v-for="(item, index) in cartItems" :key="`${item.id}-${index}`">
                         <!-- 商品圖片，若無法家則顯示預設圖片 -->
                         <td>
                             <img :src="item.image" alt="item.name" class="product-image" @error="imageError"/>
@@ -41,7 +41,11 @@
             </table>
             <div class="d-flex justify-content-between align-items-center mt-4">
                 <h4>總計：{{ cartTotal }}元</h4>
-                <button class="btn btn-success" @click="checkout">結帳</button>
+                <button 
+                class="btn btn-success" 
+                :disabled="cartItems.length === 0"
+                @click="checkout"
+                >結帳</button>
             </div>
         </template>
     </div>
@@ -64,9 +68,10 @@ export default {
         const cartTotal = computed(() => store.getters['cart/cartTotal']);
         const isLoggedIn = computed(() => store.state.auth && store.state.auth.isLoggedIn);
 
-        // 方法
         const updateQuantity = (index, quantity) => {
-        if (quantity < 1) quantity = 1;
+        if (!Number.isInteger(quantity) || quantity < 1) {
+        quantity = 1; // 恢復為最小值
+        }
         store.dispatch('cart/updateItemQuantity', { index, quantity });
         };
         const imageError = (event)=>{
@@ -90,40 +95,56 @@ export default {
             });
             return;
         }
-        try {
-            // 數據檢查
-            const orderData = {
-                user_id:store.state.auth.user.id,
-                items: cartItems.value.map(item => ({
+         // 構造訂單數據
+        const orderData = {
+            user_id: store.state.auth.user.id,
+            items: cartItems.value.map(item => ({
                 product_id: item.id,
                 quantity: item.quantity,
-                price: item.price
+                price: item.price,
             })),
-            total: cartTotal.value
-            } 
-            
-            console.log('送出的訂單數據:',orderData);
-            const response = await axios.post('/api/orders',orderData);
-            if(response.data && response.data.orderId){
-                store.dispatch('cart/clearShoppingCart');
-                store.dispatch('notifications/showNotification', {
+            total: cartTotal.value,
+        };
+        const validateOrderData = (orderData) => {
+        if (!Array.isArray(orderData.items) || orderData.items.length === 0) {
+            throw new Error('訂單商品數據不正確');
+        }
+        if (typeof orderData.total !== 'number' || orderData.total <= 0) {
+            throw new Error('訂單總計金額不正確');
+        }
+        if (!orderData.user_id) {
+            throw new Error('用戶未登入或用戶ID缺失');
+        }
+        };
+
+        try {
+        validateOrderData(orderData); // 執行數據檢查
+
+        // 提交訂單
+        console.log('送出的訂單數據:', orderData);
+        const response = await axios.post('/api/orders', orderData);
+
+        // 訂單提交成功後的處理
+        if (response.data && response.data.orderId) {
+            store.dispatch('cart/clearShoppingCart');
+            store.dispatch('notifications/showNotification', {
                 type: 'success',
                 message: '訂單已成功提交！',
-                timeout: 2000
-                });
-                
-                router.push({ 
-                name: 'OrderConfirmation', 
-                params: { orderId: response.data.orderId }
-                });
-            }
-        } catch (error) {
-            console.error('提交訂單時出錯', error);
-            store.dispatch('notifications/showNotification', {
-            type: 'error',
-            message: '提交訂單失敗，請稍後再試！'
+                timeout: 2000,
+            });
+
+            router.push({
+                name: 'OrderConfirmation',
+                params: { orderId: response.data.orderId },
             });
         }
+    } catch (error) {
+        console.error('提交訂單數據檢查失敗:', error);
+        store.dispatch('notifications/showNotification', {
+            type: 'error',
+            message: '提交訂單失敗，請稍後再試！',
+        });
+    }
         };
 
         return {
@@ -148,9 +169,6 @@ export default {
 width:80px;
 text-align: center;
 }
-.table-hover today tr:hover{
-    background: #f1f1f1;
-}
 
 .product-image{
     width:60px;
@@ -172,6 +190,5 @@ text-align: center;
 input[type="number"]{
     width:80px;
 }
-
 
 </style>

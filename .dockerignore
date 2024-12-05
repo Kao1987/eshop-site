@@ -1,0 +1,5 @@
+# .dockerigrone
+node_modules
+.git
+.env
+*.log

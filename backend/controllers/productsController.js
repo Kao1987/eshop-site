@@ -90,11 +90,13 @@ exports.createProduct = async (req, res)=>{
 // 獲取所有產品
 exports.getAllProducts = async (req, res) => {
   try {
-    const [rows] = await pool.query(`SELECT p.*, 
-      GROUP_CONCAT(t.name) AS tags FROM products p
+    const [rows] = await pool.query(`
+      SELECT p.id, p.name, p.description, p.price, p.stock,  
+      GROUP_CONCAT(t.name) AS tags 
+      FROM products p
       LEFT JOIN product_tags pt ON p.id = pt.product_id
       LEFT JOIN tags t ON pt.tag_id = t.id
-      GROUP BY p.id
+      GROUP BY p.id, p.name, p.description, p.price,p.stock
       `);
 
     const products = rows.map(product => {
@@ -104,10 +106,10 @@ exports.getAllProducts = async (req, res) => {
       };
     });
 
-    res.json(products);
+    res.status(200).json(products);
   } catch (error) {
     console.error('獲取產品時出錯',error);
-    res.status(500).json({ message: '伺服器錯誤' });
+    res.status(500).json({ message: '伺服器錯誤',error:error.toString() });
   }
 };
 
