@@ -32,6 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/static', express.static(path.join(__dirname, 'public','img')));
 app.use('/img', express.static(path.join(__dirname, 'public', 'img'))); // 新增：將 /img 路徑指向 public/img
 app.use('/static', express.static(path.join(__dirname, 'public'))); // 保留其他靜態資源
+app.use('/img/products', express.static(path.join(__dirname, 'public', 'img', 'products')));
 
 // app.use('/api/static/img', express.static(path.join(__dirname, 'public', 'img')));
 // app.use('/public', express.static(path.join(__dirname, 'public')));
