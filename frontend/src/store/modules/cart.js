@@ -15,8 +15,8 @@ export default {
     mutations: {
         addToCart(state, product) {
             const price = Number(product.price);
-            if(isNaN(price)){
-                console.error('Invalid price value');
+            if(isNaN(price)||!product.id||!product.name){
+                console.error('Invalid price value',product);
                 return;
             }
             const existingItem = state.items.find(item => item.id === product.id);
@@ -27,7 +27,7 @@ export default {
                     id: product.id,
                     name: product.name,
                     price: price,
-                    image: product.image,
+                    image: product.image ||'/backend/public/img/wrong.png',
                     quantity: 1
                 });
             }

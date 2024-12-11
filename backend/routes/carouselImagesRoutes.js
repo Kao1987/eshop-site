@@ -15,7 +15,17 @@ const storage = multer.diskStorage({
     cb(null,uniqueSuffix + path.extname(file.originalname));
     }
 });
-const upload = multer({storage:storage});
+const upload = multer({
+    storage:storage,
+    fileFilter: (req, file, cb) => {
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!validTypes.includes(file.mimetype)) {
+        return cb(new Error('僅支援JPEG, PNG, GIF 格式的圖片！'), false);
+    }
+    cb(null, true);
+    },
+    limits: { fileSize: 5 * 1024 * 1024 },
+});
 
 // 新增輪播圖
 router.post('/',upload.single('image'), carouselImagesController.createCarouselImage);

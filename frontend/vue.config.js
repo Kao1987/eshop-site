@@ -1,55 +1,47 @@
-const { defineConfig } = require('@vue/cli-service')
-const webpack = require('webpack')
-const path = require('path')
-module.exports = defineConfig({
-  publicPath: '/',
-  outputDir:'dist',
-  lintOnSave:false,
-  transpileDependencies: true,
-  configureWebpack: {
-    resolve:{
-      alias:{
-        '@':path.resolve(__dirname, 'src')
-      }
-    },
-    plugins:[
-      new webpack.DefinePlugin({
-        __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: JSON.stringify(false),
-        __VUE_OPTIONS_API__: JSON.stringify(true),
-        __VUE_PROD_DEVTOOLS__: JSON.stringify(false),
-      })
-    ]
-  },
-  devServer:{
-    port:8081,
-    proxy:{
-      '/api': {
-          target:'http://localhost:5001',
-          changeOrigin: true,
-          pathRewrite: { '^/api': '' },
-          secure: false, // 如果使用 HTTPS，但目標未加密，設置為 false
-          logLevel: 'debug',  // 增加此行來獲取更多的 debug 信息
-          onError(err, req, res) {
-            console.error('Proxy error:', err);
-            res.writeHead(500, {
-              'Content-Type': 'text/plain'
-            });
-            res.end('Something went wrong. And we are reporting a custom error message.');
-          }
+    const { defineConfig } = require('@vue/cli-service');
+    const webpack = require('webpack');
+    const path = require('path');
+
+    module.exports = defineConfig({
+    publicPath: '/', // 設置基礎路徑
+    outputDir: 'dist', // 打包輸出目錄
+    lintOnSave: false, // 停止代碼 lint 檢查
+    transpileDependencies: true, // 編譯依賴
+
+    configureWebpack: {
+        resolve: {
+        alias: {
+            '@': path.resolve(__dirname, 'src'), // 簡化引用 src 的路徑
         },
-      '/img':{
-        target:'http://localhost:5001',
-        changeOrigin:true,
-        pathRewrite:{'^/api/img': '/img'},
+        },
+        plugins: [
+        new webpack.DefinePlugin({
+            __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: JSON.stringify(false),
+            __VUE_OPTIONS_API__: JSON.stringify(true),
+            __VUE_PROD_DEVTOOLS__: JSON.stringify(false),
+        }),
+        ],
+        optimization: {
+            splitChunks: {
+                chunks: 'all',
+                minSize: 20000,
+                maxSize: 250000,
+            }
+        },
+        // 資產大小警告
+        performance: {
+            hints: false,
+        },
+        // 加入 stats 設定為 'errors-only' 或 'minimal'
+        stats: 'errors-only' // 只顯示錯誤訊息   
+        // 或者使用 'minimal' 來顯示較少但不只有錯誤的資訊
 
-      },
-      '/static': {
-        target: 'http://localhost:5001',
-        changeOrigin: true,
-        pathRewrite:{'^/static': ''},
+    },
 
-      },
-    }
-  },
-  productionSourceMap: false  // 生產環境不生成 source map
-})
+    devServer: {
+        port: 8081, // 設置開發伺服器埠號
+    },
+
+    productionSourceMap: false, // 生產環境不生成 source map
+    assetsDir: 'static',
+    });

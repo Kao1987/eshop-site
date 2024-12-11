@@ -129,7 +129,8 @@
 <script>
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import axios from 'axios';
+import { productAPI } from '@/services/api';
+import { orderAPI } from '@/services/api';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
 
@@ -188,13 +189,10 @@ export default{
                     productForm.description = product.description;
                     productForm.price = product.price;
                     productForm.stock = product.stock;
-                    productForm.imagePreview = product.image ?  `/api/${product.image}`: '';
+                    productForm.imagePreview = product.image ?  `/${product.image}`: '';
 
                     if(product.brand_id){
-                        const selectedBrand= brands.value.find(
-                            brand => Number(brand.id) === Number(product.brand_id)
-                        );
-                        productForm.brand_id = selectedBrand ? selectedBrand.id : null;
+                        productForm.brand_id = Number(product.brand_id);
                     }
                     if(product.tag_ids && Array.isArray(product.tag_ids)){
                         productForm.tag_ids = product.tag_ids.map(id => Number(id));
@@ -212,17 +210,37 @@ export default{
                     isLoading.value = false;
                 }
             };
-
             const updateProduct = async () => {
                 try{
+                    // 檢查每個必要欄位是否存在
+                    if (!productForm.name) {
+                        alert('請填寫商品名稱');
+                        return;
+                    }
+                    if (!productForm.description) {
+                        alert('請填寫商品描述');
+                        return;
+                    }
+                    if (!productForm.price || isNaN(productForm.price)) {
+                        alert('請填寫有效的商品價格');
+                        return;
+                    }
+                    if (!productForm.stock || isNaN(productForm.stock)) {
+                        alert('請填寫有效的商品庫存');
+                        return;
+                    }
+                    if (!productForm.brand_id || isNaN(productForm.brand_id)) {
+                        alert('請選擇一個有效的廠牌');
+                        return;
+                    }
                     const formData = new FormData();
                     formData.append('name', productForm.name);
                     formData.append('description', productForm.description);
                     formData.append('price', productForm.price);
                     formData.append('stock', productForm.stock);
-                    formData.append('brand_id', productForm.brand_id?.id);
-                    formData.append('tag_ids', JSON.stringify(productForm.tag_ids.map(tag => tag.id)));
-                    
+                    formData.append('brand_id', productForm.brand_id);
+                    formData.append('tag_ids', JSON.stringify(productForm.tag_ids));
+
                     if(productForm.imageFile){
                         formData.append('image', productForm.imageFile);
                     }
@@ -233,7 +251,7 @@ export default{
                         }
                     });
                     alert('更新商品成功！');
-                    router.push('/products');
+                    router.push({name:'AdminProducts'});
                 }catch(error){
                     console.error('更新商品時出錯:',error);
                     alert('更新商品時出錯，請稍後再試！');

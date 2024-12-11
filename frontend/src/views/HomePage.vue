@@ -106,7 +106,8 @@
 </template>
 
 <script>
-import axios from 'axios';
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler';
 import * as bootstrap from 'bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
 
@@ -195,9 +196,11 @@ export default {
         async loadSalesData(){
             this.isLoading.sales = true;
             try{
+                console.log(this.$axios.defaults.baseURL); // 打印 Axios 的 baseURL
+
                 const [sevenDaysResponse, monthResponse] = await Promise.all([
-                    axios.get('/api/sales/ranking',{params:{days:7}}),
-                    axios.get('/api/sales/ranking',{params:{days:30}}),
+                    this.$axios.get('/api/ranking',{params:{days:7}}),
+                    this.$axios.get('ranking',{params:{days:30}}),
                 ]);
                 const sevenDaysSales = sevenDaysResponse.data || [];
                 const monthSales = monthResponse.data || [];
@@ -295,13 +298,13 @@ export default {
 
                 const interval = setInterval(()=> {
                     if (offer.countdown > 0) {
-                this.$set(this.specialOffers, index, {
-                    ...offer,
-                    countdown: offer.countdown - 1,
-                });
-            } else {
-                clearInterval(interval);
-            }
+                        this.specialOffers[index] = {
+                        ...offer,
+                        countdown: offer.countdown - 1,
+                        };
+                    } else {
+                        clearInterval(interval);
+                    }
         }, 1000);
                     this.countdownIntervals.push(interval);
             });

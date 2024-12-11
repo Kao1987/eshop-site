@@ -4,15 +4,16 @@ const pool = require('../config/db');
 // 獲取所有收件人
 exports.getAllrecipients = async (req, res) => {
   try {
-    const {userId} = req.query;
+    const {user_id} = req.query;
     let query = 'SELECT * FROM recipients';
     const params = [];
-      if(userId){
+
+      if(user_id){
         query += ' WHERE user_id =?';
-        params.push(userId);
+        params.push(user_id);
       }    
       const[rows] = await pool.query(query,params);
-      res.json(rows);
+      res.json({ success: true, data: rows });
     }catch (error) {
     console.error(error);
     res.status(500).json({ message: '伺服器錯誤' });

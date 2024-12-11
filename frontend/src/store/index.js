@@ -1,16 +1,15 @@
 // src/store/index.js
 import { createStore } from 'vuex';
 import cart from './modules/cart';
-import createPersistedState from 'vuex-persistedstate';
 import auth from './modules/auth';
-import notifications from './modules/notifications';
+import notification from './modules/notification';
+import createPersistedState from 'vuex-persistedstate';
 
 export default createStore({
-    modules:{
+    modules: {
         cart,
         auth,
-        notifications,
+        notification
     },
-
     plugins: [createPersistedState()]
-})
+});

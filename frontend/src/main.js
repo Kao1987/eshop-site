@@ -1,3 +1,4 @@
+// main.js
 import { createApp } from 'vue';
 import App from './App.vue';
 import ElementPlus from 'element-plus';
@@ -10,27 +11,19 @@ import router from './router';
 import axios from 'axios';
 import store from './store';
 import 'bootstrap-vue-3/dist/bootstrap-vue-3.css'
-
-
+import 'bootstrap-icons/font/bootstrap-icons.css'
+import request from '@/utils/request';
 
 
 const app = createApp(App);
 
-axios.defaults.baseURL = '/api';
-// // 添加錯誤攔截器進行全域錯誤處理
-// axios.interceptors.response.use(config=>{
-//     if (config.url.startsWith('/api/')) {
-//         config.url = config.url.slice(5);
-//     }
-//     return config;
-// });
+// 掛載全域 Axios
+app.config.globalProperties.$axios = request;
 
-app.config.globalProperties.$axios = axios;
-
+// 使用插件
 app.use(router);
 app.use(store);
 app.use(ElementPlus);
 app.use(BootstrapVue3);
-
 
 app.mount('#app');

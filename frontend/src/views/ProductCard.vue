@@ -4,7 +4,7 @@
             <router-link :to="{name: 'ProductDetail',params:{id:productId}}">
             <img :src="productImageUrl" class="product-image" alt="Product Image" @error="imageError">
             <h5 class="card-title">{{ product.name }}</h5>
-            <p class="card-text">{{ parseInt(product.price) }} 元</p>  
+            <p class="card-text">{{ formattedPrice }} 元</p>  
             </router-link>
             <button class="btn btn-primary" 
             @click="handleAddToCart"
@@ -16,6 +16,7 @@
     
 <script>
 import { computed , ref } from 'vue';
+import ApiService from '@/services/api';
 
 export default {
     name: 'ProductCard',
@@ -23,19 +24,28 @@ export default {
         product: {
         type: Object,
         required: true,
-        validator: function(obj) {
-            return obj.id && obj.name && obj.price && obj.image;
-        }
+            validator: function(obj) {
+                const requiredFields = ['id', 'name', 'price', 'image'];
+                const hasAllFields = requiredFields.every(field => field in obj);
+                if (!hasAllFields) return false;
+                // 檢查資料型別和值
+                return (
+                    typeof obj.id === 'string' || typeof obj.id === 'number' &&
+                    typeof obj.name === 'string' && obj.name.trim() !== '' &&
+                    typeof obj.price === 'number' && obj.price >= 0 &&
+                    typeof obj.image === 'string' && obj.image.trim() !== ''
+                );
+            }
         }
     },
     setup(props, {emit}) {
         // 計算屬性
         const isAdding = ref(false);
         const productId = computed(() => String(props.product.id).trim());
-        const productImageUrl = computed(() => `/api/${props.product.image}`);
+        const productImageUrl = computed(() => props.product.image ? `/${props.product.image}` : '/backend/public/img/wrong.png');
         const formattedPrice = computed(() =>{
-            const price = parseFloat(props.product.price);
-                return isNaN(price) 
+        const price = parseFloat(props.product.price);
+            return isNaN(price) 
             ? '0 元' 
             : new Intl.NumberFormat('zh-TW', { 
                 style: 'currency', 
@@ -44,7 +54,6 @@ export default {
                 maximumFractionDigits: 0 
             }).format(price);
         })
-        // 方法
         const handleAddToCart = () => {
             if(isAdding.value) return;
 
@@ -56,7 +65,7 @@ export default {
             }, 1000); // 1 秒後重製按鈕
         };
         const imageError = (event) => {
-        event.target.src = '/img/wrong.png'; // 預設圖片
+            event.target.src = '/img/wrong.png'; // 預設圖片
         };
 
         return {

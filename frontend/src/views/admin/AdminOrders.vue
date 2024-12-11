@@ -68,7 +68,8 @@
 </template>
 
 <script>
-import axios from 'axios';
+import { productAPI } from '@/services/api';
+import { orderAPI } from '@/services/api';
 import debounce from 'lodash.debounce';
 
 export default {

@@ -1,9 +1,15 @@
 <template> 
     <div class="admin-dashboard container mt-5">
         <h2 class="text-center">商品管理</h2>
-        <div class="d-flex justify-content-end mb-3">
-            <router-link to="/admin/CreateProduct" class="btn btn-success">新增商品</router-link>
-            <router-link to="/admin/SpecialOffers" class="btn btn-primary">特價商品管理</router-link>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="btn-group shadow-sm">
+                <router-link to="/admin/CreateProduct" class="btn btn-success d-flex align-items-center">
+                    <i class="bi bi-plus-circle me-2"></i>新增商品
+                </router-link>
+                <router-link to="/admin/SpecialOffers" class="btn btn-primary d-flex align-items-center">
+                    <i class="bi bi-tag me-2"></i>特價商品
+                </router-link>
+            </div>
         </div>
         <!-- 商品管理 -->
         <div v-if="isSectionOpen.products" class="accordion" id="productAccordion">
@@ -23,32 +29,38 @@
                         data-bs-parent="#productAccordion">
                     <div class="accordion-body">
                         <!-- 換頁控制區 -->
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <label for="itemsPerPage">每頁顯示：</label>
-                                <select v-model.number="itemsPerPage" id="itemsPerPage">
-                                    <option v-for="option in itemsPerPageOptions" :key="option" :value="option">{{ option }}</option>
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">商品清單</h5>
+                            <div class="d-flex align-items-center">
+                                <label class="me-2">每頁顯示：</label>
+                                <select v-model.number="itemsPerPage" class="form-select form-select-sm w-auto">
+                                    <option v-for="option in itemsPerPageOptions" :key="option" :value="option">
+                                        {{ option }}
+                                    </option>
                                 </select>
                             </div>
-                            <div>
-                                <button 
-                                    class="btn btn-primary btn-sm me-2" 
-                                    :disabled="currentPage === 1" 
-                                    @click="currentPage--"
-                                >上一頁
-                                </button>
-                                <span>第 {{ currentPage }} 頁，共 {{ totalPages }} 頁</span>
-                                <button 
-                                    class="btn btn-primary btn-sm ms-2" 
-                                    :disabled="currentPage === totalPages" 
-                                    @click="currentPage++"
-                                >下一頁
-                                </button>
+                            <!-- 分頁區域控制 -->
+                            <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                                <div>第 {{ currentPage }} 頁，共 {{ totalPages }} 頁</div>
+                                    <button 
+                                        class="btn btn-outline-secondary" 
+                                        :disabled="currentPage === 1" 
+                                        @click="currentPage--"
+                                    >
+                                        上一頁
+                                    </button>
+                                    <button 
+                                        class="btn btn-outline-secondary" 
+                                        :disabled="currentPage === totalPages" 
+                                        @click="currentPage++"
+                                    >
+                                        下一頁
+                                    </button>
                             </div>
                         </div>
                         <table class="table">
                             <thead>
-                                <tr>
+                                <tr class="text-nowrap text-center">
                                     <th>商品名稱</th>
                                     <th>價格</th>
                                     <th>庫存</th>
@@ -58,13 +70,58 @@
                             </thead>
                             <tbody>
                                 <tr v-for="(product,index) in paginatedProducts" :key="product.id">
-                                <td>{{ product.name }}</td>
-                                <td>{{ product.price }}</td>
-                                <td>{{ product.stock }}</td>
-                                <td>{{ product.description }}</td>
-                                <td>
-                                    <router-link :to="{ name:'EditProduct', params: { id: product.id } }" class="btn btn-warning btn-sm" >編輯</router-link>
-                                    <button class="btn btn-danger btn-sm ms-2" @click="deleteProduct(product.id, index)">刪除</button>
+                                    <td>
+                                        <div class="product-name-container text-truncate" style="max-width: 150px;">
+                                            <p class="product-name mb-1">
+                                                {{ product.name }}
+                                            </p>
+                                        <button 
+                                            v-if="product.name.length > 20" 
+                                            class="btn btn-link btn-sm p-0"
+                                            @click="toggleName(product)"
+                                        >
+                                            {{ product.isNameExpanded ? '收起' : '查看更多' }}
+                                        </button>
+                                    </div>
+                                    </td>
+                                <td>NT${{ Math.round(product.price) }}</td>
+                                <td class="text-nowrap text-center">
+                                    <span :class="product.stock <= 10 ? 'text-danger' : 'text-success'">
+                                        {{ product.stock }}
+                                    </span>
+                                </td>
+                                <td>            
+                                    <div class="product-description-container">
+                                        <p class="product-description mb-1" 
+                                            :class="{'expanded':product.isDescriptionExpanded}"
+                                            style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;"
+                                        >
+                                            {{ product.isDescriptionExpanded ? product.description : product.description.slice(0,50) + '...' }}
+                                        </p>
+                                        <button 
+                                            v-if="product.description.length > 50" 
+                                            class="btn btn-link btn-sm p-0"
+                                            @click="toggleDescription(product)"
+                                        >
+                                            {{ product.isDescriptionExpanded ? '收起' : '查看更多' }}
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <div class="d-flex justify-content-center">
+                                        <router-link 
+                                            :to="{ name:'EditProduct', params: { id: product.id } }" 
+                                            class="btn btn-warning btn-sm me-2" 
+                                        >
+                                            編輯
+                                        </router-link>
+                                        <button 
+                                            class="btn btn-danger btn-sm" 
+                                            @click="deleteProduct(product.id, index)"
+                                        >
+                                            刪除
+                                        </button>
+                                    </div>
                                 </td>
                                 </tr>
                             </tbody>
@@ -204,7 +261,8 @@
     </div>
 </template>
 <script>
-import axios from 'axios';
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler';
 import { Modal } from 'bootstrap';
 
     export default{
@@ -254,50 +312,50 @@ import { Modal } from 'bootstrap';
             // 加載產品列表
             async loadProducts(){
                 try{
-                    const response = await axios.get(`/api/products`);
-                    this.products = response.data;
+                    const response = await ApiService.productAPI.getAllProducts();
+                    console.log(response); // 添加這行
 
+                    this.products = response.map(product => ({
+                        ...product,
+                        isDescriptionExanded: false
+                    }));
                     if(this.currentPage > this.totalPages){
                         this.currentPage = this.totalPages || 1;
                     }
                 }catch(error){
-                    console.error('加載產品時出錯',error);
-                    alert('加載產品時出錯，請稍候再試！');
+                    handleApiError(error, '加載產品時出錯，請稍後再試！');
                 }
             },
             // 加載標籤列表
             async loadTags(){
                 try{
-                    const response = await axios.get('/api/tags');
-                    this.tags = response.data; 
+                    const response = await ApiService.tagAPI.getAllTags();
+                    this.tags = response; 
                 }catch(error){
-                    console.error('加載標籤時錯誤',error);
-                    alert('加載標籤時錯誤，請稍候再試！');
+                    handleApiError(error, '加載標籤時錯誤，請稍候再試！');
                 }
             },
             // 加載廠牌列表
             async loadBrands(){
                 try{
-                    const response = await axios.get('/api/brands');
-                    this.brands = response.data;
+                    const response = await ApiService.brandAPI.getAllBrands();
+                    this.brands = response;
                 }catch(error){
-                    console.error('加載廠牌時出錯',error);
-                    alert('加載廠牌時出錯，請稍候再試！');
+                    handleApiError(error, '加載廠牌時出錯，請稍候再試！');
                 }
             },
             // 保存或更新標籤
             async saveTag() {
             try {
                 if (this.isEditingTag) {
-                    await axios.put(`/api/tags/${this.tagForm.id}`, this.tagForm);
+                    await ApiService.tagAPI.updateTag(this.tagForm.id, this.tagForm);
                     this.tags[this.currentIndex] = { ...this.tagForm };
                 } else {
-                    const response = await axios.post('/api/tags', this.tagForm);
+                    const response = await ApiService.tagAPI.createTag(this.tagForm);
                     this.tags.push(response.data);
                 }
             } catch (error) {
-                console.error('保存標籤時出錯！', error);
-                alert('保存標籤時出錯，請稍候再試');
+                handleApiError(error, '保存標籤時出錯，請稍候再試！');
             }
             this.closeTagModal();
             },
@@ -305,15 +363,14 @@ import { Modal } from 'bootstrap';
             async saveBrand() {
             try {
                 if (this.isEditingBrand) {
-                await axios.put(`/api/brands/${this.brandForm.id}`, this.brandForm);
+                await ApiService.brandAPI.updateBrand(this.brandForm.id, this.brandForm);
                 this.brands[this.currentIndex] = { ...this.brandForm };
             } else {
-                const response = await axios.post('/api/brands', this.brandForm);
+                const response = await ApiService.brandAPI.createBrand(this.brandForm);
                 this.brands.push(response.data);
             }
             } catch (error) {
-                console.error('保存廠牌時出錯！', error);
-                alert('保存廠牌時出錯，請稍候再試');
+                handleApiError(error, '保存廠牌時出錯，請稍候再試！');
             }
             this.closeBrandModal();
             },
@@ -321,11 +378,10 @@ import { Modal } from 'bootstrap';
             async deleteProduct(productId, index){
                 if(confirm('確定要刪除此商品？')){
                     try{
-                        await axios.delete(`/api/products/${productId}`);  //送出刪除request
+                        await ApiService.productAPI.deleteProduct(productId);  //送出刪除request
                         this.products.splice(index,1);  //從列表中刪除此商品
                     }catch(error){
-                        console.error('刪除產品時出錯',error);
-                        alert('刪除產品時出錯，請稍候再試！');
+                        handleApiError(error, '刪除產品時出錯，請稍後再試！');
                     }
                 }
             }, 
@@ -333,11 +389,10 @@ import { Modal } from 'bootstrap';
             async deleteTag(tagId, index) {
             if (confirm('確定要刪除此標籤？')) {
                 try {
-                await axios.delete(`/api/tags/${tagId}`);
+                await ApiService.tagAPI.deleteTag(tagId);
                 this.tags.splice(index, 1);
                 } catch (error) {
-                console.error('刪除標籤時出錯',error);
-                alert('刪除標籤時出錯，請稍候再試！');
+                    handleApiError(error, '刪除標籤時出錯，請稍後再試！');
                 }
             }
             },
@@ -345,11 +400,10 @@ import { Modal } from 'bootstrap';
             async deleteBrand(brandId, index) {
             if (confirm('確定要刪除此廠牌？')) {
                 try {
-                await axios.delete(`/api/brands/${brandId}`);
+                    await ApiService.brandAPI.deleteBrand(brandId);
                 this.brands.splice(index, 1);
                 } catch (error) {
-                console.error('刪除廠牌時出錯',error);
-                alert('刪除廠牌時出錯，請稍候再試！');
+                    handleApiError(error, '刪除廠牌時出錯，請稍後再試！');
                 }
             }
             },
@@ -398,6 +452,13 @@ import { Modal } from 'bootstrap';
                     modalInstance.hide();
                 }
             },
+            // 商品描述展開
+            toggleDescription(product) {
+                product.isDescriptionExpanded = !product.isDescriptionExpanded;
+            },
+            toggleName(product) {
+            product.isNameExpanded = !product.isNameExpanded;
+            },
         },
         watch:{
             itemsPerPage(){
@@ -408,13 +469,50 @@ import { Modal } from 'bootstrap';
 };
 </script>
 <style scoped>
-.admin-dashboard{
-    max-width:1200px;
-    margin:0 auto;
-    min-height:100vh;
+.product-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-.admin-products{
-    max-width:800px;
-    margin:0 auto;
+
+.product-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px;
+    gap: 15px;
+}
+
+.product-thumbnail {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    margin-right: 15px;
+}
+
+.product-content {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.product-content.expanded {
+    display: block;
+    overflow: visible;
+}
+
+
+.admin-dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+.btn-group > .btn {
+    display: inline-flex;
+    align-items: center;
 }
 </style>

@@ -19,7 +19,6 @@
                     {{ image.visible ? '隱藏' : '顯示' }}
                 </button>
                 </div>
-
             </div>
         </div>
             <!-- 圖鑑上傳區 -->
@@ -43,6 +42,8 @@
 </template>
 
 <script>
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler';
 import axios from 'axios';
 
 export default {
@@ -60,11 +61,10 @@ export default {
     methods: {
         async loadCarouselImages() {
             try {
-                const response = await axios.get('/api/carousel_images');
-                this.carouselImages = response.data || [];
+                const response = await ApiService.carouselAPI.getCarouselImages();
+                this.carouselImages = response;
             } catch (error) {
-                console.error('加載輪播圖片失敗', error);
-                alert('加載輪播圖片失敗！');
+                handleApiError(error,'加載輪播圖片失敗');
             }
         },
         handleFileSelect(event){
@@ -93,17 +93,12 @@ export default {
             formData.append('image',this.selectedFile);
 
             try {
-                const response = await axios.post('/api/carousel_images', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
-                this.carouselImages.push(response.data);
+                const response = await ApiService.carouselAPI.uploadCarouselImages(formData);
+                this.carouselImages.push(response);
                 alert('圖片上傳成功');
                 this.resetUpload();
             } catch (error) {
-                console.error('圖片上傳失敗', error);
-                alert('圖片上傳失敗!');
+                handleApiError(error,'圖片上傳失敗');
             }
         },
         cancelUpload(){
@@ -117,33 +112,33 @@ export default {
         async deleteCarouselImage(imageId) {
             if (confirm('確定要刪除這張圖片嗎？')) {
                 try {
-                    await axios.delete(`/api/carousel_images/${imageId}`);
+                    await ApiService.carouselAPI.deleteCarouselImage(imageId);
                     this.carouselImages = this.carouselImages.filter(
                         (image => image.id !== imageId));
                     alert('圖片已刪除。');
                 } catch (error) {
-                    console.error('圖片刪除失敗', error);
-                    alert('圖片刪除失敗！請稍後再試。');
+                    handleApiError(error, '圖片刪除失敗');
                 }
             }
         },
         async toggleImageVisibility(image){
             const updatedVisibility =!image.visible;
             try{
-                await axios.put(`/api/carousel_images/${image.id}`,{
-                    visible: updatedVisibility,
-                });
-                image.visible = updatedVisibility;
+                await ApiService.carouselAPI.updateCarouselImage(image.id,{visible:updatedVisibility});
+                image.visible = response.data.visible;
                 alert(`圖片已${updatedVisibility ? '顯示' : '隱藏'}。`);
-            }catch (error){
-                console.error('更新圖片狀態失敗', error);
-                alert('更新圖片狀態失敗！');
+            }catch(error) {
+                handleApiError(error,'更新圖片狀態失敗');
             }
         },
-        getImageUrl(url){
-            return `/api/${url}`;
-        },
-    },
+        getImageUrl(url) {
+            if (url.startsWith('http')) {
+                return url;
+            }else {
+                return `http://localhost:5002${url}`;
+            }
+                }
+            },
 };
 </script>
 

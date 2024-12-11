@@ -105,7 +105,8 @@
 </template>
 
 <script>
-import axios from 'axios';
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler';
 import { Modal } from 'bootstrap';
 import debounce from 'lodash.debounce';
 
@@ -138,11 +139,10 @@ export default {
         // 加載特價商品列表
         async loadSpecialOffers() {
             try {
-                const response = await axios.get('/api/special-offers');
+                const response = await ApiService.specialOffersAPI.getAllSpecialOffers();
                 this.specialOffers = response.data;
             } catch (error) {
-                console.error('加載特價商品時出錯', error);
-                alert('加載特價商品時出錯，請稍後再試！');
+                handleApiError(error, '加載特價商品時出錯，請稍後再試！');
             }
         },
         // 新增特價商品時搜尋
@@ -152,7 +152,7 @@ export default {
                 return;
             }
             try{
-                const response = await axios.get('/api/products/search',{
+                const response = await ApiService.productAPI.searchProducts({
                     params:{
                         keyword:this.productSearchKeyword,
                         page:1,
@@ -161,8 +161,7 @@ export default {
                 });
                 this.searchResults = response.data;
             }catch(error){
-                console.error('搜尋商品時出錯', error);
-                alert('搜尋商品時出錯，請稍後再試！');
+                handleApiError(error, '搜尋商品時出錯，請稍後再試！');
             }
         },
         // 選擇商品
@@ -180,11 +179,10 @@ export default {
         // 加載商品列表以供選擇
         async loadProducts() {
             try {
-                const response = await axios.get('/api/products');
+                const response = await ApiService.productAPI.getAllProducts();
                 this.products = response.data;
             } catch (error) {
-                console.error('加載商品時出錯', error);
-                alert('加載商品時出錯，請稍後再試！');
+                handleApiError(error, '加載商品時出錯，請稍後再試！');
             }
         },
         // 格式化日期
@@ -222,11 +220,10 @@ export default {
             const offer = { ...this.specialOffers[index] };
             this.specialOfferForm = offer;
             try{
-                const response = await axios.get(`/api/products/${offer.product_id}`);
+                const response = await ApiService.productAPI.getProductById(offer.product_id);
                 this.selectedProduct = response.data;
             }catch{
-                console.error('取得商品資訊時出錯！');
-                alert('取得商品資訊時出錯，請稍後再試！');
+                handleApiError(error, '取得商品資訊時出錯，請稍後再試！');
             }
             this.productSearchKeyword = '';
             this.searchResults = [];
@@ -241,11 +238,10 @@ export default {
                 return this.selectedProduct.name;
             }            
             try{
-                const response = await axios.get(`/api/products/${productId}`);
+                const response = await ApiService.productAPI.getProductById(productId);
                 return response.data.name;
             }catch(error){
-                console.error('取得商品名稱時出錯！');
-                alert('取得商品名稱時出錯，請稍候再試！');
+                handleApiError(error, '取得商品名稱時出錯，請稍後再試！');
                 return '未知商品';
             }
         },
@@ -267,31 +263,29 @@ export default {
             try {
                 if (this.isEditing) {
                     // 更新特價商品
-                    await axios.put(`/api/special-offers/${this.specialOfferForm.id}`, this.specialOfferForm);
+                    await ApiService.specialOffersAPI.updateSpecialOffer(this.specialOfferForm.id, this.specialOfferForm);
                     this.specialOffers[this.currentIndex] = { ...this.specialOfferForm };
                     alert('特價商品已更新！');
                 } else {
                     // 新增特價商品
-                    const response = await axios.post('/api/special-offers', this.specialOfferForm);
+                    const response = await ApiService.specialOffersAPI.createSpecialOffer(this.specialOfferForm);
                     this.specialOffers.push(response.data);
                     alert('特價商品已新增！');
                 }
                 this.closeSpecialOfferModal();
             } catch (error) {
-                console.error('保存特價商品時出錯！', error);
-                alert('保存特價商品時出錯，請稍後再試！');
+                handleApiError(error, '保存特價商品時出錯，請稍後再試！');
             }
         },
         // 刪除特價商品
         async deleteSpecialOffer(offerId, index) {
             if (confirm('確定要刪除此特價商品？')) {
                 try {
-                    await axios.delete(`/api/special-offers/${offerId}`);
+                    await ApiService.specialOffersAPI.deleteSpecialOffer(offerId);
                     this.specialOffers.splice(index, 1);
                     alert('特價商品已刪除！');
                 } catch (error) {
-                    console.error('刪除特價商品時出錯', error);
-                    alert('刪除特價商品時出錯，請稍後再試！');
+                    handleApiError(error, '刪除特價商品時出錯，請稍後再試！');
                 }
             }
         }

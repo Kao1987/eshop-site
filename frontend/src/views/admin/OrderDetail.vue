@@ -50,7 +50,8 @@
 </template>
     
 <script>
-    import axios from 'axios';
+    import { productAPI } from '@/services/api';
+    import { orderAPI } from '@/services/api';
     
     export default {
         name: 'OrderDetail',

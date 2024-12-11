@@ -70,7 +70,9 @@
     </div>
 </template>
 <script>
-import axios from 'axios';
+import { productAPI } from '@/services/api';
+import { orderAPI } from '@/services/api';
+import { rankingAPI } from '@/services/api';
 import Chart from 'chart.js/auto';
 
 export default{

@@ -1,87 +1,142 @@
 // backend/app.js
 require('dotenv').config({ path: __dirname + '/.env' });
-
+console.log('NODE_ENV in app.js:', process.env.NODE_ENV);
 const express = require('express');
-const path = require('path');
 const cors = require('cors');
-// const dotenv = require('dotenv');
+const path = require('path');
+const fs = require('fs');
 
-// 載入所有路由
-const brandsRoutes = require('./routes/brandsRoutes');
-const carouselImagesRoutes = require('./routes/carouselImagesRoutes');
-const orderItemsRoutes = require('./routes/orderItemsRoutes');
-const ordersRoutes = require('./routes/ordersRoutes');
-const productsRoutes = require('./routes/productsRoutes');
-const recipientsRoutes = require('./routes/recipientsRoutes');
-const salesRoutes = require('./routes/salesRoutes');
-const specialOffersRoutes = require('./routes/specialOffersRoutes');
-const tagsRoutes = require('./routes/tagsRoutes');
-const usersRoutes = require('./routes/usersRoutes');
-
-// dotenv.config();
-console.log('DB_USER:', process.env.DB_USER);
-console.log('DB_PASSWORD:', process.env.DB_PASSWORD);
+// 初始化 Express 應用
 const app = express();
 
-// 中介軟體
+// 環境變數配置
+const PORT = process.env.PORT || 5002;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// 中介軟體配置
 app.use(cors({
-    // origin: ['http://localhost:8081','http://34.169.83.101'],
-    origin: '*', // 暫時允許所有來源
-    methods:'GET,HEAD,PUT,POST,DELETE',
-    credentials:true,
+    origin: process.env.NODE_ENV === 'development' 
+        ? ['http://localhost:8081']
+        : process.env.ALLOWED_ORIGINS?.split(','),
+    // origin: 'http://localhost:8081',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,        
 }));
+console.log(process.env.NODE_ENV);
+
 app.use(express.json());
-app.use(express.urlencoded({extended:true}));
+app.use(express.urlencoded({ extended: true }));
 
-// 全域設置 Content-Type 為 application/json
-app.use((req, res, next) => {
-    res.setHeader('Content-Type', 'application/json');
-    next();
-});
+// 靜態資源配置
+app.use('/api/static', express.static(path.join(__dirname, 'public','img')));
+app.use('/img', express.static(path.join(__dirname, 'public', 'img'))); // 新增：將 /img 路徑指向 public/img
+app.use('/static', express.static(path.join(__dirname, 'public'))); // 保留其他靜態資源
 
-// 設置靜態資源路徑
-app.use('/img',express.static(path.join(__dirname, 'public','img')));
-app.use(express.static(path.join(__dirname, 'public')));
+// app.use('/api/static/img', express.static(path.join(__dirname, 'public', 'img')));
+// app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'dist')));
 
+// 路由配置
+const routes = {
+    brands: require('./routes/brandsRoutes'),
+    carouselImages: require('./routes/carouselImagesRoutes'),
+    orderItems: require('./routes/orderItemsRoutes'),
+    orders: require('./routes/ordersRoutes'),
+    products: require('./routes/productsRoutes'),
+    recipients: require('./routes/recipientsRoutes'),
+    sales: require('./routes/salesRoutes'),
+    specialOffers: require('./routes/specialOffersRoutes'),
+    tags: require('./routes/tagsRoutes'),
+    users: require('./routes/usersRoutes'),
+    ranking: require('./routes/rankingRoutes')
+};
 
-
-// 路由
-app.use('/api/brands', brandsRoutes);
-app.use('/api/carousel_images', carouselImagesRoutes);
-app.use('/api/order-items', orderItemsRoutes);
-app.use('/api/orders', ordersRoutes);
-app.use('/api/products', productsRoutes);
-app.use('/api/recipients', recipientsRoutes);
-app.use('/api/sales', salesRoutes);
-app.use('/api/special-offers', specialOffersRoutes);
-app.use('/api/tags', tagsRoutes);
-app.use('/api/users', usersRoutes);
-
-// 根路由
-app.use('/api', (req, res,) => {
-    // 如果找不到對應 API 的請求，返回 404 錯誤
-    res.status(404).json({ message: 'API 路徑未找到' });
+// 註冊路由（修改路由命名規則）
+Object.entries(routes).forEach(([name, router]) => {
+    const routePath = name.replace(/([A-Z])/g, '_$1').toLowerCase();
+    app.use(`/api/${routePath}`, router);
 });
-app.use((err, req, res, next) => {
-    console.error('未處理的錯誤:', err);
-    if(!res.headersSent){
-        res.status(500).json({
-            message: '內部伺服器錯誤',
-            error: process.env.NODE_ENV === 'production' ? {} : err.message
-            });
-        }else{
-            next(err);
+
+// 檢查必要目錄
+const ensureDirectories = () => {
+    const dirs = [
+        path.join(__dirname, 'public'),
+        path.join(__dirname, 'public', 'img'),
+        path.join(__dirname, 'dist')
+    ];
+    
+    dirs.forEach(dir => {
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
         }
     });
-// 捕獲所有其他前端路由
+};
+
+// API 404 處理
+app.use('/api', (req, res) => {
+    res.status(404).json({ message: 'API 路徑未找到' });
+});
+
+// 全局錯誤處理
+app.use((err, req, res, next) => {
+    const status = err.status || 500;
+    const message = err.message || '內部伺服器錯誤';
+    
+    // 開發環境才輸出詳細錯誤
+    if (process.env.NODE_ENV === 'development') {
+        console.error('錯誤:', err);
+    }
+    
+    res.status(status).json({
+        success: false,
+        message,
+        ...(process.env.NODE_ENV === 'development' && { error: err.stack })
+    });
+});
+
+// 前端路由處理
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'dist/index.html'));
 });
 
-// 啟動伺服器
-const PORT = process.env.PORT || 5001;
+// 伺服器啟動函數
+const startServer = async () => {
+    try {
+        ensureDirectories();
+        
+        // 測試資料庫連線
+        const db = require('./config/db');
+        await db.query('SELECT 1');
+        
+        // 檢查端口是否被占用
+        const server = app.listen(PORT)
+            .on('error', (err) => {
+                if (err.code === 'EADDRINUSE') {
+                    console.log(`Port ${PORT} 已被占用，嘗試使用 ${PORT + 1}`);
+                    server.close();
+                    app.listen(PORT + 1);
+                } else {
+                    console.error('服務器��動錯誤:', err);
+                    process.exit(1);
+                }
+            })
+            .on('listening', () => {
+                const actualPort = server.address().port;
+                console.log(`
+=================================
+  伺服器啟動成功
+  環境: ${NODE_ENV}
+  端口: ${actualPort}
+=================================`);
+            });
+    } catch (error) {
+        console.error('伺服器啟動失敗:', error.message);
+        process.exit(1);
+    }
+};
 
-app.listen(PORT, '0.0.0.0',() => {
-console.log(`Server is running on port ${PORT}`);
-});
+// 啟動伺服器
+startServer();
+
+module.exports = app;

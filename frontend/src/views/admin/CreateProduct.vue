@@ -72,7 +72,8 @@
 <script>
 import {ref, reactive, onMounted} from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler';
 import Multiselect from 'vue-multiselect';
 import 'vue-multiselect/dist/vue-multiselect.min.css';
 
@@ -128,21 +129,21 @@ export default {
         // 加載品牌資料 
         const  loadBrands = async () => {
             try {
-                const response = await axios.get('/api/brands');
+                const response = await ApiService.brandAPI.getAllBrands();
                 brands.value = response.data;
                 console.log('加載的品牌資料:',brands.value);
             } catch (error) {
-                console.error('讀取品牌資料時出錯:', error);
+                handleApiError(error, '讀取品牌資料時出錯，請稍後再試！');
             }
         };
         // 加載標籤資料
         const loadTags = async() => {
             try {
-                const response = await axios.get('/api/tags');
+                const response = await ApiService.tagAPI.getAllTags();
                 tags.value = response.data;
                 console.log('加載的標籤資料:', tags.value);
             } catch (error) {
-                console.error('讀取標籤資料時出錯:', error);
+                handleApiError(error, '讀取標籤資料時出錯，請稍後再試！');
             }
         };
         const handleBrandSelect = (selected) => {
@@ -159,26 +160,24 @@ export default {
         };
         const createNewBrand = async (newBrandName) =>{
             try{
-                const response = await axios.post('/api/brands',{name:newBrandName});
+                const response = await ApiService.brandAPI.createBrand(newBrandName);
                 const newBrand = response.data;
                 brands.value.push(newBrand);
                 productForm.brand_id = newBrand.id;
                 alert('新品牌已添加');
             }catch(error){
-                console.error('創建新品牌時出錯',error);
-                alert('創建新品牌時出錯，請稍候再試');
+                handleApiError(error, '創建新品牌時出錯，請稍後再試！');
             }
         };
         const createNewTag = async(newTagName)=>{
             try{
-                const response = await axios.post('/api/tags',{name:newTagName});
+                const response = await ApiService.tagAPI.createTag(newTagName);
                 const newTag = response.data;
                 tags.value.push(newTag);
                 productForm.tag_ids.push(newTag.id);
                 alert('新標籤已增加');
             }catch(error){
-                console.error('創建新標籤時出錯',error);
-                alert('創建新標籤時出錯，請稍候再試。');
+                handleApiError(error, '創建新標籤時出錯，請稍後再試！');
             }
         }
         onMounted(() => {
@@ -217,47 +216,28 @@ export default {
                     formData.append('image', productForm.imageFile);
                 }
                 // 發送 POST 請求到後端
-                const response = await axios.post('/api/products',formData, {
-                    headers:{
-                        'Content-Type':'multipart/form-data',
-                    },
-                    timeout:10000,
-                });
+                const response = await ApiService.productAPI.createProduct(formData);
                 console.log('伺服器回應：',response.data);
                 alert('商品新增成功');
                 router.push('/admin/products'); // 回到商品列表頁面
             }catch(error){
-                console.error('新增商品時出錯:',error);
-                let errorMessage = '新增商品失敗';
-                if (error.code === 'ERR_NETWORK'){
-                    errorMessage = '無法連接到伺服器，請確認伺服器是否正常運行。';
-                }else if(error.response){
-                    errorMessage = `伺服器錯誤: ${error.response.data?.message || error.message}`;
-                }else if(error.request){
-                    errorMessage = '未收到伺服器回應，請稍後再試。';
-                }
-                alert(errorMessage);
+                handleApiError(error, '新增商品時出錯，請稍後再試！');
+            }finally{
+                formSubmitted.value = false;
             }
         };
-        // 圖片選擇功能
-        const selectImage = (event) =>{
-        const file = event.target.files[0];
-            if(file) {
-                if(file.size > 5 * 1024 * 1024 ){
-                    alert('圖片大小不能超過5MB!');
-                    event.target.value = '';
-                    return;
-                }
-                if(!file.type.startsWith('image/')){
-                    alert('請上傳正確的圖片格式');
-                    event.target.value = '';
-                    return;
-                }
-                productForm.imageFile = file;
-                // 預覽圖片
-                productForm.imagePreview = URL.createObjectURL(file);
+            // 監聽圖片上傳
+            const handleImageUpload = (event) => {
+            const file = event.target.files[0];
+            if(file && !file.type.startsWith('image/')){
+                alert('請上傳正確的圖片格式');
+                event.target.value = '';
+                return;
             }
+            productForm.value.image = file;
         };
+        loadBrands();
+        loadTags();
         return{
             productForm,
             brands,

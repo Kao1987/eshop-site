@@ -29,7 +29,8 @@
 </template>
 
 <script>
-import axios from 'axios';
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler';
 import { ref, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import { useRoute,useRouter} from 'vue-router';
@@ -43,70 +44,50 @@ export default {
 
         const product = ref(null);
         const productId = computed(()=> route.params.id);
-        const productImageUrl = computed(()=> product.value ? `/api/${product.value.image}` : '/img/wrong.png');
+        const productImageUrl = computed(()=> product.value ? `/${product.value.image}` : '/wrong.png');
         const isLoggedIn = computed(()=>store.state.auth.isLoggedIn);
 
         const fetchProduct = async() =>{
-            if (!isProductIdValid.value) {
-                console.error('商品ID格式不正確:', productId.value);
-                store.dispatch('notifications/showNotification', {
-                    type: 'error',
-                    message: '商品ID格式不正確，無法加載商品詳情。',
-                });
-                router.go(-1); // 返回上一頁
+            if(!isValidProductId(productId.value)){
+                notificationTypes('error','商品格式不正確，無法加載商品詳情');
+                router.go(-1);
                 return;
             }
-            try {
-                const response = await axios.get(`/api/products/${productId.value}`);
-                product.value = response.data;
-            } catch (error) {
-                console.error("加載商品詳情時出錯", error);
-                store.dispatch('notifications/showNotification',{
-                    type:'error',
-                    message:'加載商品詳情時出錯，請稍後再試！'
-                });
+            try{
+                product.value = await ApiService.productAPI.getProductById(productId.value);
+            }catch(error){
+                console.error("加載商品詳情時出錯",error);
+                notifiy('error','加載商品詳情失敗，請稍後再試！');
             }
         };
         const addToCart=()=>{
             if (!isLoggedIn.value) {
-                store.dispatch('notifications/showNotification',{
-                    type:'warning',
-                    message:'請先登入在加入購物車！'
-                });
-                const returnPath = route.fullPath;
-                router.push({
-                    name:'UserLogin',
-                    query:{ redirect: returnPath}
-                });
+                redirectToLogin();
                 return;
-            }
-            store.dispatch('cart/addProductToCart',product.value);
-            store.dispatch('notifications/showNotification',{
-                type:'success',
-                message:`已將${product.value.name}加入購物車`,
-                timeout:2000,
-            });
-        };
-        const isProductIdValid = computed(() => {
-            // 假設 productId 應為正整數
-            const id = productId.value;
-            return /^[1-9]\d*$/.test(id); // 檢查是否為正整數
-        });
+                };
+                store.dispatch('cart/addProductToCart',product.value);
+                notify('success',`已將${product.value.name}加入購物車`);
+            };
+            
+            const isValidProductId = (id) => /^[1-9]\d*$/.test(id);
+            const notify = (type, message) => {
+                store.dispatch('notifications/showNotification', { type, message });
+            };
+            const redirectToLogin = () => {
+                router.push({ name: 'UserLogin', query: { redirect: route.fullPath } });
+            };
 
-        const goBack = () => {
-            router.go(-1);
-        };
-        onMounted(()=>{
-            fetchProduct();
-        });
+            const goBack = () => router.go(-1);
 
-        return {
-            addToCart,
-            goBack,
-            product,
-            productId,
-            productImageUrl
-        };
+            onMounted(fetchProduct);
+
+            return {
+                addToCart,
+                goBack,
+                product,
+                productId,
+                productImageUrl
+            };
     },
 };
 </script>

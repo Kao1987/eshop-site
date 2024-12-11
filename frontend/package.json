@@ -4,7 +4,7 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "serve": "vue-cli-service serve",
+        "serve": "vue-cli-service serve --slient",
         "build": "vue-cli-service build",
         "lint": "vue-cli-service lint"
     },
@@ -15,7 +15,8 @@
         "@vue/cli-service": "^5.0.8",
         "concurrently": "^9.1.0",
         "eslint": "^9.16.0",
-        "eslint-plugin-vue": "^9.32.0"
+        "eslint-plugin-vue": "^9.32.0",
+        "webpack-dev-server": "^5.1.0"
     },
     "author": "Kao1987 <winterlove1999@gmail.com>",
     "license": "MIT",
@@ -25,6 +26,7 @@
         "@vueform/multiselect": "^2.6.11",
         "axios": "^1.7.9",
         "bootstrap": "^5.3.3",
+        "bootstrap-icons": "^1.11.3",
         "bootstrap-vue-3": "^0.5.1",
         "chart.js": "^4.4.7",
         "element-plus": "^2.9.0",

@@ -21,7 +21,7 @@ exports.createProduct = async (req, res)=>{
       created_at,
     } = req.body;
 
-    if (!name || !description || !price || !stock || !brand_id) {
+    if (!name || !description || !price || !stock || !brand_id || isNaN(brand_id)) {
       throw new Error('缺少必要字段');
     }
     // 準備產品數據
@@ -91,12 +91,12 @@ exports.createProduct = async (req, res)=>{
 exports.getAllProducts = async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT p.id, p.name, p.description, p.price, p.stock,  
+      SELECT p.id, p.name, p.description, p.price, p.stock,p.image,  
       GROUP_CONCAT(t.name) AS tags 
       FROM products p
       LEFT JOIN product_tags pt ON p.id = pt.product_id
       LEFT JOIN tags t ON pt.tag_id = t.id
-      GROUP BY p.id, p.name, p.description, p.price,p.stock
+      GROUP BY p.id, p.name, p.description, p.price,p.stock,p.image
       `);
 
     const products = rows.map(product => {
@@ -162,7 +162,14 @@ exports.updateProduct = async (req, res) => {
       tag_ids,
     } = req.body;
 
-    if(!name || !description || !price || !stock || !brand_id){
+    if(!name || !description || !price || !stock || !brand_id ||isNaN(brand_id)){
+      const missingFields = [];
+      if (!name||typeof name != 'string' || name.trim() === '') missingFields.push('name');
+      if (!description || typeof description !== 'string' || description.trim()==='') missingFields.push('description');
+      if (!price || isNaN(price) || price <= 0) missingFields.push('price');
+      if (!stock || isNaN(price) || price < 0) missingFields.push('stock');
+      if (!brand_id || isNaN(brand_id)) missingFields.push('brand_id');
+      console.error('缺少必要欄位:', missingFields);
       throw new Error('缺少必要欄位');
     }
     // 準備產品數據
@@ -171,7 +178,7 @@ exports.updateProduct = async (req, res) => {
       description,
       price:parseFloat(price),
       stock:parseInt(stock),
-      brand_id:parseInt(brand_id),
+      brand_id:parseInt(brand_id,10),
       updated_at:new Date() || new Date().toISOString().slice(0,10),
     };
     if(req.file){
@@ -198,7 +205,10 @@ exports.updateProduct = async (req, res) => {
         parseTagIds= tag_ids;
       }
       if(Array.isArray(parseTagIds) && parseTagIds.length > 0){
-        const tagValues = parseTagIds.map(tagId => [id,parseInt(tagId)]);
+        const tagValues = parseTagIds
+        .map(tagId => parseInt(tagId))
+        .filter(tagId =>!isNaN(tagId))
+        .map(tagId =>[id,tagId]);
         await connection.query('INSERT INTO product_tags (product_id, tag_id) VALUES ?',[tagValues]);
       }
     }

@@ -19,7 +19,8 @@
 <script>
 import { onMounted, ref } from 'vue';
 import { useRoute , useRouter } from 'vue-router';
-import axios from 'axios';
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler';
 import { useStore } from 'vuex'; // 添加 useStore
 
 

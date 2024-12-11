@@ -7,7 +7,9 @@
             <div class="headerbar d-flex align-items-center">
                 <BNavbarToggle @click="toggleNav"></BNavbarToggle>
                 <div v-if="!isNavOpen" class="nav-toggle-wrapper d-flex align-items-center ms-2">
-                    <img src="img/arrowleft.png" alt="導航提示" class="nav-toggle-image" @click="toggleNav"/>
+                    <img 
+                    src="http://localhost:5002/api/static/img/arrowleft.png"
+                    alt="導航提示" class="nav-toggle-image" @click="toggleNav"/>
                     <span class="nav-toggle-text ms-1">請點選此處開啟導航欄</span>
 
                 </div>

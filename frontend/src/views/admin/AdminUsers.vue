@@ -114,8 +114,10 @@
     </div>
 </template>
 <script>
-import axios from 'axios';
 import * as bootstrap from 'bootstrap';
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler';
+
 
 
     export default{
@@ -143,11 +145,10 @@ import * as bootstrap from 'bootstrap';
         methods:{
             async loadUsers(){
                 try{
-                    const response = await axios.get('/api/users');
+                    const response = await ApiService.userAPI.getAllUsers();
                     this.users = response.data;
                 }catch(error){
-                    console.error('加載用戶資料失敗',error);
-                    alert('無法家載用戶資料');
+                    handleApiError(error, '無法加載用戶資料');
                 }
             },
             openCreateUserModal(){
@@ -195,7 +196,7 @@ import * as bootstrap from 'bootstrap';
                         if(this.userForm.password){
                             userData.password = this.userForm.password;
                         }
-                        await axios.put(`/api/users/${this.userForm.id}`,userData);
+                        await ApiService.userAPI.updateUser(this.userForm.id,userData);
                         this.users[this.currentIndex] = {...this.userForm};//更新用戶資料
                     }else{
                         const userData = {
@@ -206,7 +207,7 @@ import * as bootstrap from 'bootstrap';
                             address: this.userForm.address,
                             password: this.userForm.password,
                         };
-                        const response = await axios.post('/api/users',userData);
+                        const response = await ApiService.userAPI.createUsers(userData);
                         this.users.push(response.data);//新增用戶
                     }          
                 this.closeModal();
@@ -218,7 +219,7 @@ import * as bootstrap from 'bootstrap';
             async deleteUser(index){
                 if(confirm('確定要刪除此用戶嗎？')){
                     try{
-                        await axios.delete(`/api/users/${this.users[index].id}`);
+                        await ApiService.userAPI.deleteUsers(this.users[index].id);
                         this.users.splice(index, 1);
                     }catch(error){
                         ('刪除用戶失敗',error);

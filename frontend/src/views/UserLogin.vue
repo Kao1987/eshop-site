@@ -22,8 +22,9 @@
 </template>
     
 <script>
-    import axios from 'axios';    
-    import { mapActions } from 'vuex';
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler';
+import { mapActions } from 'vuex';
 
     export default {
         name: 'UserLogin',
@@ -37,19 +38,13 @@
             ...mapActions('auth',['login']),
             async handleLogin(){
                 try {
-                    const response = await axios.post("/api/users/login",{
-                        email:this.email,
-                        password:this.password
+                    const response = await this.login({email:this.email,password:this.password
                     });
-                    const user = response.data;
-                    console.log("用戶資料:",user);
+                    const user = response.data;    
+
                     if(user){
                         console.log("找到的用戶",user);
                         alert('登入成功!歡迎' + user.name);
-                        
-                        //更新vuex狀態 
-                        this.login(user);
-
                         const redirectPath = this.$route.query.redirect;
 
                         //登入邏輯
@@ -70,16 +65,7 @@
                         }
                     }
                 }catch (error){
-                    if(error.response){
-                        if(error.response.status === 401 || error.response.status === 404){
-                            alert('帳號或密碼錯誤');
-                        }else{
-                            alert('登入失敗，伺服器錯誤！');
-                        }
-                    }else{
-                    console.error("登入失敗",error);
-                    alert("登入失敗，請稍候再試");
-                    }
+                    handleApiError(error,'登入失敗，請稍後再試');
                 }
             }
         }

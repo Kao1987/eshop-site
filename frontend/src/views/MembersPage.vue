@@ -27,7 +27,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(recipient, index) in recipients" :key="index">
+                    <tr v-for="(recipient, index) in recipients || []" :key="index">
                         <td>{{ recipient.name }}</td>
                         <td>{{ recipient.phone }}</td>
                         <td>{{ recipient.address }}</td>
@@ -70,10 +70,10 @@
                                 <div class="order-details">
                                     <div v-for="(orderItem, i) in order.items" :key="i" class="order-item">
                                         <img 
-                                        :src="orderItem.product_image || '/default-product-image.png'"
-                                        :alt="orderItem.product_name"
-                                        class="product-thumbnail"
-                                        >
+                                            :src="orderItem.product_image ? `/img/products/${orderItem.product_image}` : '/img/welcome.jpg'"
+                                            :alt="orderItem.product_name"
+                                            class="product-thumbnail"
+                                        />
                                         <div class="item-info">
                                             <strong>商品名稱:</strong>{{ orderItem.name }}
                                             <strong>數量:</strong> {{ orderItem.quantity }}
@@ -134,7 +134,11 @@
 <script>
 import { Modal } from 'bootstrap';
 import {mapState , mapActions} from 'vuex';
-import axios from 'axios';
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler.js';
+
+const {userAPI,recipientAPI} = ApiService;
+
 
 export default {
     name: "MemberPage",
@@ -162,20 +166,33 @@ export default {
         },
     computed:{
         ...mapState('auth',{
-            isLoggedIn:state => state.isLoggedIn,
-            user: state => state.user
-        })
-    },
-    mounted(){
-        if(!this.isLoggedIn){
-            alert('請先登入會員！');
-            this.$router.push('/UserLogin');
-            return;
-        }
-            this.loadUserInfo();
-            this.loadOrders();
-            this.loadRecipients();
+            isLoggedIn:(state) => state.isLoggedIn,
+            user: (state) => state.user || {},
+        }),
+        filteredOrders() {
+        return this.orders.map((order) => ({
+            ...order,
+            formattedDate: this.formatOrderDate(order.created_at),
+        }));
         },
+    },
+    async mounted(){
+        try{
+            if(!this.isLoggedIn){
+                alert('請先登入會員！');
+                this.$router.push('/UserLogin');
+                return;
+            }
+            await Promise.all([
+            this.loadUserInfo(),
+            this.loadOrders(),
+            this.loadRecipients()
+            ]);
+        }catch(error){
+            handleApiError(error,"加載用戶信息失敗，請重試。");
+        }
+
+    },
     methods: {
         async loadUserInfo(){
             try{
@@ -185,91 +202,65 @@ export default {
                     console.error("用戶ID無效");  
                     return;
                 }
-                const response = await axios.get(`/api/users/${userID}`); //請求API
+                const response = await ApiService.userAPI.getUserInfo(userID); //請求API
                 this.userInfo = response.data;
                 console.log("用戶資料",this.userInfo);
             }catch (error){
                 console.error("加載用戶信息時出錯:", error);
-                console.error('錯誤回應:', error.response);
-                console.error('請求細節:', error.config);
-                alert("加載用戶信息失敗，請重試。");
+                handleApiError(error, "加載用戶信息失敗，請重試。");
             }
         },
-        async loadOrders(){
-            try{
-                const userID = this.user.id;
-                if(!userID){
-                    console.error("用戶ID無效");  
-                    return;
+        async loadOrders() {
+            try {
+                const response = await ApiService.userAPI.getOrders();
+                if (response.success) {
+                    this.orders = response.data;
                 }
-                const response = await axios.get(`/api/orders`,{
-                    params: {
-                        userId: userID
-                    }
-                });
-                this.orders = response.data;   
-            }catch(error){
-                console.error(
-            process.env.NODE_ENV === "development"
-                ? `加載訂單失敗：${error.message}`
-                : "加載訂單失敗，請稍候再試。"
-            );                
-            alert("加載訂單失敗，請稍候再試");
+            } catch (error) {
+                console.error('載入訂單失敗:', error);
             }
         },
-        async loadRecipients(){
-            this.isLoadingRecipients = true;
-
-            try{
-                const userID = this.user.id;
-                const response = await axios.get(`/api/recipients`,{
-                    params: {user_id: userID,}
-                });
-                this.recipients = response.data;
-            }catch(error){
-                console.error('加載收件人時錯誤：',error);
-                this.recipients = [];
-                alert('加載收件人失敗，請稍候再試。')
-            }finally{
-                this.isLoadingRecipients = false;
+        
+        async loadRecipients() {
+            try {
+                const response = await ApiService.recipientAPI.getRecipients(this.user.id);
+                if (response.success) {
+                    this.recipients = response.data;
+                }
+            } catch (error) {
+                console.error('載入收件人資料失敗:', error);
             }
+        },
+        isRecipientValid(recipient) {
+            const phoneRegex = /^[0-9]{10}$/;
+            return recipient.name.trim() && phoneRegex.test(recipient.phone) && recipient.address.trim();
         },
         async saveRecipient(){
-            try{
-                const userID = this.user.id;
-                const isRecipientValid = (recipient) => {
-                    const phoneRegex = /^[0-9]{10}$/; // 假設電話為 10 碼數字
-                    return recipient.name.trim() && phoneRegex.test(recipient.phone) && recipient.address.trim();
-                };
-                if (!isRecipientValid(this.editRecipient)) {
+            if (!this.isRecipientValid(this.editRecipient)) {
                     alert('請檢查收件人資料是否完整且格式正確！');
                     return;
                 }
+
+            try{
+                let response;
                 if(this.isEditing){
-                    // 編輯收件人
-                    await axios.put(`/api/recipients/${this.editRecipient.id}`,{
-                        ...this.editRecipient,
-                        user_id:userID,
-                    });
-                    this.recipients[this.editingIndex] = {...this.editRecipient};
+                    response = await ApiService.recipientAPI.updateRecipient(this.editRecipient.id, this.editRecipient);
+                    const updateIndex = this.editingIndex;
+                    this.recipients[updateIndex] = response;
                 }else{
-                    // 新增收件人   
-                    const response = await axios.post('/api/recipients',{
-                        ...this.editRecipient,
-                        user_id: userID,
-                    });
-                    this.recipients.push(response.data);
+                    // 新增收件人
+                    response = await ApiService.recipientAPI.addRecipient({...this.editRecipient,user_id:this.user.id});
+                    this.recipients.push(response);
                 }
                 this.hideModal();
             }catch(error){
-                console.error("保存收件人時出錯：",error);
-                alert("保存收件人失敗，請稍候再試。");
+                handleApiError(error, '加載用戶信息失敗，請重試。');
             }
         },
         async deleteRecipient(index){
             try{
                 const recipientId = this.recipients[index].id;
-                await axios.delete(`/api/recipients/${recipientId}`);
+                await ApiService.recipientAPI.deleteRecipient(recipientId);
                 this.recipients.splice(index,1);
             }catch(error){
                 console.error('刪除收件人失敗',error);
@@ -293,12 +284,12 @@ export default {
         toggleOrderDetails(index){
             const order = this.orders[index];
             if (!order.items || !order.items.length) {
-            alert('該訂單無法顯示細節！');
-            return;
+                alert('該訂單無法顯示細節！');
+                return;
             }
             // 確保所有訂單項目數據正確
             const isOrderItemValid = (item) =>
-                item.name && item.quantity > 0 && item.price >= 0;
+                item.product_name && item.quantity > 0 && item.price >= 0;
             if (!order.items.every(isOrderItemValid)) {
                 alert('該訂單數據不完整，無法展開！');
                 return;
@@ -318,10 +309,10 @@ export default {
             }
         },    
         ...mapActions('auth',['logout']),
-        async handleLogout(){
-            await this.logout();
-            alert("已成功登出!");
-            this.$router.push("/UserLogin"); // 登出後導向登入頁面
+            async handleLogout(){
+                await this.logout();
+                alert("已成功登出!");
+                this.$router.push("/UserLogin"); // 登出後導向登入頁面
         },
         formateOrderDate(dateString){
             if(!dateString) return'';
@@ -331,11 +322,12 @@ export default {
                 month: 'long',
                 day: 'numeric',
                 hour: 'numeric',
-                minute: 'numeric'
+                minute: 'numeric',
             });
-        },
+        }
+        }
     }
-}
+
 </script>
 
 <style scoped>

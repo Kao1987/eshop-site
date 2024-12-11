@@ -53,94 +53,106 @@
 </template>
 
 <script>
-import axios from 'axios';
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler';
 
-    export default {
-        name: "UserRegister",
-        data() {
-            return {
-            username: "",
-            phone: "",
-            address:"",
-            email: "",
-            password: "",
-            confirmpassword: "" ,
-            formErrors: [],
-            showPassword: false,
-            };
+export default {
+    name: "UserRegister",
+    data() {
+        return {
+        username: "",
+        phone: "",
+        address:"",
+        email: "",
+        password: "",
+        confirmpassword: "" ,
+        formErrors: [],
+        showPassword: false,
+        };
     },
     methods: {
-        handleRegister() {
-    this.formErrors = []; // 清空錯誤訊息
+        async handleRegister() {
+            try{
+                this.formErrors = [];
 
-    if (!this.validatePhoneNumber()) {
-        this.formErrors.push('請輸入正確的手機號碼格式');
-    }
-    if (this.password !== this.confirmpassword) {
-        this.formErrors.push('兩次密碼不相符，請重新輸入。');
-    }
-    if (!this.validateEmail(this.email)) {
-        this.formErrors.push('請輸入正確的電子郵件格式');
-    }
-    if (!this.username.trim()) {
-        this.formErrors.push('請輸入會員姓名');
-    }
-    if (!this.address.trim()) {
-        this.formErrors.push('請輸入地址');
-    }
-    if (!this.password.trim()) {
-        this.formErrors.push('請設定密碼');
-    }
-    if (this.password.length < 6) {
-        this.formErrors.push('密碼長度需至少為6個字元');
-    }
+                const validationErrors = this.validateForm();
+                if (validationErrors.length > 0) {
+                    this.formErrors = validationErrors;
+                    return;
+                    }
 
-    if (this.formErrors.length) {
-        return; // 若有錯誤訊息則阻止提交
-    }
-
-    // 發送 POST 請求到 API
-    axios.post('/api/users', {
-        name: this.sanitizeInput(this.username),
-        phone: this.sanitizeInput(this.phone),
-        address: this.sanitizeInput(this.address),
-        email: this.sanitizeInput(this.email),
-        password: this.sanitizeInput(this.password),
-        role: "user",
-    })
-    .then(() => {
-        alert('註冊成功');
-        this.$router.push("/UserLogin");
-    })
-    .catch(error => {
-        if (error.response) {
-            console.error('伺服器錯誤:', error.response.data);
-            this.formErrors.push('伺服器錯誤，請稍候再試。');
-        } else if (error.request) {
-            console.error('未收到伺服器響應:', error.request);
-            this.formErrors.push('無法連接到伺服器，請檢查網絡。');
-        } else {
-            console.error('註冊失敗:', error.message);
-            this.formErrors.push('註冊失敗，請稍候再試。');
-        }
-    });
-},
-
-        // 驗證電話號碼格式
-        validatePhoneNumber(){
-        const phoneRegex = /^[0-9]{10}$/; 
-        return phoneRegex.test(this.phone);
-        },
-        // 驗證電子郵件格式
-        validateEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-        },
-        sanitizeInput(input) {
-        return input.replace(/<[^>]*>?/gm, '').trim();
-}
-
+                const response = await ApiService.userAPI.register({
+                    name: this.sanitizeInput(this.username),
+                    phone: this.sanitizeInput(this.phone),
+                    address: this.sanitizeInput(this.address),
+                    email: this.sanitizeInput(this.email),
+                    password: this.sanitizeInput(this.password),
+                    role: "user",
+                });
+                if (response.success) {
+                    alert("註冊成功");
+                    this.$router.push("/UserLogin");
+                }
+            }catch (error) {
+                handleApiError(error, '註冊失敗，請稍後再試');
+            }
     },
+        // 表單驗證方法
+        validateForm() {
+            const errors = [];
+            
+            // 用戶名驗證
+            if (!this.username.trim()) {
+                errors.push('請輸入會員姓名');
+            } else if (this.username.length < 2) {
+                errors.push('會員姓名至少需要2個字元');
+            }
+            // 電話驗證
+            if (!this.validatePhoneNumber(this.phone)) {
+                errors.push('請輸入正確的手機號碼格式（10位數字）');
+            }
+            // 地址驗證
+            if (!this.address.trim()) {
+                errors.push('請輸入地址');
+            } else if (this.address.length < 8) {
+                errors.push('地址需要更詳細');
+            }
+            // 電子郵件驗證
+            if (!this.validateEmail(this.email)) {
+                errors.push('請輸入正確的電子郵件格式');
+            }
+            // 密碼驗證
+            if (!this.password) {
+                errors.push('請設定密碼');
+            } else if (this.password.length < 6) {
+                errors.push('密碼長度需至少為6個字元');
+            } else if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(this.password)) {
+                errors.push('密碼需包含至少一個字母和一個數字');
+            }
+            // 確認密碼
+            if (this.password !== this.confirmpassword) {
+                errors.push('兩次密碼不相符');
+            }
+            return errors;
+        },
+        // 改進的電話驗證
+        validatePhoneNumber(phone) {
+            const phoneRegex = /^09\d{8}$/;  // 台灣手機號碼格式
+            return phoneRegex.test(phone);
+        },
+        // 改進的電子郵件驗證
+        validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        },
+        // 改進的輸入淨化方法
+        sanitizeInput(input) {
+            if (typeof input !== 'string') return '';
+            return input.trim()
+                    .replace(/<[^>]*>/g, '')  // 移除 HTML 標籤
+                    .replace(/[<>]/g, '');    // 移除特殊字符
+        }
+    }
 }
 </script>
 

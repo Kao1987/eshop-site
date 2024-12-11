@@ -17,10 +17,12 @@ const mutations = {
             n => n.message === notification.message && n.type === notification.type
         );
         if(!isDuplicate){
-            state.notifications.push(notification)
+            if(state.notifications.length>= MAX_NOTIFICATIONS_LENGTH){
+                state.notifications.shift();
+            }
+        state.notifications.push(notification);
         }
     },
-
     REMOVE_NOTIFICATION(state,id){
         const index = state.notifications.findIndex(n => n.id === id);
         if(index !== -1){

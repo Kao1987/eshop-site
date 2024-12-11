@@ -55,7 +55,8 @@
 import { useStore } from 'vuex';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler';
 
 export default {
     name: 'ShopCart',
@@ -63,7 +64,6 @@ export default {
         const store = useStore();
         const router = useRouter();
 
-        // 計算屬性
         const cartItems = computed(() => store.state.cart.items);
         const cartTotal = computed(() => store.getters['cart/cartTotal']);
         const isLoggedIn = computed(() => store.state.auth && store.state.auth.isLoggedIn);
@@ -72,16 +72,14 @@ export default {
         if (!Number.isInteger(quantity) || quantity < 1) {
         quantity = 1; // 恢復為最小值
         }
-        store.dispatch('cart/updateItemQuantity', { index, quantity });
+            store.dispatch('cart/updateItemQuantity', { index, quantity });
         };
         const imageError = (event)=>{
             event.target.src='/img/wrong.png';
         }
-
         const removeItem = (index) => {
         store.dispatch('cart/removeItemFromCart', index);
         };
-
         const checkout = async () => {
         if (!isLoggedIn.value) {
             router.push({ name: 'UserLogin', query: { redirect: '/cart' }});
@@ -105,47 +103,29 @@ export default {
             })),
             total: cartTotal.value,
         };
-        const validateOrderData = (orderData) => {
-        if (!Array.isArray(orderData.items) || orderData.items.length === 0) {
-            throw new Error('訂單商品數據不正確');
-        }
-        if (typeof orderData.total !== 'number' || orderData.total <= 0) {
-            throw new Error('訂單總計金額不正確');
-        }
-        if (!orderData.user_id) {
-            throw new Error('用戶未登入或用戶ID缺失');
-        }
-        };
+        try{
+            const response = await ApiService.createOrder(orderData);
+            if(response.orderId){
+                store.dispatch('cart/clearShoppingCart');
+                store.dispatch('notifications/showNotification', {
+                    type:'success',
+                    message: 'order已成功提交！',
+                    timeout: 2000,
+                });
 
-        try {
-        validateOrderData(orderData); // 執行數據檢查
-
-        // 提交訂單
-        console.log('送出的訂單數據:', orderData);
-        const response = await axios.post('/api/orders', orderData);
-
-        // 訂單提交成功後的處理
-        if (response.data && response.data.orderId) {
-            store.dispatch('cart/clearShoppingCart');
+                router.push({
+                    name: 'OrderConfirmation',
+                    params: { orderId: response.orderId },
+                });
+            }
+        }catch(error){
+            console.error('提交訂單失敗:', error);
             store.dispatch('notifications/showNotification', {
-                type: 'success',
-                message: '訂單已成功提交！',
-                timeout: 2000,
-            });
-
-            router.push({
-                name: 'OrderConfirmation',
-                params: { orderId: response.data.orderId },
+                type: 'error',
+                message: '提交訂單失敗，請稍候再試！',
             });
         }
-    } catch (error) {
-        console.error('提交訂單數據檢查失敗:', error);
-        store.dispatch('notifications/showNotification', {
-            type: 'error',
-            message: '提交訂單失敗，請稍後再試！',
-        });
     }
-        };
 
         return {
         cartItems,

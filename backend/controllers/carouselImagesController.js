@@ -9,7 +9,7 @@ exports.getAllCarouselImages = async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: '伺服器錯誤' });
+    res.status(500).json({ message: '伺服器錯誤', error: error.message });
   }
 };
 
@@ -19,40 +19,43 @@ exports.getCarouselImageById = async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM carousel_images WHERE id = ?', [id]);
     if (rows.length === 0) {
-      return res.status(404).json({ message: '輪播圖未找到' });
+      return res.status(404).json({ message: '輪播圖未找到', error: error.message });
     }
     res.json(rows[0]);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: '伺服器錯誤' });
+    res.status(500).json({ message: '伺服器錯誤', error: error.message });
   }
 };
 
 // 新增輪播圖
 exports.createCarouselImage = async (req, res) => {
   try {
-    const imageUrl = `/img/carouselImages/${req.file.filename}`;
+    const imageUrl = `/api/img/carouselImages/${req.file.filename}`;
     const [result] = await pool.query('INSERT INTO carousel_images (url) VALUES (?)', [imageUrl]);
     res.status(201).json({ id: result.insertId, url:imageUrl });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: '伺服器錯誤' });
+    res.status(500).json({ message: '伺服器錯誤', error: error.message });
   }
 };
 
 // 更新輪播圖
 exports.updateCarouselImage = async (req, res) => {
   const { id } = req.params;
-  const data = req.body;
+  const { visible } = req.body; // 支援 visible 欄位
   try {
-    const [result] = await pool.query('UPDATE carousel_images SET ? WHERE id = ?', [data, id]);
+    const [result] = await pool.query(
+      'UPDATE carousel_images SET visible = ? WHERE id = ?',
+      [visible, id]
+    );
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: '輪播圖未找到' });
     }
-    res.json({ id, ...data });
+    res.json({ id, visible });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: '伺服器錯誤' });
+    res.status(500).json({ message: '伺服器錯誤', error: error.message });
   }
 };
 
@@ -62,11 +65,11 @@ exports.deleteCarouselImage = async (req, res) => {
   try {
     const [result] = await pool.query('DELETE FROM carousel_images WHERE id = ?', [id]);
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: '輪播圖未找到' });
+      return res.status(404).json({ message: '輪播圖未找到', error: error.message });
     }
     res.json({ message: '輪播圖已成功刪除' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: '伺服器錯誤' });
+    res.status(500).json({ message: '伺服器錯誤', error: error.message });
   }
 };

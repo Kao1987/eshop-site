@@ -51,8 +51,11 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter, useRoute } from 'vue-router';
-import axios from 'axios';
 import ProductCard from './ProductCard.vue';
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler';
+
+
 
 export default {
     name: 'ProductsList',
@@ -101,26 +104,26 @@ export default {
             error.value = null;
 
             try {
-                const response = await axios.get('/api/products');
-                if (!Array.isArray(response.data)) {
-                    throw new Error("API 返回的數據格式不正確，預期為陣列");
-                }
-                console.log("商品數據:", response.data);
+                const response = await ApiService.productAPI.getAllProducts();
 
-                products.value = Array.isArray(response.data)
-                    ? response.data.map(product => ({ ...product, id: String(product.id).trim() }))
-                    : [];
-                if (products.value.length === 0) {
-                    console.warn("商品數據為空或格式錯誤");
-                }
-                console.log("處理後的商品數據:",products.value);
+                if(Array.isArray(response)){
+                    products.value = response.map((product) => ({ 
+                        ...product,
+                        id: String(product.id).trim(),
+                        price:Number(product.price),
+                        tags: Array.isArray(product.tags) ? product.tags : []
 
+                    }))
+                }else{
+                    products.value =[];
+                }
+                console.log('加載後的商品列表:',products.value);
                 priceRange.value = maxPrice.value;
-
+                // 獲取所有標籤     
                 const tagsSet = new Set();
-                products.value.forEach(product => {
+                products.value.forEach((product) => {
                     if(product.tags && Array.isArray(product.tags)){
-                        product.tags.forEach(tag =>tagsSet.add(tag));
+                        product.tags.forEach((tag) =>tagsSet.add(tag));
                     }
                 });
                 availableTags.value = Array.from(tagsSet);
@@ -134,7 +137,7 @@ export default {
         };
         const toggleTag = (tag) =>{
             if (selectedTags.value.includes(tag)){
-                selectedTags.value = selectedTags.value.filter(t => t!== tag);
+                selectedTags.value = selectedTags.value.filter((t) => t!== tag);
             }else{
                 selectedTags.value.push(tag);
             }
@@ -155,8 +158,9 @@ export default {
                 });
                 return;
             }
-
+            // 透過Vuex Action 添加商品到購物車
             store.dispatch('cart/addProductToCart', product);
+            // 透過Vuex Action 顯示成功通知
             store.dispatch('notifications/showNotification', {
                 type: 'success',
                 message: `已將 ${product.name} 加入購物車`,
