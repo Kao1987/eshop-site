@@ -1,14 +1,17 @@
 import request from '@/utils/request';
+import getImageUrl from '@/utils/imageUrl';
 import axios from 'axios';
 
 const ApiService = {
+    setHeader(header, value) {
+        request.defaults.headers.common[header] = value;
+    },
     userAPI: {
         getAllUsers: () => request.get('/users'),
         login: (data) => request.post('/users/login', data),
         register: (data) => request.post('/users/register', data),
         getUserInfo: (id) => request.get(`/users/${id}`),
         updateUser: (id, data) => request.put(`/users/${id}`, data),
-        getOrders: () => request.get('/orders'),
         getRecipients: () => request.get('/recipients'),
     },
     productAPI: {
@@ -54,10 +57,17 @@ const ApiService = {
         deleteCarouselImage: (id) => request.delete(`/carousel_images/${id}`),
     },
     specialOffersAPI: {
-        getOffers: () => request.get('/special-offers'),
+        getAllSpecialOffers: () => request.get('/special_offers'),
+        getSpecialOfferById: (id) => request.get(`/special_offers/${id}`),
+        createSpecialOffer: (data) => request.post('/special_offers', data),
+        updateSpecialOffer: (id, data) => request.put(`/special_offers/${id}`, data),
+        deleteSpecialOffer: (id) => request.delete(`/special_offers/${id}`),
     },
     rankingAPI: {
-        getRanking: (days) => request.get('/ranking', { params: { days } }),
+        getRanking: (days) => request.get('/ranking',{
+            params: { days },
+            baseURL: process.env.VUE_APP_API_BASE_URL,
+            }),
     },
     createCancelToken: () => {
         const source = axios.CancelToken.source();

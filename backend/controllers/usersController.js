@@ -215,7 +215,7 @@ async login(req, res) {
             message: '登入成功',
             data: {
                 ...user,
-                token: token // 將 token 一併回傳
+                token: token
             }
         });
     } catch (error) {

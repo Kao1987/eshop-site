@@ -32,7 +32,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="(offer, index) in specialOffers" :key="offer.id">
+                                <tr v-for="(offer, index) in specialOffers" :key="offer?.id">
                                     <td>{{ getProductName(offer.product_id) }}</td>
                                     <td>{{ offer.price }}</td>
                                     <td>{{ offer.countdown }}</td>
@@ -66,7 +66,7 @@
                                     v-model="productSearchKeyword"
                                     @input="debouncedSearchProducts" 
                                     required/>
-                            <ul class="list-group mt-2" v-if="searchResults.length > 0">
+                            <ul class="list-group mt-2" v-if="searchResults &&searchResults.length > 0">
                                 <li 
                                     class="list-group-item list-group-item-action"
                                     v-for="product in searchResults"
@@ -116,6 +116,7 @@ export default {
         return {
             specialOffers: [],
             products: [],
+            productMap:{},
             specialOfferForm: {
                 id: null,
                 product_id: '',
@@ -140,29 +141,27 @@ export default {
         async loadSpecialOffers() {
             try {
                 const response = await ApiService.specialOffersAPI.getAllSpecialOffers();
-                this.specialOffers = response.data;
+                console.log('loadSpecialOffers response:', response); 
+                this.specialOffers = response;
             } catch (error) {
                 handleApiError(error, '加載特價商品時出錯，請稍後再試！');
             }
         },
         // 新增特價商品時搜尋
         async searchProducts() {
-            if(this.productSearchKeyword.trim() ===''){
+            const keyword = this.productSearchKeyword.trim();
+            if(keyword){
+                try{
+                    const response = await ApiService.productAPI.searchProducts({
+                        keyword,page:1,limit:10 });
+                    this.searchResults = response;
+                }catch(error){
+                    handleApiError(error, '搜尋商品時出錯，請稍後再試！');
+                }
+            }else{
                 this.searchResults = [];
-                return;
             }
-            try{
-                const response = await ApiService.productAPI.searchProducts({
-                    params:{
-                        keyword:this.productSearchKeyword,
-                        page:1,
-                        limit:10 
-                    }
-                });
-                this.searchResults = response.data;
-            }catch(error){
-                handleApiError(error, '搜尋商品時出錯，請稍後再試！');
-            }
+    
         },
         // 選擇商品
         selectProduct(product){
@@ -180,7 +179,11 @@ export default {
         async loadProducts() {
             try {
                 const response = await ApiService.productAPI.getAllProducts();
-                this.products = response.data;
+                this.products = response;
+                this.productMap = {};
+                response.forEach(product => {
+                    this.productMap[product.id] = product.name;
+                });
             } catch (error) {
                 handleApiError(error, '加載商品時出錯，請稍後再試！');
             }
@@ -190,11 +193,6 @@ export default {
             const date = new Date(dateStr);
             return date.toLocaleDateString();
         },
-        // // 獲取商品名稱根據商品 ID
-        // getProductName(productId) {
-        //     const product = this.products.find(p => p.id === productId);
-        //     return product ? product.name : '未知商品';
-        // },
         // 開啟新增特價商品的 Modal
         openCreateSpecialOfferModal() {
             this.isEditing = false;
@@ -220,9 +218,9 @@ export default {
             const offer = { ...this.specialOffers[index] };
             this.specialOfferForm = offer;
             try{
-                const response = await ApiService.productAPI.getProductById(offer.product_id);
-                this.selectedProduct = response.data;
-            }catch{
+                const response = await ApiService.specialOffersAPI.getSpecialOfferById(offer.id);
+                this.selectedProduct = response;
+            }catch(error){
                 handleApiError(error, '取得商品資訊時出錯，請稍後再試！');
             }
             this.productSearchKeyword = '';
@@ -233,17 +231,14 @@ export default {
             });
         },
         // 獲取商品名稱時根據商品ID
-        async getProductName(productId){
-            if(this.selectedProduct && this.selectedProduct.id === productId){
-                return this.selectedProduct.name;
-            }            
-            try{
-                const response = await ApiService.productAPI.getProductById(productId);
-                return response.data.name;
-            }catch(error){
-                handleApiError(error, '取得商品名稱時出錯，請稍後再試！');
-                return '未知商品';
-            }
+        getProductName(productId){
+            return this.productMap[productId] || '未知商品';
+            // if (!this.products || !Array.isArray(this.products)) {
+            //     return '未知商品'; // 確保 products 已正確加載
+            // }
+            // const product = this.products.find(p => p.id === productId);
+            // return product ? product.name : '未知商品';
+
         },
         // 關閉特價商品的 Modal
         closeSpecialOfferModal() {
@@ -263,13 +258,13 @@ export default {
             try {
                 if (this.isEditing) {
                     // 更新特價商品
-                    await ApiService.specialOffersAPI.updateSpecialOffer(this.specialOfferForm.id, this.specialOfferForm);
-                    this.specialOffers[this.currentIndex] = { ...this.specialOfferForm };
+                    const updatedOffer = await ApiService.specialOffersAPI.updateSpecialOfferById(this.specialOfferForm.id,this.specialOfferForm);
+                    this.$set(this.specialOffers,this.currentIndex,updatedOffer);
                     alert('特價商品已更新！');
                 } else {
                     // 新增特價商品
-                    const response = await ApiService.specialOffersAPI.createSpecialOffer(this.specialOfferForm);
-                    this.specialOffers.push(response.data);
+                    const newOffer = await ApiService.specialOffersAPI.createSpecialOffer(this.specialOfferForm);
+                    this.specialOffers.push(newOffer);
                     alert('特價商品已新增！');
                 }
                 this.closeSpecialOfferModal();

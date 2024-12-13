@@ -1,50 +1,101 @@
-<!-- src/components/AdminCarouselImages.vue -->
+<!-- src/components/CarouselImages.vue -->
 <template>
     <div class="carousel-management container mt-5">
-        <h2 class="text-center">輪播圖片管理</h2>
-        <div class="carousel-image-list d-flex flex-wrap">
+        <div class="dashboard-header mb-4">
+            <h2 class="text-primary fw-bold">輪播圖片管理</h2>
+            <p class="text-muted">管理網站首頁輪播圖片的顯示與排序</p>
+        </div>
+
+        <div class="image-grid mb-4">
             <div v-for="image in carouselImages" 
                 :key="image.id" 
-                class="carousel-image-item m-2"
-                >
-                <img :src="getImageUrl(image.url)" alt="輪播圖片" class="img-thumbnail">
-                <button class="btn btn-danger btn-sm mt-2" 
-                @click="deleteCarouselImage(image.id)"
-                >刪除圖片</button>
-                <div class="me-2">
-                    <button 
-                    class="btn btn-secondary btn-sm" 
-                    @click="toggleImageVisibility(image)"
+                class="image-card"
+            >
+                <div class="image-wrapper">
+                    <img :src="getImageUrl(image.url,'carousel')" 
+                         :alt="'輪播圖片 #' + image.id" 
+                         class="carousel-image"
                     >
-                    {{ image.visible ? '隱藏' : '顯示' }}
-                </button>
+                    <div class="image-overlay">
+                        <div class="action-buttons">
+                            <button 
+                                class="btn btn-light btn-sm me-2" 
+                                @click="toggleImageVisibility(image)"
+                                :class="{ 'active': image.visible }"
+                            >
+                                <i :class="image.visible ? 'fas fa-eye' : 'fas fa-eye-slash'"></i>
+                                {{ image.visible ? '隱藏' : '顯示' }}
+                            </button>
+                            <button 
+                                class="btn btn-danger btn-sm"
+                                @click="deleteCarouselImage(image.id)"
+                            >
+                                <i class="fas fa-trash-alt me-1"></i>
+                                刪除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="image-status mt-2">
+                    <span :class="['status-badge', image.visible ? 'status-active' : 'status-inactive']">
+                        {{ image.visible ? '顯示中' : '已隱藏' }}
+                    </span>
                 </div>
             </div>
         </div>
-            <!-- 圖鑑上傳區 -->
-        <div class="upload-section mt-4">
-            <h4>
+
+        <div class="upload-section p-4 bg-light rounded-3">
+            <h4 class="mb-3">
+                <i class="fas fa-cloud-upload-alt me-2"></i>
                 上傳新圖片
             </h4>
-            <input type="file" @change="handleFileSelect" accept="image/*" ref="fileInput"/>
-            <!-- 預覽圖片與上傳 -->
-            <div v-if="previewUrl" class="preview-section mt-3">
-                <h5>預覽圖片</h5>
-                <img :src="previewUrl" alt="上傳的圖片" class="img-thumbnail" style="max-width:300px;" />
-                <div class="mt-2">
-                    <button class="btn btn-primary me-2" @click="confirmUpload">確認上傳</button>
-                    <button class="btn btn-secondary" @click="cancelUpload">取消上傳</button>
+            <div class="upload-area" 
+                 @dragover.prevent 
+                 @drop.prevent="handleFileDrop"
+                 :class="{ 'dragging': isDragging }"
+            >
+                <input 
+                    type="file" 
+                    @change="handleFileSelect" 
+                    accept="image/*" 
+                    ref="fileInput"
+                    class="d-none"
+                />
+                <div class="upload-placeholder" @click="$refs.fileInput.click()">
+                    <i class="fas fa-plus-circle fs-2 mb-2"></i>
+                    <p class="mb-1">點擊或拖曳圖片至此處上傳</p>
+                    <small class="text-muted">支援 JPG、PNG、GIF 格式，檔案大小不超過 5MB</small>
+                </div>
+            </div>
+
+            <div v-if="previewUrl" class="preview-section mt-4">
+                <h5 class="mb-3">預覽圖片</h5>
+                <div class="preview-container">
+                    <img :src="previewUrl" alt="預覽圖片" class="preview-image">
+                    <div class="preview-actions mt-3">
+                        <button class="btn btn-primary me-2" @click="confirmUpload">
+                            <i class="fas fa-check me-1"></i>確認上傳
+                        </button>
+                        <button class="btn btn-outline-secondary" @click="cancelUpload">
+                            <i class="fas fa-times me-1"></i>取消
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
+        <div v-if="showToast" 
+             :class="['toast-notification', `toast-${toastType}`]"
+        >
+            {{ toastMessage }}
+        </div>
+    </div>
 </template>
 
 <script>
 import ApiService from '@/services/api';
 import { handleApiError } from '@/utils/errorHandler';
-import axios from 'axios';
+import getImageUrl from '@/utils/imageUrl'; 
 
 export default {
     name: 'AdminCarouselImages',
@@ -53,6 +104,10 @@ export default {
             carouselImages: [],
             selectedFile:null,
             previewUrl:'',
+            isDragging: false,
+            showToast: false,
+            toastMessage: '',
+            toastType: 'success'
         };
     },
     async mounted() {
@@ -124,38 +179,168 @@ export default {
         async toggleImageVisibility(image){
             const updatedVisibility =!image.visible;
             try{
-                await ApiService.carouselAPI.updateCarouselImage(image.id,{visible:updatedVisibility});
-                image.visible = response.data.visible;
+                const response = await ApiService.carouselAPI.updateCarouselImage(image.id,{visible:updatedVisibility});
+                image.visible = response.visible;
                 alert(`圖片已${updatedVisibility ? '顯示' : '隱藏'}。`);
             }catch(error) {
                 handleApiError(error,'更新圖片狀態失敗');
             }
         },
-        getImageUrl(url) {
-            if (url.startsWith('http')) {
-                return url;
-            }else {
-                return `http://localhost:5002${url}`;
+        getImageUrl(url, type) {
+            return getImageUrl(url,'type');
+        },
+        handleFileDrop(event) {
+            this.isDragging = false;
+            const file = event.dataTransfer.files[0];
+            if (file) {
+                this.handleFile(file);
             }
-                }
-            },
+        },
+        showNotification(message, type = 'success') {
+            this.toastMessage = message;
+            this.toastType = type;
+            this.showToast = true;
+            setTimeout(() => {
+                this.showToast = false;
+            }, 3000);
+        }
+    },
 };
 </script>
 
 <style scoped>
-.carousel-image-list {
+.carousel-management {
+    max-width: 1200px;
+}
+
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.image-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+.image-card:hover {
+    transform: translateY(-2px);
+}
+
+.image-wrapper {
+    position: relative;
+    padding-top: 66.67%; /* 3:2 比例 */
+}
+
+.carousel-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
     display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
 }
 
-.carousel-image-item {
-    width: 200px;
+.image-card:hover .image-overlay {
+    opacity: 1;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+}
+
+.status-active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 2rem;
     text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.preview-section img {
-    max-width: 100%;
-    height: auto;
+.upload-area.dragging {
+    border-color: #007bff;
+    background-color: rgba(0,123,255,0.1);
+}
+
+.upload-placeholder {
+    color: #6c757d;
+}
+
+.preview-container {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.preview-image {
+    width: 100%;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 1rem;
+    border-radius: 4px;
+    color: #fff;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+}
+
+.toast-success {
+    background-color: #28a745;
+}
+
+.toast-error {
+    background-color: #dc3545;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
 }
 </style>

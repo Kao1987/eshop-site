@@ -1,54 +1,126 @@
 <template>
-    <div class="container register-container mt-5 whitespace:nowrap">
-        <h2 class="mb-4">會員註冊</h2>
-        <form @submit.prevent="handleRegister">
-        <div class="mb-3 d-flex align-items-center">
-            <label for="username" class="form-label me-2">會員姓名</label>
-            <input type="text" class="form-control" id="username" v-model="username" placeholder="請輸入姓名" required />
-        </div>
-        <div class="mb-3 d-flex align-items-center">
-            <label for="email" class="form-label me-2">電子郵件</label>
-            <input type="email" class="form-control" id="email" v-model="email" placeholder="請輸入電子信箱" required />
+    <div class="register-page">
+        <div class="register-container container">
+            <div class="auth-card">
+                <div class="auth-header text-center mb-4">
+                    <h2 class="fw-bold text-primary">會員註冊</h2>
+                    <p class="text-muted">創建您的帳號，開始購物之旅</p>
+                </div>
 
-        </div>
-        <div class="mb-3 d-flex align-items-center">
-            <label for="phone" class="form-label me-2">會員電話號碼</label>
-            <input type="tel" class="form-control" id="phone" v-model="phone" placeholder="請輸入手機號碼" required />
+                <form @submit.prevent="handleRegister" class="auth-form">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="username" 
+                                    v-model="username" 
+                                    placeholder="請輸入姓名"
+                                    required 
+                                />
+                                <label for="username">會員姓名</label>
+                            </div>
+                        </div>
 
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input 
+                                    type="email" 
+                                    class="form-control" 
+                                    id="email" 
+                                    v-model="email" 
+                                    placeholder="請輸入電子信箱"
+                                    required 
+                                />
+                                <label for="email">電子郵件</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input 
+                                    type="tel" 
+                                    class="form-control" 
+                                    id="phone" 
+                                    v-model="phone" 
+                                    placeholder="請輸入手機號碼"
+                                    required 
+                                />
+                                <label for="phone">手機號碼</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="address" 
+                                    v-model="address" 
+                                    placeholder="請輸入收件地址"
+                                    required 
+                                />
+                                <label for="address">收件地址</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-floating password-wrapper">
+                                <input 
+                                    :type="showPassword ? 'text' : 'password'" 
+                                    class="form-control" 
+                                    id="password" 
+                                    v-model="password" 
+                                    placeholder="請設定密碼"
+                                    required 
+                                />
+                                <label for="password">密碼</label>
+                                <button 
+                                    type="button"
+                                    class="btn btn-link password-toggle"
+                                    @click="showPassword = !showPassword"
+                                >
+                                    <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input 
+                                    type="password" 
+                                    class="form-control" 
+                                    id="confirmpassword" 
+                                    v-model="confirmpassword" 
+                                    placeholder="請再次輸入密碼"
+                                    required 
+                                />
+                                <label for="confirmpassword">確認密碼</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="formErrors.length" class="alert alert-danger mt-3">
+                        <ul class="mb-0">
+                            <li v-for="error in formErrors" :key="error">{{ error }}</li>
+                        </ul>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mt-4">
+                        <i class="fas fa-user-plus me-2"></i>註冊
+                    </button>
+
+                    <div class="text-center mt-3">
+                        <p class="mb-0">已經有帳號？ 
+                            <router-link to="/UserLogin" class="text-primary text-decoration-none">
+                                立即登入
+                            </router-link>
+                        </p>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="mb-3 d-flex align-items-center">
-            <label for="address" class="form-label me-2">收件人地址</label>
-            <input type="text" class="form-control" id="address" v-model="address"  placeholder="請輸入收件人地址" required />
-        </div>
-        <div class="mb-3 d-flex align-items-center">
-            <label for="password" class="form-label me-2">會員密碼</label>
-            <input 
-            :type="showPassword ? 'text' : 'password'" 
-            class="form-control" 
-            id="password" 
-            v-model="password" 
-            placeholder="請設定密碼" 
-        />
-        <button 
-            type="button" 
-            class="btn btn-outline-secondary position-absolute end-0 top-0 h-100" 
-            @click="showPassword = !showPassword"
-            style="width: 60px;"
-        >
-            {{ showPassword ? '隱藏' : '顯示' }}
-        </button>
-        </div>
-        <div class="mb-3 d-flex align-items-center">
-            <label for="confirmpassword" class="form-label me-2">請再次輸入密碼</label>
-            <input type="password" class="form-control" id="confirmpassword" v-model="confirmpassword"  placeholder="請再次輸入密碼" required />
-        </div>
-        <div v-if="formErrors.length" class="text-danger">
-            <ul>
-                <li v-for="error in formErrors" :key="error">{{ error }}</li>
-            </ul>
-        </div>
-        <button type="submit" class="btn btn-primary">註冊</button>
-        </form>
     </div>
 </template>
 
@@ -125,7 +197,7 @@ export default {
             if (!this.password) {
                 errors.push('請設定密碼');
             } else if (this.password.length < 6) {
-                errors.push('密碼長度需至少為6個字元');
+                errors.push('密碼長��需至少為6個字元');
             } else if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(this.password)) {
                 errors.push('密碼需包含至少一個字母和一個數字');
             }
@@ -157,23 +229,73 @@ export default {
 </script>
 
 <style scoped>
-        .register-container{
-        max-width: 500px;
-        width:100%;
-        margin: 0 auto;
-    }
-    .form-label{
-        width: 200px;
-        color: #3e3f4c;
-        margin-bottom: 0;
-    }
-    .password-wrapper {
-        position: relative;
-    }
+.register-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 2rem 0;
+}
 
-    .password-wrapper .btn {
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-    }
+.register-container {
+    max-width: 500px;
+    width: 100%;
+}
 
+.auth-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+.form-floating {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6c757d;
+    padding: 0;
+    z-index: 3;
+}
+
+.password-toggle:hover {
+    color: #0d6efd;
+}
+
+.btn-primary {
+    padding: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0.25rem 0.5rem rgba(13, 110, 253, 0.2);
+}
+
+.alert-danger ul {
+    padding-left: 1.25rem;
+}
+
+@media (max-width: 576px) {
+    .register-container {
+        padding: 0 1rem;
+    }
+    
+    .auth-card {
+        padding: 1.5rem;
+    }
+}
 </style>

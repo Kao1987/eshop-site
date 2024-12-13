@@ -17,7 +17,7 @@ const mutations = {
             n => n.message === notification.message && n.type === notification.type
         );
         if(!isDuplicate){
-            if(state.notifications.length>= MAX_NOTIFICATIONS_LENGTH){
+            if(state.notifications.length>= MAX_NOTIFICATIONS){
                 state.notifications.shift();
             }
         state.notifications.push(notification);

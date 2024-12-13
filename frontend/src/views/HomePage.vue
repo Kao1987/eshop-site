@@ -107,6 +107,7 @@
 
 <script>
 import ApiService from '@/services/api';
+import axios from 'axios';
 import { handleApiError } from '@/utils/errorHandler';
 import * as bootstrap from 'bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -199,8 +200,8 @@ export default {
                 console.log(this.$axios.defaults.baseURL); // 打印 Axios 的 baseURL
 
                 const [sevenDaysResponse, monthResponse] = await Promise.all([
-                    this.$axios.get('/api/ranking',{params:{days:7}}),
-                    this.$axios.get('ranking',{params:{days:30}}),
+                    ApiService.rankingAPI.getRanking(7),
+                    ApiService.rankingAPI.getRanking(30),
                 ]);
                 const sevenDaysSales = sevenDaysResponse.data || [];
                 const monthSales = monthResponse.data || [];
@@ -236,7 +237,7 @@ export default {
         async loadOffersData(){
             this.isLoading.offers = true;
             try{
-                const response = await axios.get('/api/special-offers');
+                const response = await ApiService.specialOffersAPI.getAllSpecialOffers();
                 this.specialOffers = response.data || [];
             } catch(error){
                 console.error('加載特價商品失敗',error);
@@ -249,7 +250,7 @@ export default {
         async loadCarouselData(){
             this.isLoading.carousel = true;
             try{
-                const response = await axios.get('/api/carousel_images');
+                const response = await ApiService.carouselAPI.getCarouselImages();
                 this.carouselImages = response.data || [];
                 console.log('Loaded carousel images:', this.carouselImages);
 
@@ -264,8 +265,8 @@ export default {
         async loadProductsData(){
             this.isLoading.products = true;
             try{
-                const response = await axios.get('/api/products');
-                this.products = response.data || [];
+                    const response = await ApiService.productAPI.getAllProducts();
+                this.products = response || [];
             } catch(error){
                 console.error('加載商品數據失敗',error);
                 this.errors.products = '無法加載商品列表';
@@ -283,7 +284,7 @@ export default {
                             product_id,
                             quantity_sold,
                             name:product ? product.name:'未知商品',
-                            image:product ? product.image:'/img/default-product.jpg'
+                            image:product ? product.image:'/img/wrong.png'
                         };
                     })
                     .sort((a, b)=>b.quantity_sold - a.quantity_sold)
@@ -320,12 +321,17 @@ export default {
             return `${hours}時${minutes}分${remainingSeconds}秒`;
         },
         getImageUrl(url){
-            return `api${url}`;
+            if (!url) return '/img/wrong.png';
+            if (url.startsWith('http')) return url;
+            return `api/img/carousel/${url.split('/').pop()}`;
         },
         getProductImage(productId){
             const id = Number(productId);
             const product = this.products.find(p => p.id === id);
-            return product && product.image ? `api${product.image}` : '/img/default-product.jpg';
+            if(!product || !product.image){
+                return '/img/wrong.png';
+            } 
+            return `api/img/products/${product.image.split('/').pop()}`;
         },
         getRandomProducts(count = 5){
             const shuffled = [...this.products];

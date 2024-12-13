@@ -82,9 +82,28 @@ export default {
         };
         const checkout = async () => {
         if (!isLoggedIn.value) {
+            store.dispatch('notifications/showNotification', {
+                type: 'warning',
+                message: '請先登入！',
+                timeout: 2000,
+            });
             router.push({ name: 'UserLogin', query: { redirect: '/cart' }});
             return;
         }
+            // token 存在性檢查
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+        store.dispatch('notifications/showNotification', {
+            type: 'error',
+            message: '登入狀態已過期，請重新登入！',
+            timeout: 2000
+        });
+        router.push({ 
+            name: 'UserLogin', 
+            query: { redirect: '/cart' }
+        });
+        return;
+    }
         if (cartItems.value.length === 0) {
             store.dispatch('notifications/showNotification', {
             type: 'warning',
@@ -104,7 +123,7 @@ export default {
             total: cartTotal.value,
         };
         try{
-            const response = await ApiService.createOrder(orderData);
+            const response = await ApiService.orderAPI.createOrder(orderData);
             if(response.orderId){
                 store.dispatch('cart/clearShoppingCart');
                 store.dispatch('notifications/showNotification', {
@@ -120,10 +139,23 @@ export default {
             }
         }catch(error){
             console.error('提交訂單失敗:', error);
-            store.dispatch('notifications/showNotification', {
-                type: 'error',
-                message: '提交訂單失敗，請稍候再試！',
-            });
+                if (error.response && error.response.status === 403) {
+                store.dispatch('notifications/showNotification', {
+                    type: 'error',
+                    message: '權限不足或登入已過期，請重新登入！',
+                    timeout: 2000
+                });
+                router.push({ 
+                    name: 'UserLogin', 
+                    query: { redirect: '/cart' }
+                });
+            } else {
+                store.dispatch('notifications/showNotification', {
+                    type: 'error',
+                    message: '提交訂單失敗，請稍後再試！',
+                    timeout: 2000
+                });
+            }
         }
     }
 

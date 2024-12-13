@@ -111,7 +111,8 @@ export default {
                         ...product,
                         id: String(product.id).trim(),
                         price:Number(product.price),
-                        tags: Array.isArray(product.tags) ? product.tags : []
+                        tags: Array.isArray(product.tags) ? product.tags : [],
+                        image: product.image ? `api/img/products/${product.image.split('/').pop()}` : '/img/default-product.jpg'
 
                     }))
                 }else{

@@ -19,6 +19,10 @@
             __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: JSON.stringify(false),
             __VUE_OPTIONS_API__: JSON.stringify(true),
             __VUE_PROD_DEVTOOLS__: JSON.stringify(false),
+            // 'process.env': {
+            //     VUE_APP_API_BASE_URL: JSON.stringify(process.env.VUE_APP_API_BASE_URL),
+            //     VUE_APP_IMAGE_BASE_URL: JSON.stringify(process.env.VUE_APP_IMAGE_BASE_URL)
+            // }
         }),
         ],
         optimization: {
@@ -40,6 +44,12 @@
 
     devServer: {
         port: 8081, // 設置開發伺服器埠號
+        proxy: {
+            '/api': {
+                target: 'http://localhost:5002',
+                changeOrigin: true
+            }
+        }
     },
 
     productionSourceMap: false, // 生產環境不生成 source map

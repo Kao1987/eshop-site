@@ -130,7 +130,7 @@ export default {
         const  loadBrands = async () => {
             try {
                 const response = await ApiService.brandAPI.getAllBrands();
-                brands.value = response.data;
+                brands.value = Array.isArray(response.data) ? response.data : [];
                 console.log('加載的品牌資料:',brands.value);
             } catch (error) {
                 handleApiError(error, '讀取品牌資料時出錯，請稍後再試！');
@@ -140,7 +140,7 @@ export default {
         const loadTags = async() => {
             try {
                 const response = await ApiService.tagAPI.getAllTags();
-                tags.value = response.data;
+                tags.value = Array.isArray(response.data) ? response.data : [];
                 console.log('加載的標籤資料:', tags.value);
             } catch (error) {
                 handleApiError(error, '讀取標籤資料時出錯，請稍後再試！');
@@ -227,17 +227,16 @@ export default {
             }
         };
             // 監聽圖片上傳
-            const handleImageUpload = (event) => {
+            const selectImage = (event) => {
             const file = event.target.files[0];
             if(file && !file.type.startsWith('image/')){
                 alert('請上傳正確的圖片格式');
                 event.target.value = '';
                 return;
             }
-            productForm.value.image = file;
+            productForm.imageFile = file; 
+            productForm.imagePreview = URL.createObjectURL(file);
         };
-        loadBrands();
-        loadTags();
         return{
             productForm,
             brands,

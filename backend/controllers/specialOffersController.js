@@ -29,13 +29,31 @@ exports.getSpecialOfferById = async (req, res) => {
 
 // 新增特價商品
 exports.createSpecialOffer = async (req, res) => {
-  const data = req.body;
+  const connection = await pool.getConnection();
   try {
-    const [result] = await pool.query('INSERT INTO special_offers SET ?', data);
-    res.status(201).json({ id: result.insertId, ...data });
+    await connection.beginTransaction();
+    const { product_id, price, countdown, created_at } = req.body;
+    if(!product_id || !price || !countdown || !created_at){
+      return res.status(400).json({ message: '缺少必要欄位' });
+    }
+    const specialOfferData = {
+      product_id: parseInt(product_id, 10),
+      price: parseFloat(price),
+      countdown: parseInt(countdown, 10),
+      created_at: created_at || new Date().toISOString().slice(0, 10)
+    };
+    const [result] = await connection.query('INSERT INTO special_offers SET ?', specialOfferData);
+    const specialOfferId = result.insertId;
+    await connection.commit();
+    
+    const [specialOffer] = await connection.query('SELECT * FROM special_offers WHERE id = ?', [specialOfferId]);
+    res.status(201).json( specialOffer[0] );
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: '伺服器錯誤' });
+    await connection.rollback();
+    console.error('新增特價商品時出錯',error);
+    res.status(500).json({ message: '伺服器錯誤',error: error.message });
+  }finally{
+    connection.release();
   }
 };
 

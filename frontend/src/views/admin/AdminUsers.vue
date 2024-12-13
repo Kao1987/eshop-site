@@ -1,118 +1,288 @@
 <!-- frontend/admin/adminUsers.vue -->
 <template> 
-    <div class="admin-dashboard container mt-5">
-        <h2 class="text-center">用戶管理</h2>
-        <!-- 新增用戶 -->
-        <div class="admin-users container mt-5">
-            <button class="btn btn-success" @click="openCreateUserModal">新增用戶</button>
+    <div class="admin-dashboard container py-4">
+        <!-- 頁面標題區 -->
+        <div class="page-header mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold text-primary mb-1">用戶管理</h2>
+                    <p class="text-muted mb-0">管理系統用戶和權限</p>
+                </div>
+                <button class="btn btn-primary" @click="openCreateUserModal">
+                    <i class="fas fa-user-plus me-2"></i>新增用戶
+                </button>
+            </div>
         </div>
-        <!-- 用戶列表 -->
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>用戶名</th>
-                    <th>電子信箱</th>
-                    <th>權限</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                    <template v-for="(user,index) in users" :key="index">
-                        <tr>
-                            <td>{{ user.name }}</td>
-                            <td>{{ user.email }}</td>
-                            <td>{{ user.role }}</td>
-                            <td>
-                                <button class="btn btn-warning btn-sm" @click="openEditUserModal(index)">編輯</button>
-                                <button class="btn btn-danger btn-sm ml-2" @click="deleteUser(index)">刪除</button>
-                            </td>
-                        </tr>
-                        <tr v-if="user.recipients && Array.isArray(user.recipients)">
-                            <td colspan="4">
-                                <div class="recipient-card">
-                                    <div v-for="(recipient,recipientIndex) in user.recipients" :key="recipientIndex">
-                                        <strong>收件人名稱:</strong> {{ recipient.name }}
-                                    <strong>電話:</strong> {{ recipient.phone }}
-                                    <strong>地址:</strong> {{ recipient.address }}
-                                    <button class="btn btn-sm btn-warning" @click="editRecipient(index, recipientIndex)">編輯收件人</button>
-                                    <button class="btn btn-sm btn-danger" @click="deleteRecipient(index, recipientIndex)">刪除</button>
-                                    <br/>
-                                    </div>
-                                </div>
-                            </td>
-                    </tr>
-                    </template>
 
-            </tbody>
-        </table>
-        <!-- 新增/編輯用戶 MODAL -->
+        <!-- 用戶列表卡片 -->
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="py-3">用戶資訊</th>
+                            <th class="py-3">權限</th>
+                            <th class="py-3">收件地址</th>
+                            <th class="py-3 text-end">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template v-for="(user,index) in users" :key="index">
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="user-avatar me-3">
+                                            {{ getUserInitials(user.name) }}
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">{{ user.name }}</h6>
+                                            <small class="text-muted">{{ user.email }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span :class="getRoleBadgeClass(user.role)">
+                                        {{ getRoleDisplayName(user.role) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button 
+                                        class="btn btn-link btn-sm text-decoration-none"
+                                        @click="toggleRecipients(index)"
+                                        v-if="user.recipients && user.recipients.length"
+                                    >
+                                        {{ user.recipients.length }} 個地址
+                                        <i :class="['fas', user.showRecipients ? 'fa-chevron-up' : 'fa-chevron-down', 'ms-1']"></i>
+                                    </button>
+                                    <span v-else class="text-muted">無收件地址</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <button 
+                                            class="btn btn-outline-primary btn-sm" 
+                                            @click="openEditUserModal(index)"
+                                            title="編輯用戶"
+                                        >
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button 
+                                            class="btn btn-outline-danger btn-sm" 
+                                            @click="deleteUser(index)"
+                                            title="刪除用戶"
+                                        >
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- 收件人資訊展開區 -->
+                            <tr v-if="user.showRecipients && user.recipients && user.recipients.length">
+                                <td colspan="4" class="bg-light">
+                                    <div class="recipient-list p-3">
+                                        <div v-for="(recipient, recipientIndex) in user.recipients" 
+                                             :key="recipientIndex"
+                                             class="recipient-item"
+                                        >
+                                            <div class="recipient-info">
+                                                <h6 class="mb-2">{{ recipient.name }}</h6>
+                                                <p class="mb-1">
+                                                    <i class="fas fa-phone me-2 text-muted"></i>
+                                                    {{ recipient.phone }}
+                                                </p>
+                                                <p class="mb-0">
+                                                    <i class="fas fa-map-marker-alt me-2 text-muted"></i>
+                                                    {{ recipient.address }}
+                                                </p>
+                                            </div>
+                                            <div class="recipient-actions">
+                                                <button 
+                                                    class="btn btn-outline-primary btn-sm me-2"
+                                                    @click="editRecipient(index, recipientIndex)"
+                                                >
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button 
+                                                    class="btn btn-outline-danger btn-sm"
+                                                    @click="deleteRecipient(index, recipientIndex)"
+                                                >
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 用戶編輯 Modal -->
         <div class="modal fade" tabindex="-1" ref="userModal">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">{{ isEditing ? '編輯用戶':'新增用戶'}}</h5>
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title">{{ isEditing ? '編輯用戶' : '新增用戶' }}</h5>
                         <button type="button" class="btn-close" @click="closeModal"></button>
                     </div>
                     <div class="modal-body">
-                        <form @submit.prevent="saveUser">
+                        <form @submit.prevent="saveUser" class="needs-validation">
                             <div class="mb-3">
-                                <label for="userName" class="form-label">用戶名</label>
-                                <input type="text" class="form-control" id="userName" v-model="userForm.name" required/>
+                                <label class="form-label">用戶名稱</label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    v-model="userForm.name" 
+                                    required
+                                />
                             </div>
                             <div class="mb-3">
-                                <label for="userEmail" class="form-label">電子郵件</label>
-                                <input type="email" class="form-control" id="userEmail" v-model="userForm.email" required/>
+                                <label class="form-label">電子郵件</label>
+                                <input 
+                                    type="email" 
+                                    class="form-control" 
+                                    v-model="userForm.email" 
+                                    required
+                                />
                             </div>
                             <div class="mb-3">
-                                <label for="userPassword" class="form-label">密碼</label>
-                                <input
-                                type="password"
-                                class="form-control"
-                                id="userPassword"
-                                v-model="userForm.password"
-                                :required="!isEditing || userForm.password"
-                                >
-                            </div>                            
-                            <div class="mb-3">
-                                <label for="confirmPassword" class="form-label">確認密碼</label>
-                                <input
-                                type="password"
-                                class="form-control"
-                                id="confirmPassword"
-                                v-model="userForm.confirmPassword"
-                                :required="!isEditing || userForm.password"
-                                >
+                                <label class="form-label">密碼</label>
+                                <div class="input-group">
+                                    <input 
+                                        :type="showPassword ? 'text' : 'password'"
+                                        class="form-control" 
+                                        v-model="userForm.password"
+                                        :required="!isEditing"
+                                    />
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-outline-secondary"
+                                        @click="showPassword = !showPassword"
+                                    >
+                                        <i :class="['fas', showPassword ? 'fa-eye-slash' : 'fa-eye']"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="mb-3">
-                                <label for="userName" class="form-label">權限</label>
-                                <select id="userRole" class="form-select" v-model="userForm.role">
-                                    <option value="user">用戶</option>
-                                    <option value="admin">管理者</option>
+                                <label class="form-label">確認密碼</label>
+                                <input 
+                                    type="password" 
+                                    class="form-control" 
+                                    v-model="userForm.confirmPassword"
+                                    :required="!isEditing || userForm.password"
+                                />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">用戶權限</label>
+                                <select class="form-select" v-model="userForm.role">
+                                    <option value="user">一般用戶</option>
+                                    <option value="admin">管理員</option>
                                 </select>
                             </div>
-                            <!-- 編輯用戶詳細資料 -->
                             <div v-if="userForm.role === 'user'">
                                 <div class="mb-3">
-                                    <label for="userPhone" class="form-label">電話</label>
-                                    <input type="text" class="form-control" id="userPhone" v-model="userForm.phone" :required="userForm.role === 'user'" />
+                                    <label class="form-label">聯絡電話</label>
+                                    <input 
+                                        type="tel" 
+                                        class="form-control" 
+                                        v-model="userForm.phone"
+                                        required
+                                    />
                                 </div>
-                                <div>
-                                    <label for="userAddress" class="form-label">地址</label>
-                                    <input type="text" class="form-control" id="userAddress" v-model="userForm.address" :required="userForm.role === 'user'" />
+                                <div class="mb-3">
+                                    <label class="form-label">聯絡地址</label>
+                                    <input 
+                                        type="text" 
+                                        class="form-control" 
+                                        v-model="userForm.address"
+                                        required
+                                    />
                                 </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" @click="closeModal">取消</button>
-                                <button type="submit" class="btn btn-primary">{{ isEditing ? '保存變更' : '新增用戶' }}</button>
                             </div>
                         </form>
-
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-outline-secondary" @click="closeModal">取消</button>
+                        <button type="submit" class="btn btn-primary" @click="saveUser">
+                            {{ isEditing ? '保存變更' : '新增用戶' }}
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </template>
+
+<style scoped>
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background-color: #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.recipient-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.recipient-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.recipient-info {
+    flex: 1;
+}
+
+.recipient-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-group .btn {
+    padding: 0.375rem 0.75rem;
+}
+
+.badge {
+    padding: 0.5em 0.75em;
+    font-weight: 500;
+}
+
+.modal-content {
+    border: none;
+    border-radius: 1rem;
+}
+
+.form-control, .form-select {
+    padding: 0.75rem 1rem;
+}
+
+@media (max-width: 768px) {
+    .recipient-item {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .recipient-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+</style>
+
 <script>
 import * as bootstrap from 'bootstrap';
 import ApiService from '@/services/api';
@@ -136,6 +306,7 @@ import { handleApiError } from '@/utils/errorHandler';
                 },
                 isEditing:false,
                 currentIndex: null,
+                showPassword: false,
             };
         },
         mounted(){
@@ -237,14 +408,23 @@ import { handleApiError } from '@/utils/errorHandler';
                 })
 
             },
+            getUserInitials(name) {
+                return name ? name.substring(0, 2).toUpperCase() : '??';
+            },
+
+            getRoleBadgeClass(role) {
+                return role === 'admin' ? 'badge bg-primary' : 'badge bg-success';
+            },
+
+            getRoleDisplayName(role) {
+                return role === 'admin' ? '管理員' : '一般用戶';
+            },
+
+            toggleRecipients(index) {
+                this.$set(this.users[index], 'showRecipients', !this.users[index].showRecipients);
+            }
         },
 
         
 };
 </script>
-<style scoped>
-.admin-users{
-    max-width:800px;
-    margin:0 auto;
-}
-</style>

@@ -58,7 +58,7 @@ import SpecialOffers from '@/views/admin/SpecialOffers.vue';
         path: '/admin/Orders',
         name: 'AdminOrders',
         component: AdminOrders,
-        // meta:{requiresAuth: true,role:'admin'}
+        meta:{requiresAuth: true,role:'admin'}
     },    
     {
         path: '/admin/Orders/:id(\\d+)',
@@ -163,7 +163,9 @@ const router = createRouter({
     });
     router.beforeEach((to,from,next)=>{
         const isLoggedIn = !!localStorage.getItem('authToken'); //檢查是某有登入
-        const userRole = localStorage.getItem('role');
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        const userRole = user ? user.role : null;
 
         if(to.matched.some(record => record.meta.requiresAuth)){
             // 如果頁面需要登入

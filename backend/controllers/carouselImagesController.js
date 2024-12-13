@@ -31,9 +31,19 @@ exports.getCarouselImageById = async (req, res) => {
 // 新增輪播圖
 exports.createCarouselImage = async (req, res) => {
   try {
-    const imageUrl = `/api/img/carouselImages/${req.file.filename}`;
-    const [result] = await pool.query('INSERT INTO carousel_images (url) VALUES (?)', [imageUrl]);
-    res.status(201).json({ id: result.insertId, url:imageUrl });
+    const imageUrl = `/img/carouselImages/${req.file.filename}`;
+    const [result] = await pool.query(
+      'INSERT INTO carousel_images (url, created_at) VALUES (?, NOW())',
+      [imageUrl]
+    );
+    
+    // 取得新增的資料
+    const [newImage] = await pool.query(
+      'SELECT * FROM carousel_images WHERE id = ?',
+      [result.insertId]
+    );
+    
+    res.status(201).json(newImage[0]);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: '伺服器錯誤', error: error.message });

@@ -50,8 +50,7 @@
 </template>
     
 <script>
-    import { productAPI } from '@/services/api';
-    import { orderAPI } from '@/services/api';
+import ApiService from '@/services/api';
     
     export default {
         name: 'OrderDetail',
@@ -65,8 +64,8 @@
         methods: {
             async fetchOrderDetails(orderId) {
                 try {
-                    const response = await axios.get(`/api/orders/${orderId}`);
-                    this.order = response.data.order || response.data;
+                    const response = await ApiService.orderAPI.getOrderById(orderId);
+                    this.order = response || response.data;
                     // 獲取用戶名稱
                     this.fetchUserName(this.order.user_id);
                 } catch (error) {
@@ -77,8 +76,8 @@
             },
             async fetchUserName(userId) {
                 try {
-                    const response = await axios.get(`/api/users/${userId}`);
-                    const user = response.data.user || response.data;
+                    const response = await ApiService.userAPI.getUserInfo(userId);
+                    const user = response.data || response;
                     this.userName = user.name || '未知用戶';
                 } catch (error) {
                     console.error('加載用戶資訊時出錯', error);
@@ -100,7 +99,7 @@
             async updateOrderStatus() {
                 if (!this.order) return;
                     try {
-                        await axios.put(`/api/orders/${this.order.id}`,{status:this.order.status});                   
+                        await ApiService.orderAPI.updateOrderStatus(this.order.id,this.order.status);                   
                         alert('訂單狀態已更新');
                     } catch (error) {
                         console.error('更新訂單狀態時出錯', error);

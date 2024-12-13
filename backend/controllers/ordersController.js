@@ -29,7 +29,7 @@ exports.getAllOrders = async (req, res) => {
         item.price = Math.round(item.price);
       })
     }
-    res.json(orders);
+    res.json({data:orders});
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: '伺服器錯誤' });
@@ -128,6 +128,8 @@ exports.updateOrderStatus = async (req, res) =>{
     if(result.affectedRows === 0){
       return res.status(404).json({ message: '訂單未找到' });
     }
+    res.json({ message: '訂單狀態已更新', id, status });
+
   }catch(error){
     console.error('更新訂單狀態時出錯,error');
     res.status(500).json({ message: '伺服器錯誤' });

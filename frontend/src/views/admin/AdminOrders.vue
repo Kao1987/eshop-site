@@ -1,75 +1,126 @@
+<!-- frontend/src/views/admin/AdminOrders.vue -->
 <template> 
     <div class="admin-dashboard container mt-5">
-        <h2 class="text-center">訂單管理</h2>
-        <div class="filters d-flex justify-content-between mb-3">
-            <!-- 訂單或用戶搜索 -->
-            <input 
-                type="text" 
-                class="form-control me-2" 
-                placeholder="搜尋訂單號或用戶名" 
-                v-model="searchQuery"
-            />
-            <select 
-                v-model="selectedStatus" 
-                class="form-select me-2" 
-                aria-label="訂單狀態篩選"
-            >
-                <option value="">全部狀態</option>
-                <option value="pending">待確認</option>
-                <option value="shipped">已發貨</option>
-                <option value="completed">已完成</option>
-                <option value="cancelled">已取消</option>
-            </select>
-            <button class="btn btn-primary" @click="filterOrders">篩選</button>
+        <!-- 標題區塊改善 -->
+        <div class="dashboard-header mb-4">
+            <h2 class="text-primary fw-bold">訂單管理系統</h2>
+            <p class="text-muted">管理所有訂單狀態與詳情</p>
         </div>
-        <!-- 訂單列表 -->
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>訂單號</th>
-                    <th>用戶編號</th>
-                    <th>總金額</th>
-                    <th>訂單狀態</th>
-                    <th>建立日期</th>
-                    <th>操作</th>   
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="order in paginatedOrders" :key="order.id">
-                    <td>{{ order.id }}</td>
-                    <td>{{ order.user_id }} - {{ getUserName(order.user_id) }}</td>
-                    <td>{{ formatCurrency(order.total) }}</td>
-                    <td>{{ formatStatus(order.status) }}</td>
-                    <td>{{ formatDate(order.order_date) }}</td>
-                    <td>
-                        <button class="btn btn-info btn-sm me-2" @click="viewOrderDetails(order)">查看</button>
-                        <button 
-                            class="btn btn-danger btn-sm" 
-                            @click="cancelOrder(order)"
-                            :disabled="order.status === 'cancelled' || order.status === 'completed'"
-                            :title="order.status === 'cancelled' || order.status === 'completed' ? '無法取消或已取消的訂單' : '取消訂單'"
-                        >
-                            取消訂單
-                        </button>
-                    </td>
-                </tr>
-                <tr v-if="paginatedOrders.length === 0">
-                    <td colspan="6" class="text-center">沒有符合條件的訂單。</td>
-                </tr>
-            </tbody>
-        </table>
-        <!-- 訂單分頁 -->
-        <div class="d-flex justify-content-center align-items-center">
-            <button class="btn btn-outline-primary me-2" @click="prevPage" :disabled="currentPage === 1">上一頁</button>
-            <span>{{ currentPage }} / {{ totalPages }}頁</span>
-            <button class="btn btn-outline-primary ms-2" @click="nextPage" :disabled="currentPage === totalPages">下一頁</button>
+
+        <!-- 搜尋和篩選區塊優化 -->
+        <div class="filters-container p-3 bg-light rounded-3 mb-4">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input 
+                            type="text" 
+                            class="form-control border-start-0" 
+                            placeholder="搜尋訂單號或用戶名" 
+                            v-model="searchQuery"
+                        />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select 
+                        v-model="selectedStatus" 
+                        class="form-select" 
+                    >
+                        <option value="">所有訂單狀態</option>
+                        <option value="pending">待確認</option>
+                        <option value="shipped">已發貨</option>
+                        <option value="completed">已完成</option>
+                        <option value="cancelled">已取消</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-primary w-100" @click="filterOrders">
+                        <i class="fas fa-filter me-2"></i>套用篩選
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 訂單列表優化 -->
+        <div class="table-responsive rounded-3 shadow-sm">
+            <table class="table table-hover mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="py-3">訂單號</th>
+                        <th class="py-3">用戶資訊</th>
+                        <th class="py-3">總金額</th>
+                        <th class="py-3">狀態</th>
+                        <th class="py-3">建立日期</th>
+                        <th class="py-3">操作</th>   
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="order in paginatedOrders" :key="order.id">
+                        <td class="align-middle">#{{ order.id }}</td>
+                        <td class="align-middle">
+                            <div class="d-flex align-items-center">
+                                <span class="user-avatar">{{ getUserInitials(order.user_id) }}</span>
+                                <span class="ms-2">{{ getUserName(order.user_id) }}</span>
+                            </div>
+                        </td>
+                        <td class="align-middle fw-bold">{{ formatCurrency(order.total) }}</td>
+                        <td class="align-middle">
+                            <span :class="getStatusBadgeClass(order.status)">
+                                {{ formatStatus(order.status) }}
+                            </span>
+                        </td>
+                        <td class="align-middle">{{ formatDate(order.order_date) }}</td>
+                        <td class="align-middle">
+                            <button 
+                                class="btn btn-outline-info btn-sm me-2" 
+                                @click="viewOrderDetails(order)"
+                            >
+                                <i class="fas fa-eye me-1"></i>查看
+                            </button>
+                            <button 
+                                class="btn btn-outline-danger btn-sm" 
+                                @click="cancelOrder(order)"
+                                :disabled="order.status === 'cancelled' || order.status === 'completed'"
+                                v-tooltip="order.status === 'cancelled' || order.status === 'completed' ? 
+                                    '無法取消已完成或已取消的訂單' : '取消此訂單'"
+                            >
+                                <i class="fas fa-times me-1"></i>取消
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分頁控制優化 -->
+        <div class="pagination-container mt-4 d-flex justify-content-between align-items-center">
+            <div class="page-info text-muted">
+                顯示第 {{ paginationInfo.start }} 到 {{ paginationInfo.end }} 筆，共 {{ filteredOrders.length }} 筆
+            </div>
+            <div class="pagination-controls">
+                <button 
+                    class="btn btn-outline-primary me-2" 
+                    @click="prevPage" 
+                    :disabled="currentPage === 1"
+                >
+                    <i class="fas fa-chevron-left me-1"></i>上一頁
+                </button>
+                <button 
+                    class="btn btn-outline-primary" 
+                    @click="nextPage" 
+                    :disabled="currentPage === totalPages"
+                >
+                    下一頁<i class="fas fa-chevron-right ms-1"></i>
+                </button>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
-import { productAPI } from '@/services/api';
-import { orderAPI } from '@/services/api';
+import ApiService from '@/services/api'; 
 import debounce from 'lodash.debounce';
 
 export default {
@@ -82,13 +133,17 @@ export default {
             selectedStatus: '',
             currentPage: 1,
             itemsPerPage: 10,
-            debouncedFilter: null, // 初始化 debouncedFilter
+            debouncedFilter: null, 
+            loading: false,
+            showToast: false,
+            toastMessage: '',
+            toastType: 'success',
         };
     },
     computed: {
         filteredOrders() {
             return this.orders.filter(order => {
-                const matchesSearch = (order.userId && order.userId.toString().toLowerCase().includes(this.searchQuery.toLowerCase())) ||
+                const matchesSearch = (order.user_id && order.user_id.toString().toLowerCase().includes(this.searchQuery.toLowerCase())) ||
                                     (order.id && order.id.toString().toLowerCase().includes(this.searchQuery.toLowerCase()));
                 const matchesStatus = this.selectedStatus ? order.status === this.selectedStatus : true;
                 return matchesSearch && matchesStatus;
@@ -101,12 +156,17 @@ export default {
             const start = (this.currentPage - 1) * this.itemsPerPage;
             const end = this.currentPage * this.itemsPerPage;
             return this.filteredOrders.slice(start, end);
+        },
+        paginationInfo() {
+            const start = (this.currentPage - 1) * this.itemsPerPage + 1;
+            const end = Math.min(this.currentPage * this.itemsPerPage, this.filteredOrders.length);
+            return { start, end };
         }
     },
     methods: {
         async fetchOrders() {
             try {
-                const response = await axios.get('/api/orders');
+                const response = await ApiService.orderAPI.getOrders();
                 console.log('API回傳的訂單資料',response.data);
                 const ordersData = response.data;
                 this.orders = ordersData.map(
@@ -115,14 +175,24 @@ export default {
                             status:order.status || 'pending'
                         }))  || [] ;
             } catch (error) {
-                console.error('加載訂單時出錯', error);
-                alert('加載訂單時出錯');
+                if (error.response && error.response.status === 401) {
+                    alert('您的登入已過期，請重新登入。');
+                    this.$store.dispatch('auth/logout');
+                    this.$router.push('/UserLogin'); // 導向登入頁
+                } else if (error.response && error.response.status === 403) {
+                    // 權限不足
+                    alert('您沒有權限訪問此頁面');
+                    this.$router.push('/');
+                } else {
+                    console.error('加載訂單時出錯', error);
+                    alert('加載訂單時出錯，請稍後再試');
+                }
                 this.orders = [];
             }
         },
         async fetchUsers() {
             try{
-                const response = await axios.get('/api/users');
+                const response = await ApiService.userAPI.getAllUsers();
                 this.users = response.data || [];
             }catch(error){
                 console.error('加載用戶時出錯',error);
@@ -137,7 +207,7 @@ export default {
         async cancelOrder(order) {
             if (confirm('確定要取消這個訂單？')) {
                 try {
-                    await axios.put(`/api/orders/${order.id}/status`,{status:'cancelled'});
+                    await ApiService.orderAPI.updateOrder(order.id,{status:'cancelled'});
                     order.status = 'cancelled';
                     alert('訂單已成功取消。');
                 } catch (error) {
@@ -184,15 +254,56 @@ export default {
             const user = this.users.find(u=>u.id == userId);
             return user? user.name : '未知用戶';
         },
-    },
-    mounted() {
-        // 從API取得數據
-        this.fetchOrders();
-        this.fetchUsers();
-        // 初始化 debouncedFilter 為 debounce(this.filterOrders, 300)
-        this.debouncedFilter = debounce(this.filterOrders, 300);
+        getStatusBadgeClass(status) {
+            const classes = {
+                pending: 'badge bg-warning text-dark',
+                shipped: 'badge bg-info text-white',
+                completed: 'badge bg-success text-white',
+                cancelled: 'badge bg-danger text-white'
+            };
+            return classes[status] || 'badge bg-secondary';
+        },
         
+        getUserInitials(userId) {
+            const user = this.users.find(u => u.id === userId);
+            if (!user) return '??';
+            return user.name.substring(0, 2).toUpperCase();
+        },
+
+        showNotification(message, type = 'success') {
+            this.toastMessage = message;
+            this.toastType = type;
+            this.showToast = true;
+            setTimeout(() => {
+                this.showToast = false;
+            }, 3000);
+        }
     },
+    async mounted() {
+        try{
+            // const isAuthenticated = await this.$store.dispatch('auth/checkAuthStatus');
+            // const user = this.$store.state.auth.user;
+
+            // if(!isAuthenticated || !user){
+            //     this.$router.push({
+            //         path:'/UserLogin',
+            //         query:{
+            //             redirect:this.$route.fullPath
+            //         }
+            //     });
+            //     return;
+            // }
+
+            await this.fetchOrders();
+            await this.fetchUsers();
+        }catch(error){
+            console.error('獲取訂單或用戶數據時出錯', error);
+            alert('獲取訂單或用戶數據時出錯，請稍後再試！');
+        };
+    },
+
+        // // 初始化 debouncedFilter 為 debounce(this.filterOrders, 300)
+        // this.debouncedFilter = debounce(this.filterOrders, 300);
     watch: {
         searchQuery() {
             this.debouncedFilter();
@@ -206,19 +317,88 @@ export default {
 
 <style scoped>
 .admin-dashboard {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
 }
-.filters {
+
+.dashboard-header h2 {
+    font-size: 2rem;
+    color: #2c3e50;
+}
+
+.filters-container {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: #e9ecef;
+    border-radius: 50%;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 500;
 }
-.table-hover tbody tr:hover {
-    background-color: #f1f1f1;
+
+.table th {
+    font-weight: 600;
+    color: #495057;
 }
+
+.table td {
+    vertical-align: middle;
+}
+
+.badge {
+    padding: 0.5em 0.75em;
+    font-weight: 500;
+}
+
 .btn-sm {
     padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.pagination-container {
+    font-size: 0.875rem;
+}
+
+/* 添加過渡動畫 */
+.table-hover tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.btn {
+    transition: all 0.2s ease;
+}
+
+/* 加載動畫 */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .filters-container .row {
+        flex-direction: column;
+    }
+    
+    .pagination-container {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
 }
 </style>

@@ -187,7 +187,7 @@ exports.updateProduct = async (req, res) => {
         const oldImagePath = path.join(__dirname, '..','public',existingProductRows[0].image);
         fs.unlink(oldImagePath,(err)=>{
           if(err && err.code !== 'ENOENT'){
-            console.error('刪除圖片失敗,err');
+            console.error('刪除圖片失敗',err);
           }
         });
       }
@@ -256,18 +256,23 @@ exports.deleteProduct = async (req, res) => {
 
 // 處理搜索產品
 exports.searchProducts = async (req, res) =>{
-  const { keyword, page= 1, limit= 10 } = req.query;
-  const offset = (page -1) * limit;
   try{
-    const sanitizedKeyword = keyword.replace(/[%_]/g,'\\$&');
-    const [rows] = await pool.query(
-      'SELECT * FROM products WHERE name LIKE ? Limit ? OFFSET ?',
-      [`%${sanitizedKeyword}%`,parseInt(limit),parseInt(offset)]
-    );
-    res.json(rows);
+      const { keyword, page= 1, limit= 10 } = req.query;
+      const offset = (page -1) * limit;
+
+      if(!keyword){
+        return res.status(400).json({message:'缺少關鍵字'});
+      }
+
+      const sanitizedKeyword = keyword.replace(/[%_]/g,'\\$&');
+      const [rows] = await pool.query(
+        'SELECT * FROM products WHERE name LIKE ? LIMIT ? OFFSET ?',
+        [`%${sanitizedKeyword}%`,parseInt(limit),parseInt(offset)]
+      );
+      res.json(rows);
   }catch(error){
     console.error('搜索產品時出錯:',error);
-    res.status(500).json({message:'服務氣錯誤'});
+    res.status(500).json({message:'伺服器錯誤'});
   }
 };
 

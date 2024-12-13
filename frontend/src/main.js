@@ -13,6 +13,8 @@ import store from './store';
 import 'bootstrap-vue-3/dist/bootstrap-vue-3.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import request from '@/utils/request';
+import ApiService from '@/services/api'; // 確保使用 ApiService 管理 Axios 請求
+import { getImageUrl } from '@/utils/imageUrl'; // 引入圖片幫助函數
 
 
 const app = createApp(App);
@@ -25,5 +27,14 @@ app.use(router);
 app.use(store);
 app.use(ElementPlus);
 app.use(BootstrapVue3);
+// 確認環境變數載入
+console.log('API Base URL:', process.env.VUE_APP_API_BASE_URL);
+console.log('Carousel Image Base URL:', process.env.VUE_APP_CAROUSEL_IMAGE_BASE_URL);
+console.log('Product Image Base URL:', process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL);
 
-app.mount('#app');
+store.dispatch('auth/checkAuthStatus').then(() => {
+    app.mount('#app');
+}).catch(error => {
+    console.error('認證狀態檢查失敗:', error);
+    app.mount('#app');
+});

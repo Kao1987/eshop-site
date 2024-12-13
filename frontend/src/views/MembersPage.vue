@@ -1,135 +1,297 @@
 <!-- frontend/src/views/MembersPage.vue -->
 <template>
-<div class="container mt-5">
-    <h2 class="mb-4">會員資料</h2>
-    <!--會員基本資料 -->
-        <div class="card mb-3">
-            <div class="card-body">
-            <h5 class="card-title">會員基本資料</h5>
-            <p class="card-text">使用者名稱：{{ userInfo.name }} </p>
-            <p class="card-text">電子郵件：{{ userInfo.email }} </p>
-            <p class="card-text">電話：{{ userInfo.phone }} </p>
-            <p class="card-text">住址: {{ userInfo.address }} </p>
+    <div class="member-page bg-light">
+        <div class="container py-4">
+            <!-- 會員資訊卡片 -->
+            <div class="member-profile mb-4">
+                <div class="profile-header d-flex align-items-center">
+                    <div class="avatar-circle me-3">
+                        <span class="initials">{{ getUserInitials }}</span>
+                    </div>
+                    <div>
+                        <h2 class="mb-1">{{ userInfo.name }}</h2>
+                        <p class="text-muted mb-0">{{ userInfo.email }}</p>
+                    </div>
+                </div>
             </div>
-        </div>
-    <!--收件人資料 -->
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5>收件人資料</h5>
-            <button class="btn btn-link" @click="toggleRecipient">展開/收起</button>
-            <div v-if="showRecipient">
-            <table class="table">
-                <thead>
-                    <tr>
-                    <th>收件人名稱</th>
-                    <th>聯絡電話</th>
-                    <th>地址</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(recipient, index) in recipients || []" :key="index">
-                        <td>{{ recipient.name }}</td>
-                        <td>{{ recipient.phone }}</td>
-                        <td>{{ recipient.address }}</td>
-                        <td>
-                            <button class="btn btn-primary btn-sm" @click="editRecipientInfo(index)">編輯</button>
-                            <button class="btn btn-danger btn-sm" @click="deleteRecipient(index)">刪除</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <button class="btn btn-primary" @click="addRecipient">新增收件人</button>
-        </div>
-    </div>
-    <!-- 訂單查詢 -->
-    <div class="mb-3">
-        <div class="card-body">
-            <h5 class="card-title">訂單查詢</h5>
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>訂單編號</th>
-                    <th>訂單金額</th>
-                    <th>訂購時間</th>
-                    <th>操作</th>
-                </tr>
-                </thead>
-                <tbody>
-                    <template v-for="(order,index) in orders" :key="index">
-                        <tr >
-                            <td>{{ order.id }}</td>
-                            <td>{{ Math.round(order.total) }}</td>
-                            <td>{{ formateOrderDate(order.created_at) }}</td>
-                            <td>
-                                <button class="btn btn-link" @click="toggleOrderDetails(index)">展開/收起</button>
-                            </td>
-                        </tr>
-                        <!-- 訂單展開 -->
-                        <tr v-if="expandedOrder !==null && expandedOrder === index">
-                            <td colspan="4">
-                                <div class="order-details">
-                                    <div v-for="(orderItem, i) in order.items" :key="i" class="order-item">
-                                        <img 
-                                            :src="orderItem.product_image ? `/img/products/${orderItem.product_image}` : '/img/welcome.jpg'"
-                                            :alt="orderItem.product_name"
-                                            class="product-thumbnail"
-                                        />
-                                        <div class="item-info">
-                                            <strong>商品名稱:</strong>{{ orderItem.name }}
-                                            <strong>數量:</strong> {{ orderItem.quantity }}
-                                            <strong>價格:</strong> {{ orderItem.price }}
+
+            <!-- 主要內容區塊 -->
+            <div class="content-tabs mb-4">
+                <ul class="nav nav-pills mb-3" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#profile">
+                            <i class="fas fa-user me-2"></i>個人資料
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#addresses">
+                            <i class="fas fa-map-marker-alt me-2"></i>收件地址
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#orders">
+                            <i class="fas fa-shopping-bag me-2"></i>訂單記錄
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- 個人資料頁籤 -->
+                    <div class="tab-pane fade show active" id="profile">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="info-group mb-3">
+                                    <label class="text-muted">會員姓名</label>
+                                    <p class="mb-0">{{ userInfo.name }}</p>
+                                </div>
+                                <div class="info-group mb-3">
+                                    <label class="text-muted">電子信箱</label>
+                                    <p class="mb-0">{{ userInfo.email }}</p>
+                                </div>
+                                <div class="info-group mb-3">
+                                    <label class="text-muted">聯絡電話</label>
+                                    <p class="mb-0">{{ userInfo.phone }}</p>
+                                </div>
+                                <div class="info-group">
+                                    <label class="text-muted">聯絡地址</label>
+                                    <p class="mb-0">{{ userInfo.address }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 收件地址頁籤 -->
+                    <div class="tab-pane fade" id="addresses">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-end mb-3">
+                                    <button class="btn btn-primary" @click="addRecipient">
+                                        <i class="fas fa-plus me-2"></i>新增地址
+                                    </button>
+                                </div>
+                                <div class="address-list">
+                                    <div v-for="(recipient, index) in recipients" 
+                                         :key="recipient.id" 
+                                         class="address-item"
+                                    >
+                                        <div class="address-content">
+                                            <h6 class="mb-2">{{ recipient.name }}</h6>
+                                            <p class="mb-1">
+                                                <i class="fas fa-phone me-2 text-muted"></i>
+                                                {{ recipient.phone }}
+                                            </p>
+                                            <p class="mb-0">
+                                                <i class="fas fa-map-marker-alt me-2 text-muted"></i>
+                                                {{ recipient.address }}
+                                            </p>
+                                        </div>
+                                        <div class="address-actions">
+                                            <button class="btn btn-link" @click="editRecipientInfo(index)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-link text-danger" @click="deleteRecipient(index)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
-                            </td>
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 訂單記錄頁籤 -->
+                    <div class="tab-pane fade" id="orders">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="order-list">
+                                    <div v-for="(order, index) in orders" 
+                                         :key="order.id" 
+                                         class="order-item"
+                                    >
+                                        <div class="order-header" @click="toggleOrderDetails(index)">
+                                            <div>
+                                                <span class="order-id">#{{ order.id }}</span>
+                                                <span class="order-date">{{ formateOrderDate(order.created_at) }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="order-amount">NT$ {{ Math.round(order.total).toLocaleString() }}</span>
+                                                <i :class="['fas', expandedOrder === index ? 'fa-chevron-up' : 'fa-chevron-down', 'ms-2']"></i>
+                                            </div>
+                                        </div>
+                                        <div v-if="expandedOrder === index" class="order-details">
+                                            <div v-for="item in order.items" 
+                                                 :key="item.id" 
+                                                 class="order-product"
+                                            >
+                                                <img :src="item.product_image ? `/img/products/${item.product_image}` : '/img/welcome.jpg'"
+                                                     :alt="item.name"
+                                                     class="product-img"
+                                                >
+                                                <div class="product-info">
+                                                    <h6>{{ item.name }}</h6>
+                                                    <p class="mb-0">
+                                                        數量：{{ item.quantity }} × NT$ {{ item.price }}
+                                                    </p>
+                                                </div>
+                                                <div class="product-total">
+                                                    NT$ {{ (item.quantity * item.price).toLocaleString() }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 登出按鈕 -->
+            <div class="text-center">
+                <button class="btn btn-outline-danger" @click="handleLogout">
+                    <i class="fas fa-sign-out-alt me-2"></i>登出
+                </button>
+            </div>
         </div>
     </div>
-    <!-- 登出使用者 -->
-        <div class="text-end">
-        <button class="btn btn-danger" @click="handleLogout">登出</button>
-        </div>
-    </div>
-    <!-- 編輯收件人 -->
-    <div class="modal fade" id="recipientModal" ref="recipientModal" tabindex="-1" aria-labelledby="recipientModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div v-if="isLoadingRecipients" class="text-center">
-                <p>正在加載收件人資料...</p>
-            </div>
-            <div v-else-if="!recipients.length" class="text-center">
-                <p>目前尚未有收件人資料。</p>
-            </div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="recipientModalLabel">{{ isEditing ? '編輯收件人':'新增收件人' }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="recipientName" class="form-label">收件人名稱</label>
-                    <input type="text" class="form-control" v-model="editRecipient.name" />
-                </div>
-                <div class="mb-3">
-                    <label for="recipientPhone" class="form-label">收件人電話</label>
-                    <input type="text" class="form-control" v-model="editRecipient.phone" />
-                </div>
-                <div class="mb-3">
-                    <label for="recipientAddress" class="form-label">收件人地址</label>
-                    <input type="text" class="form-control" v-model="editRecipient.address" />
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-primary" @click="saveRecipient">{{ isEditing ? '儲存變更':'新增' }}</button>   
-        </div>
-    </div>
-</div>
-</div>
-</div>
 </template>
+
+<style scoped>
+.member-page {
+    min-height: 100vh;
+}
+
+.member-profile {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.avatar-circle {
+    width: 64px;
+    height: 64px;
+    background: #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.initials {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.nav-pills .nav-link {
+    color: #495057;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.info-group label {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.address-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.address-item:last-child {
+    margin-bottom: 0;
+}
+
+.order-item {
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    cursor: pointer;
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+}
+
+.order-details {
+    padding: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.order-product {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.product-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    margin-right: 1rem;
+}
+
+.product-info {
+    flex: 1;
+}
+
+.product-total {
+    font-weight: 600;
+}
+
+.btn-link {
+    color: inherit;
+    text-decoration: none;
+    padding: 0.25rem;
+}
+
+.btn-link:hover {
+    color: #0d6efd;
+}
+
+@media (max-width: 768px) {
+    .member-profile {
+        padding: 1rem;
+    }
+
+    .nav-pills .nav-link {
+        padding: 0.5rem 1rem;
+    }
+
+    .avatar-circle {
+        width: 48px;
+        height: 48px;
+    }
+
+    .initials {
+        font-size: 1.25rem;
+    }
+}
+</style>
 
 <script>
 import { Modal } from 'bootstrap';
@@ -175,6 +337,9 @@ export default {
             formattedDate: this.formatOrderDate(order.created_at),
         }));
         },
+        getUserInitials() {
+            return this.userInfo.name ? this.userInfo.name.substring(0, 2).toUpperCase() : '??';
+        }
     },
     async mounted(){
         try{
@@ -223,48 +388,63 @@ export default {
         
         async loadRecipients() {
             try {
+                this.isLoadingRecipients = true;
                 const response = await ApiService.recipientAPI.getRecipients(this.user.id);
-                if (response.success) {
-                    this.recipients = response.data;
-                }
+                this.recipients = Array.isArray(response.data) ? response.data : [];
             } catch (error) {
                 console.error('載入收件人資料失敗:', error);
+                handleApiError(error, '載入收件人資料失敗');
+            } finally {
+                this.isLoadingRecipients = false;
             }
         },
         isRecipientValid(recipient) {
             const phoneRegex = /^[0-9]{10}$/;
             return recipient.name.trim() && phoneRegex.test(recipient.phone) && recipient.address.trim();
         },
-        async saveRecipient(){
+        async saveRecipient() {
             if (!this.isRecipientValid(this.editRecipient)) {
-                    alert('請檢查收件人資料是否完整且格式正確！');
-                    return;
-                }
+                alert('請檢查收件人資料是否完整且格式正確！');
+                return;
+            }
 
-            try{
+            try {
                 let response;
-                if(this.isEditing){
-                    response = await ApiService.recipientAPI.updateRecipient(this.editRecipient.id, this.editRecipient);
-                    const updateIndex = this.editingIndex;
-                    this.recipients[updateIndex] = response;
-                }else{
-                    // 新增收件人
-                    response = await ApiService.recipientAPI.addRecipient({...this.editRecipient,user_id:this.user.id});
-                    this.recipients.push(response);
+                if (this.isEditing) {
+                    response = await ApiService.recipientAPI.updateRecipient(
+                        this.editRecipient.id, 
+                        this.editRecipient
+                    );
+                    if (response.success) {
+                        this.recipients[this.editingIndex] = response.data;
+                    }
+                } else {
+                    response = await ApiService.recipientAPI.addRecipient({
+                        ...this.editRecipient,
+                        user_id: this.user.id
+                    });
+                    if (response.success) {
+                        this.recipients.push(response.data);
+                    }
                 }
                 this.hideModal();
-            }catch(error){
-                handleApiError(error, '加載用戶信息失敗，請重試。');
+                alert(this.isEditing ? '收件人資料已更新' : '新增收件人成功');
+            } catch (error) {
+                handleApiError(error, this.isEditing ? '更新收件人失敗' : '新增收件人失敗');
             }
         },
-        async deleteRecipient(index){
-            try{
+        async deleteRecipient(index) {
+            if (!confirm('確定要刪除此收件人資料？')) return;
+            
+            try {
                 const recipientId = this.recipients[index].id;
-                await ApiService.recipientAPI.deleteRecipient(recipientId);
-                this.recipients.splice(index,1);
-            }catch(error){
-                console.error('刪除收件人失敗',error);
-                alert('刪除收件人失敗');
+                const response = await ApiService.recipientAPI.deleteRecipient(recipientId);
+                if (response.success) {
+                    this.recipients.splice(index, 1);
+                    alert('收件人資料已刪除');
+                }
+            } catch (error) {
+                handleApiError(error, '刪除收件人敗');
             }
         },
         toggleRecipient(){
@@ -324,55 +504,29 @@ export default {
                 hour: 'numeric',
                 minute: 'numeric',
             });
+        },
+        getOrderStatusClass(status) {
+            const classes = {
+                'pending': 'badge bg-warning text-dark',
+                'processing': 'badge bg-info text-white',
+                'shipped': 'badge bg-primary text-white',
+                'completed': 'badge bg-success text-white',
+                'cancelled': 'badge bg-danger text-white'
+            };
+            return classes[status] || 'badge bg-secondary';
+        },
+
+        getOrderStatusText(status) {
+            const statusMap = {
+                'pending': '處理中',
+                'processing': '處理中',
+                'shipped': '已出貨',
+                'completed': '已完成',
+                'cancelled': '已取消'
+            };
+            return statusMap[status] || '未知狀態';
         }
         }
     }
 
 </script>
-
-<style scoped>
-    .card {
-    margin-bottom: 1rem;
-    }
-
-    .search-box {
-    margin-bottom: 1rem;
-    }
-
-    .table th,
-    .table td {
-    vertical-align: middle;
-    }
-    .table td:last-child {
-    width: 100px;
-    text-align: center;
-    }
-
-
-    .modal-content {
-    padding: 1rem;
-    }
-    .modal-body.error-highlight {
-    border: 2px solid red;
-    border-radius: 8px;
-    padding: 10px;
-    background-color: #ffe6e6;
-}
-
-    .product-thumbnail {
-    max-width: 100px;  /* 限制圖片寬度 */
-    max-height: 100px; /* 限制圖片高度 */
-    object-fit: cover; /* 保持圖片比例 */
-    margin-right: 10px; /* 與文字保持一些間距 */
-    }
-
-    .order-item {
-        display: flex;      /* 使用 flexbox 佈局 */
-        align-items: center; /* 垂直居中 */
-        margin-bottom: 10px; /* 項目之間的間距 */
-    }
-
-    .item-info {
-        flex-grow: 1;
-    }
-</style>
