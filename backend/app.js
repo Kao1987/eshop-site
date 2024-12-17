@@ -33,7 +33,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/img/products', express.static(path.join(__dirname, 'public', 'img', 'products')));
 app.use('/api/img/carousel', express.static(path.join(__dirname, 'public', 'img', 'carousel')));
 app.use('/api/img/carouselImages', express.static(path.join(__dirname, 'public', 'img', 'carouselImages')));
-
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // 路由配置

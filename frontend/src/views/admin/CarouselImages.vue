@@ -12,10 +12,12 @@
                 class="image-card"
             >
                 <div class="image-wrapper">
-                    <img :src="getImageUrl(image.url,'carousel')" 
-                         :alt="'輪播圖片 #' + image.id" 
-                         class="carousel-image"
-                    >
+                    <img :src="getImageUrl(image.url, 'carousel')"
+                            @load="onImgLoad(index)" 
+                            @error="onImgError(index)"
+                            class="carousel-image"
+                            alt="輪播圖片"
+                    >                    
                     <div class="image-overlay">
                         <div class="action-buttons">
                             <button 
@@ -118,6 +120,12 @@ export default {
             try {
                 const response = await ApiService.carouselAPI.getCarouselImages();
                 this.carouselImages = response;
+
+                console.log('後端回傳的輪播資料:', this.carouselImages);
+
+                this.carouselImages.forEach((img, index) => {
+                console.log(`[carouselImages] index=${index}, url=`, img.url);
+                });
             } catch (error) {
                 handleApiError(error,'加載輪播圖片失敗');
             }
@@ -187,7 +195,15 @@ export default {
             }
         },
         getImageUrl(url, type) {
-            return getImageUrl(url,'type');
+            const finalUrl = getImageUrl(url, type);
+            console.log(`[getImageUrl] url=${url}, type=${type}, finalUrl=${finalUrl}`);
+            return finalUrl;
+        },
+        onImgLoad(index){
+            console.log(`image #${index} 載入成功！`);
+        },
+        onImgError(index){
+            console.error(`image #${index} 載入失敗！`);
         },
         handleFileDrop(event) {
             this.isDragging = false;
@@ -213,27 +229,32 @@ export default {
     max-width: 1200px;
 }
 
+
 .image-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 1rem;
 }
 
 .image-card {
     background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     overflow: hidden;
-    transition: transform 0.2s;
+    transition: all 0.3s ease;
 }
 
 .image-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.15);
 }
 
 .image-wrapper {
     position: relative;
-    padding-top: 66.67%; /* 3:2 比例 */
+    width: 100%;
+    height: 200px; /* 固定高度 */
+    overflow: hidden;
 }
 
 .carousel-image {
@@ -243,6 +264,7 @@ export default {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.3s ease;
 }
 
 .image-overlay {
@@ -251,46 +273,71 @@ export default {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.6);
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: all 0.3s ease;
 }
 
-.image-card:hover .image-overlay {
+.image-overlay:hover {
     opacity: 1;
 }
 
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.action-buttons button {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.action-buttons button:hover {
+    transform: scale(1.05);
+}
+
 .status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
     font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-block;
+    margin-top: 0.5rem;
 }
 
 .status-active {
-    background-color: #d4edda;
-    color: #155724;
+    background-color: #e8f5e9;
+    color: #2e7d32;
 }
 
 .status-inactive {
-    background-color: #f8d7da;
-    color: #721c24;
+    background-color: #ffebee;
+    color: #c62828;
 }
 
 .upload-area {
-    border: 2px dashed #dee2e6;
-    border-radius: 8px;
-    padding: 2rem;
+    border: 3px dashed #e0e0e0;
+    border-radius: 16px;
+    padding: 3rem;
     text-align: center;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.upload-area:hover {
+    border-color: #007bff;
+    background-color: rgba(0,123,255,0.05);
 }
 
 .upload-area.dragging {
-    border-color: #007bff;
-    background-color: rgba(0,123,255,0.1);
+    border-color: #28a745;
+    background-color: rgba(40,167,69,0.1);
 }
 
 .upload-placeholder {
@@ -310,13 +357,15 @@ export default {
 
 .toast-notification {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 1rem;
-    border-radius: 4px;
+    bottom: 30px;
+    right: 30px;
+    padding: 1rem 2rem;
+    border-radius: 8px;
     color: #fff;
+    font-weight: 500;
     z-index: 1000;
-    animation: slideIn 0.3s ease-out;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    animation: slideIn 0.4s ease-out;
 }
 
 .toast-success {
@@ -340,7 +389,16 @@ export default {
 
 @media (max-width: 768px) {
     .image-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    
+    .image-wrapper {
+        height: 180px;
+    }
+    
+    .upload-area {
+        padding: 2rem;
     }
 }
 </style>

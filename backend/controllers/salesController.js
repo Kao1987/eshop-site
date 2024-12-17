@@ -8,13 +8,19 @@ exports.getSalesRanking = async (req, res) => {
     const daysAgo = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
     const formattedDate = daysAgo.toISOString().slice(0,19).replace('T',' ');
     const [rows] = await pool.query(
-      `SELECT oi.product_id, SUM(oi.quantity) AS quantity_sold
-      FROM order_items oi
-      JOIN orders o ON oi.order_id = o.id
-      WHERE o.order_date >= ?
-      GROUP BY oi.product_id 
-      ORDER BY quantity_sold DESC`,
-      [formattedDate]
+        `SELECT 
+            oi.product_id, 
+            p.name,
+            SUM(oi.quantity) AS sale_count
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.id
+        JOIN products p ON oi.product_id = p.id
+        WHERE o.order_date >= ?
+        AND o.status != 'cancelled'
+        GROUP BY oi.product_id, p.name
+        ORDER BY sale_count DESC
+        LIMIT 10`,
+        [formattedDate]
     );
     console.log('Sales Ranking Data:',rows);
     res.json(rows);

@@ -53,13 +53,17 @@ setup() {
         return;
     }
     try {
-        const response = await axios.get(`/api/orders/${orderId}`);
-        if (!response.data || !response.data.orderId || !response.data.items.length === 0) {
+        const response = await ApiService.orderAPI.getOrderById(orderId);
+        if (!response || !response.id) {
             console.error('訂單詳情數據不完整');
+            store.dispatch('notifications/showNotification', {
+                type: 'error',
+                message: '訂單資料不完整，請聯繫客服。',
+            });            
             isLoading.value = false;
             return;
         }
-        orderDetails.value = response.data;
+        orderDetails.value = response;
     } catch (error) {
         if (error.response && error.response.status === 404) {
         console.error('訂單不存在', error);

@@ -51,7 +51,7 @@
     
 <script>
 import ApiService from '@/services/api';
-    
+import { useStore } from 'vuex';
     export default {
         name: 'OrderDetail',
         props: ['id'],
@@ -59,6 +59,7 @@ import ApiService from '@/services/api';
         return {
             order: null,
             userName: '',
+            store: useStore(),
         };
         },
         methods: {
@@ -99,11 +100,20 @@ import ApiService from '@/services/api';
             async updateOrderStatus() {
                 if (!this.order) return;
                     try {
-                        await ApiService.orderAPI.updateOrderStatus(this.order.id,this.order.status);                   
+                        await ApiService.orderAPI.updateOrderStatus(this.order.id,this.order.status);  
+                        store.dispatch('notification/showNotification', {
+                            message: '訂單狀態已更新',
+                            type: 'success',
+                            timeout:3000
+                        });
                         alert('訂單狀態已更新');
                     } catch (error) {
                         console.error('更新訂單狀態時出錯', error);
-                        alert('更新訂單狀態時出錯，請稍候再試！');
+                        store.dispatch('notifications/showNotification', {
+                        type: 'error',
+                        message: '更新訂單狀態時出錯，請稍後再試！',
+                        timeout: 2000
+                    });
                     }
                 },
             goBack() {

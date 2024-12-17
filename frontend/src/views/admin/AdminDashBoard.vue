@@ -166,6 +166,7 @@ export default {
             products: [],
             sevenDaySalesRanking: [],
             monthSalesRanking: [],
+            socket: null,
         };
     },
     async mounted() {
@@ -244,7 +245,6 @@ export default {
                 alert('加載儀表板數據時出錯，請稍後再試！');
             }
         },
-
         renderSalesChart() {
             if (!this.salesData || this.salesData.length === 0) {
                 console.error("銷售數據未加載！");
@@ -324,7 +324,6 @@ export default {
                 }
             });
         },
-
         formatNumber(amount) {
             return Number(amount).toLocaleString('zh-TW', {
                 style: 'currency',
@@ -332,6 +331,23 @@ export default {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
             }).replace(/^NT\$\s?/, '');
+        },
+        initWebSocket() {
+            this.socket = new WebSocket('ws://localhost:5002/ws/admin');
+            this.socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if(data.type === 'newOrder'){
+                    this.updateDashboardData();
+                }
+            }
+        },
+        updateDashboardData(newOrder){
+            const today = new Date();
+            const todayStr = today.Date(newOrder.created_at);
+            if(newOrder.order_date.split('T')[0] === todayStr){
+                this.todayOrders++;
+                this.todaySales += Number(newOrder.total);
+            }
         }
     }
 };

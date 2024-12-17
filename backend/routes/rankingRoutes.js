@@ -17,7 +17,9 @@ router.get('/', async (req, res) => {
             LEFT JOIN order_items oi ON p.id = oi.product_id
             LEFT JOIN orders o ON oi.order_id = o.id
             WHERE o.order_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+            AND o.status != 'cancelled'
             GROUP BY p.id
+            HAVING sales_count > 0
             ORDER BY sales_count DESC
             LIMIT 10
         `;

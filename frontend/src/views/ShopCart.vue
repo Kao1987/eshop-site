@@ -132,6 +132,20 @@ export default {
                     timeout: 2000,
                 });
 
+                // 發送WebSocket消息
+                if(window.WebSocket&& window.dashboardSocket){
+                    try{
+                        window.dashboardSocket.send(JSON.stringify({
+                            type: 'newOrder',
+                            orderId: response.orderId,
+                            total:cartTotal.value,
+                            created_at: new Date().toISOString(),
+                        }));
+                    }catch(error){
+                        console.error('WebSocket發送消息失敗:', error);
+                    }
+                }
+
                 router.push({
                     name: 'OrderConfirmation',
                     params: { orderId: response.orderId },

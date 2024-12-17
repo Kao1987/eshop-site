@@ -5,11 +5,13 @@ const pool = require('../config/db');
 // 獲取所有輪播圖
 exports.getAllCarouselImages = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM carousel_images');
+    const [rows] = await pool.query(
+      'SELECT id, url, visible, created_at FROM carousel_images WHERE visible = 1 ORDER BY created_at DESC'
+    );
     res.json(rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: '伺服器錯誤', error: error.message });
+    res.status(500).json({ success:false, message: '伺服器錯誤', error: error.message });
   }
 };
 
@@ -31,9 +33,9 @@ exports.getCarouselImageById = async (req, res) => {
 // 新增輪播圖
 exports.createCarouselImage = async (req, res) => {
   try {
-    const imageUrl = `/img/carouselImages/${req.file.filename}`;
+    const imageUrl = `${req.file.filename}`;
     const [result] = await pool.query(
-      'INSERT INTO carousel_images (url, created_at) VALUES (?, NOW())',
+      'INSERT INTO carousel_images (url, created_at,visible) VALUES (?, NOW(),1)',
       [imageUrl]
     );
     

@@ -1,6 +1,7 @@
+// frontend/src/services/api.js
 import request from '@/utils/request';
-import getImageUrl from '@/utils/imageUrl';
 import axios from 'axios';
+import getImageUrl from '@/utils/imageUrl';
 
 const ApiService = {
     setHeader(header, value) {
@@ -49,6 +50,7 @@ const ApiService = {
 
     },
     carouselAPI: {
+        getAllCarouselImages: () => request.get('/carousel_images'),
         getCarouselImages: () => request.get('/carousel_images'),
         uploadCarouselImages: (formData) => request.post('/carousel_images', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }

@@ -29,8 +29,6 @@ const upload = multer({
 
 // 新增輪播圖
 router.post('/',upload.single('image'), carouselImagesController.createCarouselImage);
-console.log('carouselImagesController:', carouselImagesController); // 調試訊息
-
 // 獲取所有輪播圖
 router.get('/', carouselImagesController.getAllCarouselImages);
 

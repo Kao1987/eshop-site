@@ -2,43 +2,52 @@
     <div class="homepage container mt-5">
         <!-- 圖片輪播 -->
         <div class="carousel-section">
-            <div v-if="isLoading.carousel"
-            id="mainCarousel"
-            class="carousel slide"
-            >
-            <!-- 指示器 -->
+            <div v-if="isLoading.carousel" class="loading-spinner">
                 <div class="spinner-border" role="status">
                     <span class="visually-hidden">加載中...</span>
                 </div>
             </div>
+
             <div v-else-if="errors.carousel" class="alert alert-warning">
                 {{ errors.carousel }} 
             </div>
-            <div v-else-if="carouselImages && carouselImages.length" id="carouselExampleIndicators" class="carousel slide position-relative" data-bs-ride="carousel">
-                <div class="carousel-indicators">
+            <!-- 輪播圖片 -->
+            <div v-else-if="carouselImages && carouselImages.length" 
+                id="mainCarousel" 
+                class="carousel slide position-relative carousel-fade"
+                data-bs-ride="carousel">
+                <!-- 指示器 -->
+                <div class="carousel-indicators custom-indicators">
                     <button v-for="(image,index) in carouselImages"
                         :key="'indicator-'+index"
                         type="button"
-                        data-bs-target="#carouselExampleIndicators"
+                        data-bs-target="#mainCarousel"
                         :data-bs-slide-to="index"
                         :class="{active:index===0}"
                         :aria-current="index===0"
                         :aria-label="'Slide' + (index +1)"
+                        class="indicator-dot"
                         >
                     </button>
                 </div>
-                <div class="carousel-inner">
+                <!-- 輪播圖片內容、 -->
+                <div class="carousel-inner rounded-4 shadow-lg">
                     <div v-for="(image, index) in carouselImages" 
-                        :key="index" 
+                        :key="'slide-'+index" 
                         :class="['carousel-item',{active:index === 0}]">
-                        <img :src="getImageUrl(image.url)" class="d-block w-100" :alt="'圖片' + (index +1)">
+                        <div class="carousel-image-container">
+                            <img :src="getImageUrl(image.url,'carousel')" 
+                                class="d-block w-100" 
+                                :alt="'商品圖片'">
+                        </div>
                     </div>
                 </div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+
+                <button class="carousel-control-prev custom-control" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
                     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                     <span class="visually-hidden">Previous</span>
                 </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next" >
+                    <button class="carousel-control-next custom-control" type="button" data-bs-target="#mainCarousel" data-bs-slide="next" >
                     <span class="carousel-control-next-icon" aria-hidden="true" ></span>
                     <span class="visually-hidden">Next</span>
                 </button>
@@ -47,16 +56,31 @@
         </div>
     </div>
     <!-- 隨機推薦商品 -->
-    <div class="sales-ranking mt-5" v-if="randomProducts && randomProducts.length > 0">
-        <h2>為您推薦</h2>
-        <div class="product-list">
+    <div class="product-section mt-5" v-if="randomProducts && randomProducts.length > 0">
+        <div class="section-header">
+            <h2 class="section-title">為您推薦</h2>
+            <div class="section-subtitle">精選優質商品，專屬於您</div>
+        </div>
+        
+        <div class="product-grid">
             <div v-for="(product,index) in randomProducts"
                 :key="index"
-                class="product-item">
-            <img :src="getProductImage(product.product_id)" class="product-thumbnail">
-            <div>{{ index + 1 }}.{{ product.name }}</div>
-            <div v-if="product.quantity_sold === '-'">熱門推薦</div>    
-        </div>
+                class="product-card"
+                :style="{ animationDelay: index * 0.1 + 's' }"
+            >
+                <div class="product-image-wrapper">
+                    <img :src="getProductImage(product.product_id)" class="product-image">
+                    <div class="product-overlay">
+                        <button class="view-details-btn" @click="viewDetails(product)">
+                            查看詳情
+                        </button>
+                    </div>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <div class="product-tag" v-if="product.quantity_sold === '-'">熱門推薦</div>
+                </div>
+            </div>
         </div>
     </div>
     <!-- 七日銷售排行 -->
@@ -111,6 +135,7 @@ import axios from 'axios';
 import { handleApiError } from '@/utils/errorHandler';
 import * as bootstrap from 'bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
+import getImageUrl from '@/utils/imageUrl'; 
 
 
 const FALLBACK_DATA = {
@@ -152,23 +177,28 @@ export default {
                 carousel: null,
                 products: null,
             },
-            randomProducts:[],
+            randomProducts:null,
 
         }
     },
     async mounted(){
         try{
+            console.log('開始載入首頁資料');
             await this.loadHomePageData();
-            this.randomProducts = this.getRandomProducts();
-            this.$nextTick(()=>{
-                this.startCountdown();
+            if(this.carouselImages.length && this.carouselImages.length > 0){
+                await this.$nextTick();
                 this.initializeCarousel();
+            }
+            console.log('輪播圖片狀態:',{
+                images:this.carouselImages,
+                domElement:document.getElementById('mainCarousel'),
             });
         }catch(error){
-            console.error('Failed to load home page data',error);
+            console.error('讀取首頁資料失敗',error);
         }
     },
     methods: {
+        getImageUrl,
         handleError(section, error) {
             console.error(`Error in ${section}:`, error.message || error);
             this.errors[section] = `無法加載 ${section} 數據，請稍後再試。`;
@@ -177,14 +207,9 @@ export default {
             }
         },
         async loadHomePageData(){
-                // // 重置錯誤狀態
-                // Object.keys(this.errors).forEach(key=>{
-                //     this.errors[key] = null;
-                // });
-            // 並行加載所有數據
             try{
                 await this.loadProductsData();
-
+                this.randomProducts = this.getRandomProducts(5);
                 await Promise.allSettled([
                 this.loadSalesData(),
                 this.loadOffersData(),
@@ -203,13 +228,10 @@ export default {
                     ApiService.rankingAPI.getRanking(7),
                     ApiService.rankingAPI.getRanking(30),
                 ]);
-                const sevenDaysSales = sevenDaysResponse.data || [];
-                const monthSales = monthResponse.data || [];
+                this.sevenDaySalesRanking = this.processSalesRanking(sevenDaysResponse || []);
+                this.monthSalesRanking = this.processSalesRanking(monthResponse || []);
 
-                this.sevenDaySalesRanking = this.processSalesRanking(sevenDaysSales);
                 console.log('Processed Seven Day Sales Ranking:', this.sevenDaySalesRanking);
-
-                this.monthSalesRanking = this.processSalesRanking(monthSales);
                 console.log('Processed Month Sales Ranking:', this.monthSalesRanking);
 
             } catch(error){
@@ -222,23 +244,33 @@ export default {
             }
         },
         processSalesRanking(salesData){
+            if(!Array.isArray(salesData)) return [];    
+
             return salesData.map((item)=>{
                 const productId = Number(item.product_id);
                 const product = this.products.find((p) => p.id === productId);
                 return{
                     product_id: productId,
                     name: product? product.name : `Product ID: ${productId}`,
-                    quantity_sold: item.quantity_sold,
-                    image:product && product.image ? `api${product.image}` : '/img/default-product.jpg',
+                    quantity_sold: item.sale_count || 0,
+                    image: product && product.image ? product.image : '/img/wrong.png'
                 };
             })
+            .filter(item => item.quantity_sold > 0)  // 過濾掉銷售量為 0 的商品
             .slice(0,10);
         },
         async loadOffersData(){
             this.isLoading.offers = true;
             try{
                 const response = await ApiService.specialOffersAPI.getAllSpecialOffers();
-                this.specialOffers = response.data || [];
+                if(response && Array.isArray(response)){
+                    this.specialOffers = response.map(offer => ({
+                        ...offer,
+                        countdown: offer.countdown || 36000, //預設倒數時間
+                        product_id: Number(offer.product_id),
+                    }));
+                    console.log('讀取到的特價商品:', this.specialOffers);
+                } 
             } catch(error){
                 console.error('加載特價商品失敗',error);
                 this.errors.offers = '無法加載特價商品數據';
@@ -250,16 +282,32 @@ export default {
         async loadCarouselData(){
             this.isLoading.carousel = true;
             try{
-                const response = await ApiService.carouselAPI.getCarouselImages();
-                this.carouselImages = response.data || [];
-                console.log('Loaded carousel images:', this.carouselImages);
+                const response = await ApiService.carouselAPI.getAllCarouselImages();
+                console.log('原始後端回傳:', response);
 
+                if(Array.isArray(response)){
+                    this.carouselImages = response.filter(image => image.visible);
+                    console.log('載入的輪播圖片:', this.carouselImages);
+                    await this.$nextTick();
+                    if(this.carouselImages.length > 0){
+                        this.initializeCarousel();
+                        console.log(this.carouselImages);
+                    }
+                }else{
+                    console.error('輪播圖的格式不正確',response);
+                    this.carouselImages = FALLBACK_DATA.carouselImages;
+                    await this.$nextTick();
+                    this.initializeCarousel();
+                    console.log(this.carouselImages);
+                }
             } catch(error){
                 console.error('加載輪播圖片失敗',error);
                 this.errors.carousel = '無法加載輪播圖片';
                 this.carouselImages = FALLBACK_DATA.carouselImages;
+                await this.$nextTick();
+                this.initializeCarousel();
             } finally{
-                this.isLoading.carousel = false;
+                this.isLoading.carousel = false; 
             }
         },
         async loadProductsData(){
@@ -320,10 +368,8 @@ export default {
             const remainingSeconds = seconds % 60;
             return `${hours}時${minutes}分${remainingSeconds}秒`;
         },
-        getImageUrl(url){
-            if (!url) return '/img/wrong.png';
-            if (url.startsWith('http')) return url;
-            return `api/img/carousel/${url.split('/').pop()}`;
+        getImageUrl(url, type) {
+            return getImageUrl(url, type);
         },
         getProductImage(productId){
             const id = Number(productId);
@@ -347,23 +393,34 @@ export default {
             }));
         },
         initializeCarousel() {
-            const carouselEl = document.getElementById('carouselExampleIndicators');
-            if (carouselEl) {
-                new bootstrap.Carousel(carouselEl, {
-                    interval: 5000,
-                    ride: true
-                });
-            }
+            this.$nextTick(() => {
+                const carouselElement = document.getElementById('mainCarousel');
+                if (carouselElement) {
+                    new bootstrap.Carousel(carouselElement, {
+                        interval: 5000,
+                        touch: true,  // 支援觸控滑動
+                        pause: 'hover', // 滑鼠懸停時暫停
+                        keyboard: true // 支援鍵盤控制
+                    });
+                }
+            });
+        },
+        viewDetails(product) {
+            this.$router.push(`/product/${product.product_id}`);
         }
     },
     computed:{
         processedSpecialOffers() {
             if (!this.specialOffers || !this.products) return [];
-            return this.specialOffers.map(offer => {
+
+            return [...this.specialOffers]
+            .filter(offer => offer.countdown > 0)
+            .map(offer => {
                 const product = this.products.find(p => p.id === offer.product_id);
                 return {
                     ...offer,
-                    name: product ? product.name : '未知商品'
+                    name: product ? product.name : '未知商品',
+                    image: product ? product.image : '/img/wrong.png'
                 };
             });
         },
@@ -373,164 +430,272 @@ export default {
 </script>
 
 <style scoped>
-.carousel-section{
-    max-width:1200px;
-    margin:0 auto;
-    border-radius: 16px;
+/* 基礎設置 */
+.homepage {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+/* 輪播區塊樣式 */
+.carousel-section {
+    max-width: 1200px;
+    margin: 0 auto 3rem;
+    padding: 0 0.5rem;
+}
+
+.carousel-inner {
+    border-radius: 1rem;
     overflow: hidden;
-    position:relative;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
-.carousel-inner{
-    position:relative;
-    width:100%;
-    border-radius: 16px;
-}
-.carousel-inner img{
-    height:400px;
-    object-fit:cover;
-}
-.carousel-item {
-    /* 圖片顯示 */
+
+/* 修改輪播圖片容器樣式 */
+.carousel-image-container {
+    position: relative;
     width: 100%;
-    height: 450px; /* 固定高度 */
-    overflow: hidden;
-    transition: all 0.5s ease;
+    padding-top: 38%;
 }
-.carousel-item img{
+
+.carousel-image-container img {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 16px ;
-    transition: transform 0.5s ease;
+    background-color: #f8f9fa;
 }
-.carousel-item img:hover{
-    transform:scale(1.05);
-}
-.carousel-indicators{
+
+/* 自定義指示器 */
+.custom-indicators {
     bottom: 20px;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
 }
-.carousel-indicators button{
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.5);
-    border: none;
+
+.indicator-dot {
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
+    background-color: rgba(255,255,255,0.5) !important;
+    border: 2px solid rgba(255,255,255,0.7) !important;
+    margin: 0 6px !important;
+}
+
+.indicator-dot.active {
+    background-color: #fff !important;
+    transform: scale(1.2);
+}
+
+/* 商品區塊樣式 */
+.product-section {
+    max-width: 1000px;
+    margin: 3rem auto;
+    padding: 0 1rem;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 2rem;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.section-subtitle {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+.product-card {
+    max-width: 280px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 1rem;
+    overflow: hidden;
     transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
 }
-.carousel-indicators button.active {
-    width: 24px;
-    border-radius: 12px;
-    background-color: white;
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
-.carousel-control-prev,
-.carousel-control-next{
+
+.product-image-wrapper {
+    position: relative;
+    padding-top: 100%;
+    overflow: hidden;
+}
+
+.product-image {
     position: absolute;
-    top:50%;
-    transform:translateY(-50%);
-    width:50px;
-    height:50px;
-    background-color: rgba(0,0,0,0.5);/* 半透明背景 */
-    border-radius: 50%;
-    display:flex;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image {
+    transform: scale(1.05);
+}
+
+.product-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+    display: flex;
     align-items: center;
     justify-content: center;
-    z-index:10 ;
-    opacity: 0.7;
+    opacity: 0;
     transition: opacity 0.3s ease;
 }
-.carousel-control-prev:hover,
-.carousel-control-next:hover{
+
+.product-card:hover .product-overlay {
     opacity: 1;
 }
-.carousel-control-prev{
-    left:20px;
-}
-.carousel-control-next{
-    right:20px;
-}
-.loading-spinner{
-    text-align: center;
-    padding: 20px;
-}
-.alert{
-    padding: 15px;
-    margin-bottom:20px;
-    border:1px solid transparent;
-    border-radius: 4px;
-}
-.alert-warning{
-    color:#856404;
-    background-color: #fff3cd;
-    border-color: #ffeeba;
-}
-.countdown-timer{
-    font-weight:bold;
-    color:red;
-}
-.sales-ranking h3,
-.countdown-special-offers h3 {
-    text-align: left;
-}
-.product-list{
-    display:flex;
-    flex-wrap:wrap;
-    gap:20px;
+
+.view-details-btn {
+    padding: 0.8rem 1.5rem;
+    background: white;
+    border: none;
+    border-radius: 2rem;
+    font-weight: 600;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
 }
 
-.product-item{
-    border:1px solid #ddd;
-    padding:10px;
-    width:150px;
-    text-align:center;
+.product-card:hover .view-details-btn {
+    transform: translateY(0);
 }
 
-.product-item{
-    border: 1px solid #ddd;
-    padding: 10px;
-    width:200px;
-    text-align: center;
-    display:flex;
-    flex-direction: column;
-    align-items: center;
+.product-info {
+    padding: 1.5rem;
 }
-.product-thumbnail{
-    width: 100px;
-    height:100px;
-    object-fit: cover;
-    margin-bottom:10px;
+
+.product-name {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
 }
-@media (max-width: 991px) {
-    .carousel-section {
-        margin-top: 30px; /* 在導航折疊時增加更多間距 */
+
+.product-tag {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    background: linear-gradient(135deg, #42b983, #3498db);
+    color: white;
+    border-radius: 1rem;
+    font-size: 0.9rem;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 1rem;
     }
     
-    .carousel-control-prev,
-    .carousel-control-next {
-        width: 30px;
-        height: 30px;
+    .section-title {
+        font-size: 1.5rem;
     }
-
-    .carousel-control-prev {
-        left: 10px;
+    
+    .product-name {
+        font-size: 1rem;
     }
-
-    .carousel-control-next {
-        right: 10px;
+    .carousel-image-container {
+        padding-top: 45%;
+    }
+    
+    .carousel-image-container img {
+        object-fit: cover;
     }
 }
-@media (max-width: 767px) {
+@media (max-width: 576px) {
+    .carousel-section {
+        padding: 0;
+    }
+    
+    .carousel-image-container {
+        padding-top: 52%;
+    }
+    
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+}
+
+/* 特價商品和銷售排行區塊樣式 */
+.sales-ranking {
+    max-width: 1000px; /* 與其他區塊保持一致 */
+    margin: 3rem auto;
+    padding: 0 1rem;
+}
+
+.product-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* 縮小商品卡片寬度 */
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+.product-item {
+    max-width: 250px; /* 限制最大寬度 */
+    margin: 0 auto;
+    background: white;
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+.product-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.product-thumbnail {
+    width: 100%;
+    height: 180px; /* 縮小圖片高度 */
+    object-fit: cover;
+    border-radius: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
     .product-list {
-        flex-direction: column;
-        align-items: center;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
     }
-    .product-item {
-        width: 100%;
-        max-width: 300px;
+
+    .product-thumbnail {
+        height: 150px;
     }
 }
 
+@media (max-width: 576px) {
+    .product-list {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    }
+
+    .product-thumbnail {
+        height: 130px;
+    }
+
+    .product-item {
+        padding: 0.8rem;
+    }
+}
 </style>

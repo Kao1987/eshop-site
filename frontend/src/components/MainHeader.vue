@@ -202,6 +202,7 @@ export default {
     padding-right: 110px;
     border: 2px solid #ddd;
     transition:all 0.3s ease;    
+    height: 38px;
 }
 .search-box:focus{
     border-color: #0056b3;
@@ -210,10 +211,16 @@ export default {
 .search-button{
     position: absolute;
     right: 0;
+    top: 0;
+    height: 100%;
     background-color:#0056b3;
     border-radius: 0 20px 20px 0;
-    padding:0.375rem 1.5rem;
+    padding:0 1.5rem;
     transition: all 0.3s ease; 
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .search-container{
     display: flex;
@@ -349,12 +356,14 @@ export default {
     }
     
     .search-container {
-        flex-direction: column;
+        flex-direction: row;
     }
     
     .search-button {
-        margin-top: 0.5rem;
-        width: 100%;
+        position: absolute;
+        margin-top: 0;
+        width: auto;
+        right: 0;
     }
 }
 @media (min-width: 992px) and (max-width: 1121px) {

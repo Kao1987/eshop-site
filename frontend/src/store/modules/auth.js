@@ -66,22 +66,22 @@ export default {
         async checkAuthStatus({ commit }) {
             const token = localStorage.getItem('authToken');
             const user = JSON.parse(localStorage.getItem('user'));
-            
-            if (token && user) {
-                try {
-                    ApiService.setHeader('Authorization',`Bearer ${token}`);
-                    await ApiService.userAPI.getUserInfo(user.id); // 假設有此 API 用於驗證用戶資訊
+            // 自動登出
+            // if (token && user) {
+            //     try {
+            //         ApiService.setHeader('Authorization',`Bearer ${token}`);
+            //         await ApiService.userAPI.getUserInfo(user.id); // 假設有此 API 用於驗證用戶資訊
 
-                    // 驗證 token 的 API 請求
-                    commit('login', user);
-                    return true;
-                } catch (error) {
-                    commit('logout');
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('user');
-                    return false;
-                }
-            }
+            //         // 驗證 token 的 API 請求
+            //         commit('login', user);
+            //         return true;
+            //     } catch (error) {
+            //         commit('logout');
+            //         localStorage.removeItem('authToken');
+            //         localStorage.removeItem('user');
+            //         return false;
+            //     }
+            // }
             commit('logout');
             return false;
         },

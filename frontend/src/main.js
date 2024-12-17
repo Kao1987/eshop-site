@@ -15,6 +15,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css'
 import request from '@/utils/request';
 import ApiService from '@/services/api'; // 確保使用 ApiService 管理 Axios 請求
 import { getImageUrl } from '@/utils/imageUrl'; // 引入圖片幫助函數
+import { Tooltip } from 'bootstrap'
 
 
 const app = createApp(App);
@@ -31,7 +32,18 @@ app.use(BootstrapVue3);
 console.log('API Base URL:', process.env.VUE_APP_API_BASE_URL);
 console.log('Carousel Image Base URL:', process.env.VUE_APP_CAROUSEL_IMAGE_BASE_URL);
 console.log('Product Image Base URL:', process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL);
-
+// 註冊全局自定義指令 v-tooltip
+app.directive('tooltip', {
+    mounted(el) {
+    new Tooltip(el)
+    },
+    unmounted(el) {
+        const tooltip = Tooltip.getInstance(el)
+        if (tooltip) {
+            tooltip.dispose()
+        }
+    }
+})
 store.dispatch('auth/checkAuthStatus').then(() => {
     app.mount('#app');
 }).catch(error => {
