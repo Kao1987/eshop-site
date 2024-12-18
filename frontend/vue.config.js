@@ -3,7 +3,7 @@
     const path = require('path');
 
     module.exports = defineConfig({
-    publicPath: '/', // 設置基礎路徑
+    publicPath: '/ECshop/', // 設置基礎路徑
     outputDir: 'dist', // 打包輸出目錄
     lintOnSave: false, // 停止代碼 lint 檢查
     transpileDependencies: true, // 編譯依賴
