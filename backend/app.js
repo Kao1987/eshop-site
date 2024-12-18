@@ -33,15 +33,6 @@ app.use('/api/img/carousel', express.static(path.join(__dirname, 'public', 'img'
 app.use('/api/img/carouselImages', express.static(path.join(__dirname, 'public', 'img', 'carouselImages')));
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// 連接到 MongoDB
-const mongoURI = process.env.MONGODB_URI;
-mongoose.connect(mongoURI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB connected'))
-.catch(err => console.error('MongoDB connection error:', err));
-
 
 // 路由配置
 const routes = {
