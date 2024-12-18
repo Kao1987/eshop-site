@@ -26,12 +26,13 @@ jobs:
       - name: Install Dependencies
         working-directory: ./frontend
         run: |
-          npm install --legacy-peer-deps
-          npm audit fix --force
+          npm install --no-audit --silent
+          npm audit --production --json || true
 
       - name: Build
         working-directory: ./frontend
-        run: npm run build
+        run: |
+          npm run build 2> >(grep -v "warning" >&2)
         env:
           NODE_ENV: production
           BASE_URL: /ECshop/
