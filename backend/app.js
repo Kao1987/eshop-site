@@ -1,14 +1,11 @@
 // backend/app.js
-require('dotenv').config({ path: __dirname + '/.env' });
-// require('dotenv').config(); 錯誤用法
-
-console.log('NODE_ENV in app.js:', process.env.NODE_ENV);
+require('dotenv').config();
 const express = require('express');
+const mongoose = require('mongoose'); 
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const helmet = require('helmet');
-
 // 初始化 Express 應用
 const app = express();
 
@@ -36,6 +33,16 @@ app.use('/api/img/products', express.static(path.join(__dirname, 'public', 'img'
 app.use('/api/img/carousel', express.static(path.join(__dirname, 'public', 'img', 'carousel')));
 app.use('/api/img/carouselImages', express.static(path.join(__dirname, 'public', 'img', 'carouselImages')));
 app.use(express.static(path.join(__dirname, 'dist')));
+
+// 連接到 MongoDB
+const mongoURI = process.env.MONGODB_URI;
+mongoose.connect(mongoURI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
+.then(() => console.log('MongoDB connected'))
+.catch(err => console.error('MongoDB connection error:', err));
+
 
 // 路由配置
 const routes = {
