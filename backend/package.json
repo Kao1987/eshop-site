@@ -2,7 +2,7 @@
     "name": "eshop-backend",
     "version": "1.0.0",
     "engines": {
-        "node": "^18.0.0"
+        "node": "^18.18.0"
     },
     "description": "Backend for EShop Site",
     "main": "app.js",
