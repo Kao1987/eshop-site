@@ -46,9 +46,7 @@ export default {
         const productId = computed(()=> route.params.id);
         const productImageUrl = computed(()=> {
             if(!product.value) return '/img/wrong.png';
-            return product.value.image.startsWith('http')
-            ? product.value.image 
-            : `http://localhost:5002/api/${product.value.image}`;
+            return getImageUrl(product.value.image,'product');
         });
         const isLoggedIn = computed(()=>store.state.auth.isLoggedIn);
 

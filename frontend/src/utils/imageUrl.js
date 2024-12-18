@@ -2,9 +2,9 @@
 
 const getImageUrl = (imagePath, type) => {
     const baseUrl = process.env.VUE_APP_API_BASE_URL 
-    ? 'https://ecshop-backend.onrender.com' 
-    : 'http://localhost:5002';
-    console.log('[imageUrl.js] input imagePath:', imagePath, 'type:', type);
+    // ? 'https://ecshop-backend.onrender.com' 
+    // : 'http://localhost:5002';
+    // console.log('[imageUrl.js] input imagePath:', imagePath, 'type:', type);
 
     if (!imagePath) return '/img/wrong.png';
     if (imagePath.startsWith('http')) return imagePath;
