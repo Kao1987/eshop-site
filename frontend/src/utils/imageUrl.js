@@ -1,7 +1,7 @@
 // src/utils/imageUrl.js
 
 const getImageUrl = (imagePath, type) => {
-    const baseUrl = process.env.VUE_APP_API_BASE_URL === 'production' 
+    const baseUrl = process.env.VUE_APP_API_BASE_URL 
     ? 'https://ecshop-backend.onrender.com' 
     : 'http://localhost:5002';
     console.log('[imageUrl.js] input imagePath:', imagePath, 'type:', type);
@@ -11,20 +11,20 @@ const getImageUrl = (imagePath, type) => {
 
     switch (type) {
         case 'product':
-            return `${baseUrl}/api/img/products/${imagePath}`;
+            return `${baseUrl}/img/products/${imagePath}`;
         case 'carousel':
-            return `${baseUrl}/api/img/carousel/${imagePath}`;
+            return `${baseUrl}/img/carousel/${imagePath}`;
         default:
-            return `${baseUrl}/api/img/${imagePath}`;
+            return `${baseUrl}/img/${imagePath}`;
     }
 
 
-    // 確認 baseUrl & path 前後斜線
-    let cleanPath = imagePath;
-    if (cleanPath.startsWith('/api')) {
-        cleanPath = cleanPath.replace(/^\/api/, ''); // 避免重複 /api
-        console.log('[imageUrl.js] removing leading /api from imagePath, new cleanPath:', cleanPath);
-    }
+    // // 確認 baseUrl & path 前後斜線
+    // let cleanPath = imagePath;
+    // if (cleanPath.startsWith('/api')) {
+    //     cleanPath = cleanPath.replace(/^\/api/, ''); // 避免重複 /api
+    //     console.log('[imageUrl.js] removing leading /api from imagePath, new cleanPath:', cleanPath);
+    // }
 
     // 組合
     let finalUrl = baseUrl;
