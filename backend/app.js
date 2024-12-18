@@ -15,11 +15,11 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // 中介軟體配置
 app.use(cors({
     origin: process.env.NODE_ENV === 'development' 
-        ? ['http://localhost:8081']
-        : process.env.ALLOWED_ORIGINS?.split(','),
+    ? ['http://localhost:8081']
+    : ['https://kao1987.github.io', 'https://kao1987.github.io/ECshop'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,        
+    credentials: false,        
 }));
 console.log(process.env.NODE_ENV);
 
@@ -31,7 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/img/products', express.static(path.join(__dirname, 'public', 'img', 'products')));
 app.use('/api/img/carousel', express.static(path.join(__dirname, 'public', 'img', 'carousel')));
 app.use('/api/img/carouselImages', express.static(path.join(__dirname, 'public', 'img', 'carouselImages')));
-app.use(express.static(path.join(__dirname, 'dist')));
+// app.use(express.static(path.join(__dirname, 'dist')));
 
 
 // 路由配置
@@ -104,9 +104,9 @@ app.use((err, req, res, next) => {
 });
 
 // 前端路由處理
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist/index.html'));
-});
+// app.get('*', (req, res) => {
+//     res.sendFile(path.join(__dirname, 'dist/index.html'));
+// });
 
 // 伺服器啟動函數
 const startServer = async () => {
