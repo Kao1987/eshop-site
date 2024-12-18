@@ -1,9 +1,19 @@
 // backend/middleware/auth.js
-
 const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
-
 const verify = promisify(jwt.verify);
+
+const TOKEN_EXPIRATION_IN = '4h'; // 4小時
+const generateToken = (user) => {
+    return jwt.sign(
+        {
+            id: user.id,
+            role: user.role,
+        },
+        process.env.JWT_SECRET,
+        {expiresIn: TOKEN_EXPIRATION_IN}
+    );
+};
 
 const authMiddleware = async (req, res, next) => {
     try {

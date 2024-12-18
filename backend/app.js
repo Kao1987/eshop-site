@@ -7,6 +7,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const helmet = require('helmet');
 
 // 初始化 Express 應用
 const app = express();
@@ -26,6 +27,7 @@ app.use(cors({
 }));
 console.log(process.env.NODE_ENV);
 
+app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
