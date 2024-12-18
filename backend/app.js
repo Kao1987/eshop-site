@@ -1,14 +1,11 @@
 // backend/app.js
-require('dotenv').config({ path: __dirname + '/.env' });
-// require('dotenv').config(); 錯誤用法
-
-console.log('NODE_ENV in app.js:', process.env.NODE_ENV);
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const helmet = require('helmet');
-
+const {pool, testConnection} = require('./config/db');
 // 初始化 Express 應用
 const app = express();
 
@@ -19,11 +16,11 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // 中介軟體配置
 app.use(cors({
     origin: process.env.NODE_ENV === 'development' 
-        ? ['http://localhost:8081']
-        : process.env.ALLOWED_ORIGINS?.split(','),
+    ? ['http://localhost:8081']
+    : ['https://kao1987.github.io', 'https://kao1987.github.io/ECshop'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,        
+    credentials: false,        
 }));
 console.log(process.env.NODE_ENV);
 
@@ -32,10 +29,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 靜態資源配置
-app.use('/api/img/products', express.static(path.join(__dirname, 'public', 'img', 'products')));
-app.use('/api/img/carousel', express.static(path.join(__dirname, 'public', 'img', 'carousel')));
-app.use('/api/img/carouselImages', express.static(path.join(__dirname, 'public', 'img', 'carouselImages')));
-app.use(express.static(path.join(__dirname, 'dist')));
+// app.use('/api/img/products', express.static(path.join(__dirname, 'public', 'img', 'products')));
+// app.use('/api/img/carousel', express.static(path.join(__dirname, 'public', 'img', 'carousel')));
+// app.use('/api/img/carouselImages', express.static(path.join(__dirname, 'public', 'img', 'carouselImages')));
+app.use('/static', express.static(path.join(__dirname, 'public')));
+app.use('/api/static', express.static(path.join(__dirname, 'public')));
+app.use('/api/img', express.static(path.join(__dirname, 'public', 'img')));
+
 
 // 路由配置
 const routes = {
@@ -107,18 +107,19 @@ app.use((err, req, res, next) => {
 });
 
 // 前端路由處理
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist/index.html'));
-});
+// app.get('*', (req, res) => {
+//     res.sendFile(path.join(__dirname, 'dist/index.html'));
+// });
 
 // 伺服器啟動函數
 const startServer = async () => {
     try {
         ensureDirectories();
-        
+        await testConnection();
+
         // 測試資料庫連線
-        const db = require('./config/db');
-        await db.query('SELECT 1');
+        // const db = require('./config/db');
+        // await db.query('SELECT 1');
         
         // 檢查端口是否被占用
         const server = app.listen(PORT)

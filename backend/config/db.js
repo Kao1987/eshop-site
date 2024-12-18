@@ -18,33 +18,33 @@ const pool = mysql.createPool({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     port: process.env.DB_PORT || 3306,
+    ssl: process.env.NODE_ENV === 'production' ? {
+        rejectUnauthorized: false,
+    } : false,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    enableKeepAlive: true,
-    keepAliveInitialDelay: 0,
+    // enableKeepAlive: true,
+    // keepAliveInitialDelay: 0,
     // debug模式=debug: process.env.NODE_ENV === 'development'
-    debug: false, 
+    // debug: false, 
 });
 
 const promisePool = pool.promise();
 
-// 改進的連接測試
+// 的連接測試
 const testConnection = async () => {
     try {
-        const [rows] = await promisePool.query('SELECT 1 as connection_test');
-        if (rows[0].connection_test === 1) {
+        const [rows] = await promisePool.query('SELECT 1');
             console.log('資料庫連接成功！');
             
-            // 測試資料庫是否存在所需的表
-            const [tables] = await promisePool.query(`
-                SELECT TABLE_NAME 
-                FROM information_schema.TABLES 
-                WHERE TABLE_SCHEMA = ?
-            `, [process.env.DB_NAME]);
-            
-            console.log('現有資料表:', tables.map(table => table.TABLE_NAME));
-        }
+            // // 測試資料庫是否存在所需的表
+            // const [tables] = await promisePool.query(`
+            //     SELECT TABLE_NAME 
+            //     FROM information_schema.TABLES 
+            //     WHERE TABLE_SCHEMA = ?
+            // `, [process.env.DB_NAME]);
+            return true;
     } catch (error) {
         console.error('資料庫連接測試失敗:', error);
         throw error;
@@ -58,7 +58,10 @@ testConnection()
         process.exit(1);
     });
 
-module.exports = promisePool;
+module.exports = {
+    pool:promisePool,
+    testConnection
+};
 
 if (process.env.NODE_ENV === 'development') {
     console.log('資料庫配置檢查完成');

@@ -3,10 +3,12 @@
     "name": "eshop-site",
     "version": "1.0.0",
     "private": true,
+    "homepage": "https://Kao1987.github.io/ECshop/",
     "scripts": {
         "serve": "vue-cli-service serve --slient",
         "build": "vue-cli-service build",
-        "lint": "vue-cli-service lint"
+        "lint": "vue-cli-service lint",
+        "deploy": "gh-pages -d dist"
     },
     "devDependencies": {
         "@babel/core": "^7.26.0",
@@ -16,6 +18,7 @@
         "concurrently": "^9.1.0",
         "eslint": "^9.16.0",
         "eslint-plugin-vue": "^9.32.0",
+        "gh-pages": "^6.2.0",
         "webpack-dev-server": "^5.1.0"
     },
     "author": "Kao1987 <winterlove1999@gmail.com>",
@@ -28,8 +31,13 @@
         "bootstrap": "^5.3.3",
         "bootstrap-icons": "^1.11.3",
         "bootstrap-vue-3": "^0.5.1",
+        "buffer": "^6.0.3",
         "chart.js": "^4.4.7",
+        "crypto-browserify": "^3.12.1",
         "element-plus": "^2.9.0",
+        "process": "^0.11.10",
+        "stream-browserify": "^3.0.0",
+        "util": "^0.12.5",
         "vue": "^3.5.13",
         "vue-multiselect": "^3.1.0",
         "vue-router": "^4.5.0",

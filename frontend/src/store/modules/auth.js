@@ -1,5 +1,15 @@
 // frontend/src/store/modules/auth.js
 import ApiService from '@/services/api';
+import jwt from 'jsonwebtoken';
+
+const verifyToken = (token, secret) => {
+    return new Promise((resolve, reject) => {
+        jwt.verify(token, secret, (err, decoded) => {
+            if (err) reject(err);
+            resolve(decoded);
+        });
+    });
+};
 
 
 export default {
@@ -31,6 +41,8 @@ export default {
             try {
                 const response = await ApiService.userAPI.login(credentials);
                 const { data } = response;
+                const decoded = await verifyToken(token, process.env.VUE_APP_JWT_SECRET);
+
 
                 console.log('Login Response Data:', data); // 調試用日誌
 
