@@ -26,8 +26,8 @@ jobs:
       - name: Install Dependencies
         working-directory: ./frontend
         run: |
-          npm install
-          npm cache clean --force
+          npm install --legacy-peer-deps
+          npm audit fix --force
 
       - name: Build
         working-directory: ./frontend
@@ -42,6 +42,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./frontend/dist
           force_orphan: true
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
-          commit_message: 'deploy: update site'
