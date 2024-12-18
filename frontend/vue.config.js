@@ -7,6 +7,7 @@
     ? '/ECshop/'  
     : '/',  
     outputDir: 'dist', 
+    assetsDir: 'static',
     lintOnSave: false, 
     transpileDependencies: true, // 編譯依賴
 
@@ -15,6 +16,7 @@
         resolve: {
             alias: {
                 '@': path.resolve(__dirname, 'src'),
+                '@assets': path.resolve(__dirname, 'src/assets'),
             },
             fallback: {
                 "crypto": require.resolve("crypto-browserify"),

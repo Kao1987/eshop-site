@@ -29,10 +29,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 靜態資源配置
-app.use('/api/img/products', express.static(path.join(__dirname, 'public', 'img', 'products')));
-app.use('/api/img/carousel', express.static(path.join(__dirname, 'public', 'img', 'carousel')));
-app.use('/api/img/carouselImages', express.static(path.join(__dirname, 'public', 'img', 'carouselImages')));
-// app.use(express.static(path.join(__dirname, 'dist')));
+// app.use('/api/img/products', express.static(path.join(__dirname, 'public', 'img', 'products')));
+// app.use('/api/img/carousel', express.static(path.join(__dirname, 'public', 'img', 'carousel')));
+// app.use('/api/img/carouselImages', express.static(path.join(__dirname, 'public', 'img', 'carouselImages')));
+app.use('/static', express.static(path.join(__dirname, 'public')));
+app.use('/api/static', express.static(path.join(__dirname, 'public')));
+app.use('/api/img', express.static(path.join(__dirname, 'public', 'img')));
 
 
 // 路由配置
