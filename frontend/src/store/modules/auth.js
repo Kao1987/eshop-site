@@ -1,6 +1,8 @@
 // frontend/src/store/modules/auth.js
 import ApiService from '@/services/api';
-
+const jwt = require('jsonwebtoken'); 
+const { promisify } = require('util'); 
+const verify = promisify(jwt.verify);
 
 export default {
     namespaced: true,
