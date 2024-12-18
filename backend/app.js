@@ -5,6 +5,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const helmet = require('helmet');
+const {pool, testConnection} = require('./config/db');
 // 初始化 Express 應用
 const app = express();
 
@@ -112,10 +113,11 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
     try {
         ensureDirectories();
-        
+        await testConnection();
+
         // 測試資料庫連線
-        const db = require('./config/db');
-        await db.query('SELECT 1');
+        // const db = require('./config/db');
+        // await db.query('SELECT 1');
         
         // 檢查端口是否被占用
         const server = app.listen(PORT)
