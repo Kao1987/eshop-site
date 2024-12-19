@@ -70,7 +70,7 @@
                 :style="{ animationDelay: index * 0.1 + 's' }"
             >
                 <div class="product-image-wrapper">
-                    <img :src="getImageUrl(product.image,'product')" class="product-image" @error="handleImageError">
+                    <img :src="$getImageUrl(product.image,'product')" class="product-image" @error="handleImageError">
                     <div class="product-overlay">
                         <button class="view-details-btn" @click="viewDetails(product)">
                             查看詳情
@@ -91,7 +91,7 @@
             <div v-for="(product, index) in sevenDaySalesRanking"
                 :key="index" 
                 class="product-item">
-                <img :src="getImageUrl(product.image,'product')" class="product-thumbnail" @error="handleImageError">
+                <img :src="$getImageUrl(product.image,'product')" class="product-thumbnail" @error="handleImageError">
                 <div>{{ index + 1 }}.{{ product.name }}</div>
                 <div>賣出 {{ product.quantity_sold }}件</div>
             </div>
@@ -105,7 +105,7 @@
                 <div v-for="(product,index) in monthSalesRanking" 
                     :key="index"
                     class="product-item">
-                    <img :src="getImageUrl(product.image,'product')" class="product-thumbnail" @error="handleImageError">
+                    <img :src="$getImageUrl(product.image,'product')" class="product-thumbnail" @error="handleImageError">
                     <div>{{ index + 1 }}.{{ product.name }}</div> 
                     <div>賣出{{ product.quantity_sold }}件</div>
                 </div>
@@ -119,7 +119,7 @@
         <div class="product-list">
                 <div v-for="(offer, index) in processedSpecialOffers" 
                 :key="index" class="product-item">
-                <img :src="getImageUrl(offer.image,'product')" class="product-thumbnail" @error="handleImageError">
+                <img :src="$getImageUrl(offer.image,'product')" class="product-thumbnail" @error="handleImageError">
                 <div>{{ offer.name }} </div>
                 <div>特價 {{ offer.price }}元</div>
                 <div class="countdown-timer">
@@ -136,8 +136,6 @@ import axios from 'axios';
 import { handleApiError } from '@/utils/errorHandler';
 import * as bootstrap from 'bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
-import { getImageUrl } from '@/utils/imageUrl'; 
-
 
 const FALLBACK_DATA = {
         carouselImages:[
@@ -258,7 +256,7 @@ export default {
                     product_id: productId,
                     name: product? product.name : `Product ID: ${productId}`,
                     quantity_sold: item.sale_count || 0,
-                    image: product && product.image ? product.image : '/img/wrong.png'
+                    image: product && product.image ? this.$getImageUrl(product.image,'product') : '/img/wrong.png'
                 };
             })
             .filter(item => item.quantity_sold > 0)  // 過濾掉銷售量為 0 的商品
@@ -397,13 +395,11 @@ export default {
             const remainingSeconds = seconds % 60;
             return `${hours}時${minutes}分${remainingSeconds}秒`;
         },
-        getProductImage(productId){
-            const id = Number(productId);
-            const product = this.products.find(p => p.id === id);
-            if(!product || !product.image){
-                return '/img/wrong.png';
-            } 
-            return `api/img/products/${product.image.split('/').pop()}`;
+        getProductImage(productId) {
+            const product = this.products.find(p => p.id === Number(productId));
+            return product && product.image
+                ? this.$getImageUrl(product.image,'product')
+                : '/img/wrong.png';
         },
         getRandomProducts(count = 5){
             const shuffled = [...this.products];
@@ -434,9 +430,6 @@ export default {
         viewDetails(product) {
             this.$router.push(`/product/${product.product_id}`);
         },
-        getProductImage(productId) {
-            return this.$getImageUrl(`${productId}`, 'product');
-        }
     },
     computed:{
         processedSpecialOffers() {
