@@ -47,19 +47,19 @@
                     <!-- 導覽右—快捷 -->
                     <div class="cartmember d-flex">
                         <router-link class="cart-item me-3" to="/ShopCart" @click="closeNav">
-                            <img :src="$getImageUrl('shopping_cart.png')" alt="購物車" class="icon-img">
-                            <span class="text-link">購物車</span>
+                            <img :src="$getImageUrl('shopping_cart.png')" alt="" class="icon-img">
+                            <span class="cart-text">購物車</span>
                         </router-link>
                         <template v-if="isLoggedIn">
-                            <div class="cart-item">
-                                <span class="text-link">歡迎 {{ userName }}</span>
-                                <button class="btn btn-link" @click="logout">會員登出</button>
+                            <div class="member-item">
+                                <span class="cart-text">歡迎 {{ userName }}</span>
+                                <button class="btn btn-link cart-text" @click="logout">會員登出</button>
                             </div>
                         </template>
                         <template v-else>
-                            <router-link class="cart-item" to="/UserLogin" @click="closeNav">
-                            <img :src="$getImageUrl('member_login.png')" alt="會員登入" class="icon-img">
-                            <span class="text-link">會員登入</span>                            
+                            <router-link class="member-item" to="/UserLogin" @click="closeNav">
+                                <img :src="$getImageUrl('member_login.png')" alt="" class="icon-img">
+                                <span class="cart-text">會員登入</span>                            
                             </router-link>
                         </template>
                     </div>
@@ -231,7 +231,9 @@ export default {
 
 .cartmember{
     display: flex;
-    text-align: center;
+    align-items: center;
+    margin-left: auto;
+    gap: 1rem;
 }
 .cart-item{
     display: flex;
@@ -241,6 +243,7 @@ export default {
     text-decoration: none;
     transition: all 0.3s ease;
     border-radius: 20px;
+    white-space: nowrap;
 }
 .cart-item:hover{
     background-color: red;
@@ -379,7 +382,7 @@ export default {
         flex-shrink: 1; /* 允許導航鏈接縮小以適應空間 */
     }
     .search-container {
-        margin: 0 1rem; /* 在兩側添加一些間距 */
+        margin: 0 1rem; /* 在兩側加一些間距 */
         min-width: 200px; /* 設置最小寬度 */
         flex-shrink: 1; /* 允許搜索框縮小 */
     }
@@ -397,4 +400,47 @@ export default {
         padding: 0.375rem 1rem; /* 稍微減少按鈕的內邊距 */
     }
 }
+
+/* 新增 .member-item 樣式 */
+.member-item{
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    color: #333;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.member-item:hover{
+    background-color: #f0f0f0; /* 更改為適合會員區塊的顏色 */
+    transform: translateY(-2px);
+}
+
+.member-item .text-link{
+    margin-right: 0.5rem;
+}
+
+.member-item .btn-link{
+    color: #333;
+    text-decoration: none;
+}
+
+.member-item .btn-link:hover{
+    color: #0056b3;
+}
+
+
+.cart-text {
+    display: inline;  /* 預設顯示 */
+}
+
+
+@media (max-width: 576px) {
+    .cart-text {
+        display: none;  /* 在手機尺寸下隱藏 */
+    }
+}
+
 </style>

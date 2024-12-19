@@ -14,30 +14,31 @@ const PORT = process.env.PORT || 5002;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // 中介軟體配置
-// app.use(cors({
-//     origin: process.env.NODE_ENV === 'development' 
-//     ? ['http://localhost:8081']
-//     : ['https://kao1987.github.io', 'https://kao1987.github.io/ECshop'],
-//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//     allowedHeaders: ['Content-Type', 'Authorization'],
-//     credentials: true,        
-// }));
-
 const allowedOrigins = process.env.NODE_ENV === 'development' 
-    ? ['http://localhost:8081']
+    ? ['http://localhost:8081', 'http://localhost:8080']
     : ['https://kao1987.github.io', 'https://kao1987.github.io/ECshop'];
 
 app.use(cors({
     origin: function(origin, callback) {
-        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+        // 開發環境下允許沒有 origin 的請求（例如 Postman）
+        if (process.env.NODE_ENV === 'development' && !origin) {
+            return callback(null, true);
+        }
+        
+        if (allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            callback(new Error('不允許的來源'));
+            console.log('拒絕的來源:', origin); // 用於調試
+            console.log('當前環境:', process.env.NODE_ENV);
+            console.log('允許的來源:', allowedOrigins);
+            callback(null, false);
         }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    credentials: true,
+    maxAge: 86400,
+    optionsSuccessStatus: 200
 }));
 console.log(process.env.NODE_ENV);
 

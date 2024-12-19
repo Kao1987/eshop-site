@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"yarn frontend\" \"yarn backend\"",
-    "frontend": "cd frontend && yarn serve",
-    "backend": "nodemon backend/app.js"
+    "dev": "cross-env NODE_ENV=development concurrently \"yarn dev:frontend\" \"yarn dev:backend\"",
+    "dev:frontend": "cd frontend && cross-env NODE_ENV=development yarn serve",
+    "dev:backend": "cd backend && cross-env NODE_ENV=development nodemon app.js",
+    "serve": "yarn dev",
+    "start": "cross-env NODE_ENV=production node backend/app.js",
+    "build": "cd frontend && yarn build",
+    "install:all": "yarn install && cd frontend && yarn install && cd ../backend && yarn install"
   },
   "dependencies": {
     "@vueform/multiselect": "^2.6.11",
@@ -13,22 +17,22 @@
     "bcrypt": "^5.1.1",
     "bootstrap": "^5.3.3",
     "bootstrap-vue-3": "^0.5.1",
+    "buffer": "^6.0.3",
     "chart.js": "^4.4.7",
     "core-js": "^3.39.0",
     "cors": "^2.8.5",
+    "crypto-browserify": "^3.12.0",
     "element-plus": "^2.9.0",
     "json-server-auth": "^2.1.0",
     "lodash.debounce": "^4.0.8",
     "multer": "^1.4.5-lts.1",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
+    "util": "^0.12.5",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0",
     "vuex": "4",
-    "vuex-persistedstate": "^4.1.0",
-    "buffer": "^6.0.3",
-    "crypto-browserify": "^3.12.0",
-    "process": "^0.11.10",
-    "stream-browserify": "^3.0.0",
-    "util": "^0.12.5"
+    "vuex-persistedstate": "^4.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
@@ -37,10 +41,11 @@
     "@vue/cli-plugin-eslint": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
     "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
     "eslint": "^9.16.0",
     "eslint-plugin-vue": "^9.32.0",
     "gh-pages": "^6.2.0",
-    "nodemon": "^3.1.7",
+    "nodemon": "^3.1.9",
     "webpack": "^5.97.0"
   },
   "eslintConfig": {
