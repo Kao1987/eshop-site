@@ -199,7 +199,8 @@ export default {
     },
     methods: {
         getImageUrl(url, type) {
-            return getImageUrl(url, type);
+            if (!url) return '/img/wrong.png';
+            return `${process.env.VUE_APP_API_BASE_URL}/img/${type}/${url}`;
         },
         handleError(section, error) {
             console.error(`Error in ${section}:`, error.message || error);
