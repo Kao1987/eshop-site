@@ -58,10 +58,7 @@ testConnection()
         process.exit(1);
     });
 
-module.exports = {
-    pool:promisePool,
-    testConnection
-};
+module.exports = {pool:promisePool,testConnection};
 pool.on('connection', (connection) => {
     console.log('📦 新的資料庫連線已建立', {
         時間: new Date().toLocaleString('zh-TW'),

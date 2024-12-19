@@ -50,6 +50,18 @@ const routes = {
     ranking: require('./routes/rankingRoutes')
 };
 
+app.use('/api/brands', routes.brands);
+app.use('/api/carousel_images', routes.carouselImages);
+app.use('/api/order_items', routes.orderItems);
+app.use('/api/orders', routes.orders);
+app.use('/api/products', routes.products);
+app.use('/api/recipients', routes.recipients);
+app.use('/api/sales', routes.sales);
+app.use('/api/special_offers', routes.specialOffers);
+app.use('/api/tags', routes.tags);
+app.use('/api/users', routes.users);
+app.use('/api/ranking', routes.ranking);
+
 // 註冊路由（修改路由命名規則）
 Object.entries(routes).forEach(([name, router]) => {
     const routePath = name.replace(/([A-Z])/g, '_$1').toLowerCase();

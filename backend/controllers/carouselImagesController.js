@@ -21,7 +21,7 @@ exports.getCarouselImageById = async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM carousel_images WHERE id = ?', [id]);
     if (rows.length === 0) {
-      return res.status(404).json({ message: '輪播圖未找到'});
+      return res.status(404).json({ message: '輪播圖未找到' });
     }
     res.json(rows[0]);
   } catch (error) {
@@ -33,7 +33,7 @@ exports.getCarouselImageById = async (req, res) => {
 // 新增輪播圖
 exports.createCarouselImage = async (req, res) => {
   try {
-    const imageUrl = `${req.file.filename}`;
+    const imageUrl = `${process.env.CAROUSEL_IMAGE_URL}/${req.file.filename}`;
     const [result] = await pool.query(
       'INSERT INTO carousel_images (url, created_at,visible) VALUES (?, NOW(),1)',
       [imageUrl]
@@ -77,7 +77,7 @@ exports.deleteCarouselImage = async (req, res) => {
   try {
     const [result] = await pool.query('DELETE FROM carousel_images WHERE id = ?', [id]);
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: '輪播圖未找到', error: error.message });
+      return res.status(404).json({ message: '輪播圖未找到' });
     }
     res.json({ message: '輪播圖已成功刪除' });
   } catch (error) {

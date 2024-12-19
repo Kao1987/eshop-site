@@ -36,7 +36,7 @@ exports.createProduct = async (req, res)=>{
     };
 
     if(req.file){
-      productData.image = `img/products/${req.file.filename}`;
+      productData.image = `${process.env.PRODUCT_IMAGE_URL}/${req.file.filename}`;
     }
 
     const [result] = await connection.query('INSERT INTO products SET ?', productData);
@@ -149,7 +149,7 @@ exports.updateProduct = async (req, res) => {
     // 檢查產品是否存在
     const [existingProductRows] = await connection.query('SELECT * FROM products WHERE id = ?',[id]);
     if(existingProductRows.length === 0){
-      return res.status(404).json({ message: '產品未找到。'});
+      return res.status(404).json({ message: '產品未找到。' });
     }
 
     // 解構並驗證欄位
@@ -179,7 +179,7 @@ exports.updateProduct = async (req, res) => {
       price:parseFloat(price),
       stock:parseInt(stock),
       brand_id:parseInt(brand_id,10),
-      updated_at:new Date() || new Date().toISOString().slice(0,10),
+      updated_at:new Date(),
     };
     if(req.file){
       productData.image = `img/products/${req.file.filename}`;
