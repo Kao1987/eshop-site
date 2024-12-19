@@ -98,12 +98,6 @@ app.use((err, req, res, next) => {
             message
         });
     }
-    
-    res.status(status).json({
-        success: false,
-        message,
-        ...(process.env.NODE_ENV === 'development' && { error: err.stack })
-    });
 });
 
 // 前端路由處理

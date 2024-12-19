@@ -133,6 +133,7 @@ import { productAPI } from '@/services/api';
 import { orderAPI } from '@/services/api';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
+import { getImageUrl as fetchImageUrl } from '@/utils/imageUrl'; 
 
 export default{
     name:'EditProduct',

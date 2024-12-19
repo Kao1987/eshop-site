@@ -135,7 +135,7 @@ import axios from 'axios';
 import { handleApiError } from '@/utils/errorHandler';
 import * as bootstrap from 'bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
-import getImageUrl from '@/utils/imageUrl'; 
+import { getImageUrl } from '@/utils/imageUrl'; 
 
 
 const FALLBACK_DATA = {
@@ -154,15 +154,15 @@ export default {
         return {
             isPageLoading: true,
             // 七日銷售排行
-            sevenDaySalesRanking: [ ],
+            sevenDaySalesRanking: [],
             // 月銷售排行
-            monthSalesRanking: [ ],
+            monthSalesRanking: [],
             // 特價商品
-            specialOffers: [ ],
+            specialOffers: [],
             // 輪播圖片
-            carouselImages: FALLBACK_DATA.carouselImages,
+            carouselImages: [],
             // 產品列表
-            products:[],
+            products: [],
             // 儲存倒數計時
             countdownIntervals: [],
             isLoading:{
