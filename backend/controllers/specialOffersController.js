@@ -1,5 +1,5 @@
 // backend/controllers/specialOffersController.js
-const pool = require('../config/db');
+const { pool } = require('../config/db');
 
 // 獲取所有特價商品
 exports.getAllSpecialOffers = async (req, res) => {

@@ -1,5 +1,5 @@
 // backend/controllers/orderItemsController.js
-const pool = require('../config/db');
+const { pool } = require('../config/db');
 
 // 獲取所有購物車
 exports.getAllOrderItems = async (req, res) => {

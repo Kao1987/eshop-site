@@ -1,5 +1,5 @@
 // backend/controllers/carouselImagesController.js
-const pool = require('../config/db');
+const { pool } = require('../config/db');
 
 
 // 獲取所有輪播圖
