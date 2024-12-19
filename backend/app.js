@@ -20,11 +20,14 @@ app.use(cors({
     : ['https://kao1987.github.io', 'https://kao1987.github.io/ECshop'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: false,        
+    credentials: true,        
 }));
 console.log(process.env.NODE_ENV);
 
-app.use(helmet());
+// 設定 crossOriginResourcePolicy 為 'cross-origin'，允許從其他網域載入圖片
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -94,11 +97,6 @@ app.use((err, req, res, next) => {
         });
     }
 });
-
-// 前端路由處理
-// app.get('*', (req, res) => {
-//     res.sendFile(path.join(__dirname, 'dist/index.html'));
-// });
 
 // 伺服器啟動函數
 const startServer = async () => {
