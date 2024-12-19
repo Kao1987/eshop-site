@@ -14,6 +14,7 @@ export const getImageUrl = (imagePath, type) => {
     };
 
     const folder = typeMap[type] || '';
-    return `${baseUrl}/img/${folder}/${imagePath}`;
+    return `${baseUrl}/api/img/${folder}/${imagePath}`;
+
 };
 
