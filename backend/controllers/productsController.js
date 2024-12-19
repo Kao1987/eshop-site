@@ -91,12 +91,13 @@ exports.createProduct = async (req, res)=>{
 exports.getAllProducts = async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT p.id, p.name, p.description, p.price, p.stock,p.image,  
-      GROUP_CONCAT(t.name) AS tags 
+      SELECT p.id, p.name, p.description, p.price, p.stock, p.image,  
+      GROUP_CONCAT(t.name) AS tags,
+      p.brand_id, p.created_at, p.updated_at
       FROM products p
       LEFT JOIN product_tags pt ON p.id = pt.product_id
       LEFT JOIN tags t ON pt.tag_id = t.id
-      GROUP BY p.id, p.name, p.description, p.price,p.stock,p.image
+      GROUP BY p.id, p.name, p.description, p.price, p.stock, p.image, p.brand_id, p.created_at, p.updated_at
       `);
 
     const products = rows.map(product => {
@@ -107,10 +108,13 @@ exports.getAllProducts = async (req, res) => {
     });
 
     res.status(200).json(products);
-  } catch (error) {
-    console.error('獲取產品時出錯',error);
-    res.status(500).json({ message: '伺服器錯誤',error:error.toString() });
-  }
+  }catch (error) {
+    console.error('獲取產品時出錯:', error);
+    res.status(500).json({ 
+        success: false,
+        message: '獲取產品時發生錯誤，請稍後再試'
+    });
+}
 };
 
 // 根據 ID 獲取單個產品

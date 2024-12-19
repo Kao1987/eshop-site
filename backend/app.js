@@ -14,13 +14,30 @@ const PORT = process.env.PORT || 5002;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // 中介軟體配置
-app.use(cors({
-    origin: process.env.NODE_ENV === 'development' 
+// app.use(cors({
+//     origin: process.env.NODE_ENV === 'development' 
+//     ? ['http://localhost:8081']
+//     : ['https://kao1987.github.io', 'https://kao1987.github.io/ECshop'],
+//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//     allowedHeaders: ['Content-Type', 'Authorization'],
+//     credentials: true,        
+// }));
+
+const allowedOrigins = process.env.NODE_ENV === 'development' 
     ? ['http://localhost:8081']
-    : ['https://kao1987.github.io', 'https://kao1987.github.io/ECshop'],
+    : ['https://kao1987.github.io', 'https://kao1987.github.io/ECshop'];
+
+app.use(cors({
+    origin: function(origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('不允許的來源'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,        
+    credentials: true
 }));
 console.log(process.env.NODE_ENV);
 
