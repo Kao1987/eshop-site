@@ -1,5 +1,4 @@
 // backend/routes/productsRoutes.js
-const { pool } = require('../config/db'); 
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');

@@ -21,7 +21,7 @@ exports.getCarouselImageById = async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM carousel_images WHERE id = ?', [id]);
     if (rows.length === 0) {
-      return res.status(404).json({ message: '輪播圖未找到', error: error.message });
+      return res.status(404).json({ message: '輪播圖未找到'});
     }
     res.json(rows[0]);
   } catch (error) {

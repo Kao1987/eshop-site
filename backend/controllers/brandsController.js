@@ -1,5 +1,5 @@
 // backend/controllers/brandsController.js
-const pool = require('../config/db');
+const { pool } = require('../config/db');
 
 // 獲取所有廠牌
 exports.getAllbrands = async (req, res) => {

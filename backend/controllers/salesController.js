@@ -1,5 +1,5 @@
 // backend/controllers/salesController.js
-const { pool } = require('../config/db');
+const { pool } = require('../config/db')
 
 // 獲取銷售排行
 exports.getSalesRanking = async (req, res) => {
