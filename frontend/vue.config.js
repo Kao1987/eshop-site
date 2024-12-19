@@ -15,8 +15,8 @@ module.exports = defineConfig({
             env.BASE_URL = JSON.stringify(process.env.NODE_ENV === 'production' ? '/ECshop/' : '/');
             env.VUE_APP_API_BASE_URL = JSON.stringify(
                 process.env.NODE_ENV === 'production'
-                    ? 'https://ecshop-backend.onrender.com'
-                    : 'http://localhost:5002'
+                    ? 'https://ecshop-backend.onrender.com/api'
+                    : 'http://localhost:5002/api'
             );
             env.VUE_APP_CAROUSEL_IMAGE_BASE_URL = JSON.stringify(
                 process.env.NODE_ENV === 'production'
