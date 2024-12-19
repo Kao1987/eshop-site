@@ -30,130 +30,7 @@ import SpecialOffers from '@/views/admin/SpecialOffers.vue';
 
 
     const routes = [
-    {
-        path: '/',
-        name: 'HomePage',
-        component: HomePage
-    },
-    {
-        path: '/admin',
-        name: 'AdminDashBoard',
-        component: AdminDashBoard,
-        // meta:{requiresAuth: true,role:'admin'}
-    },
-    {
-        path: '/admin/Products',
-        name: 'AdminProducts',
-        component: AdminProducts,
-        // meta:{requiresAuth: true,role:'admin'}
-    },
-    {
-        path: '/admin/Users',
-        name: 'AdminUsers',
-        component: AdminUsers,
-        // meta:{requiresAuth: true,role:'admin'}
-
-    },
-    {
-        path: '/admin/Orders',
-        name: 'AdminOrders',
-        component: AdminOrders,
-        meta:{requiresAuth: true,role:'admin'}
-    },    
-    {
-        path: '/admin/Orders/:id(\\d+)',
-        name: 'OrderDetail',
-        component: OrderDetail,
-        props:true,
-    },
-    {
-        path: '/admin/CreateProduct',
-        name: 'CreateProduct',
-        component: CreateProduct,
-        // meta:{requiresAuth: true,role:'admin'}
-    },
-    {
-        path: '/admin/EditProduct/:id',
-        name: 'EditProduct',
-        component: EditProduct,
-        // meta:{requiresAuth: true,role:'admin'}
-    },
-    {
-        path: '/admin/AdminContact',
-        name: 'AdminContact',
-        component: AdminContact
-    },
-    {
-        path: '/admin/CarouselImages',
-        name: 'CarouselImages',
-        component: CarouselImages
-    },
-    {
-        path: '/admin/SpecialOffers',
-        name: 'SpecialOffers',
-        component: SpecialOffers
-    },
-    
-    {
-        path: '/ShopCart',
-        name: 'ShopCart',
-        component: ShopCart,
-        meta:{requiresAuth: true}
-
-    },
-    {
-        path: '/ProductsList',
-        name: 'ProductsList',
-        component: ProductsList
-    },
-    {
-        path: '/MembersPage',
-        name: 'MembersPage',
-        component: MembersPage,
-        meta:{requiresAuth: true}
-    },
-    {
-        path: '/AboutUsPage',
-        name: 'AboutUsPage',
-        component: AboutUsPage
-    },
-    {
-        path: '/ContactUs',
-        name: 'ContactUs',
-        component: ContactUs
-    },
-    {
-        path: '/SearchResults',
-        name: 'SearchResults',
-        component: SearchResults
-    },
-    {
-        path: '/UserRegister',
-        name: 'UserRegister',
-        component: UserRegister
-    },
-    {
-        path: '/UserLogin',
-        name: 'UserLogin',
-        component: UserLogin
-    },
-    {
-        path: '/ForgotPwd',
-        name: 'ForgotPwd',
-        component: ForgotPwd
-    },
-    {
-        path: '/ProductDetail/:id',
-        name: 'ProductDetail',
-        component: ProductDetail
-    },
-    {
-        path: '/Order-Confirmation/:orderId',
-        name: 'OrderConfirmation',
-        component: OrderConfirmation
-    },
-
-
+  
   // Add more routes as needed
 ];
 
@@ -164,6 +41,127 @@ const router = createRouter({
             path:'/',
             name:'HomePage',
             component: () => import('@/views/HomePage.vue')
+        },
+        {
+            path: '/admin',
+            name: 'AdminDashBoard',
+            component: AdminDashBoard,
+            // meta:{requiresAuth: true,role:'admin'}
+        },
+        {
+            path: '/admin/Products',
+            name: 'AdminProducts',
+            component: AdminProducts,
+            // meta:{requiresAuth: true,role:'admin'}
+        },
+        {
+            path: '/admin/Users',
+            name: 'AdminUsers',
+            component: AdminUsers,
+            // meta:{requiresAuth: true,role:'admin'}
+    
+        },
+        {
+            path: '/admin/Orders',
+            name: 'AdminOrders',
+            component: AdminOrders,
+            meta:{requiresAuth: true,role:'admin'}
+        },    
+        {
+            path: '/admin/Orders/:id(\\d+)',
+            name: 'OrderDetail',
+            component: OrderDetail,
+            props:true,
+        },
+        {
+            path: '/admin/CreateProduct',
+            name: 'CreateProduct',
+            component: CreateProduct,
+            // meta:{requiresAuth: true,role:'admin'}
+        },
+        {
+            path: '/admin/EditProduct/:id',
+            name: 'EditProduct',
+            component: EditProduct,
+            // meta:{requiresAuth: true,role:'admin'}
+        },
+        {
+            path: '/admin/AdminContact',
+            name: 'AdminContact',
+            component: AdminContact
+        },
+        {
+            path: '/admin/CarouselImages',
+            name: 'CarouselImages',
+            component: CarouselImages
+        },
+        {
+            path: '/admin/SpecialOffers',
+            name: 'SpecialOffers',
+            component: SpecialOffers
+        },
+        
+        {
+            path: '/ShopCart',
+            name: 'ShopCart',
+            component: ShopCart,
+            meta:{requiresAuth: true}
+    
+        },
+        {
+            path: '/ProductsList',
+            name: 'ProductsList',
+            component: ProductsList
+        },
+        {
+            path: '/MembersPage',
+            name: 'MembersPage',
+            component: MembersPage,
+            meta:{requiresAuth: true}
+        },
+        {
+            path: '/AboutUsPage',
+            name: 'AboutUsPage',
+            component: AboutUsPage
+        },
+        {
+            path: '/ContactUs',
+            name: 'ContactUs',
+            component: ContactUs
+        },
+        {
+            path: '/SearchResults',
+            name: 'SearchResults',
+            component: SearchResults
+        },
+        {
+            path: '/UserRegister',
+            name: 'UserRegister',
+            component: UserRegister
+        },
+        {
+            path: '/UserLogin',
+            name: 'UserLogin',
+            component: UserLogin
+        },
+        {
+            path: '/ForgotPwd',
+            name: 'ForgotPwd',
+            component: ForgotPwd
+        },
+        {
+            path: '/ProductDetail/:id',
+            name: 'ProductDetail',
+            component: ProductDetail
+        },
+        {
+            path: '/Order-Confirmation/:orderId',
+            name: 'OrderConfirmation',
+            component: OrderConfirmation
+        },
+        {
+            path: '/:pathMatch(.*)*',
+            redirect: '/'
         }
     ]
     });
