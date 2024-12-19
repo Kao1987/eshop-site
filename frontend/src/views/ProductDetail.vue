@@ -46,7 +46,7 @@ export default {
         const productId = computed(()=> route.params.id);
         const productImageUrl = computed(()=> {
             if(!product.value) return '/img/wrong.png';
-            return getImageUrl(product.value.image,'product');
+            return product.value.image ? product.value.image : '/img/wrong.png';
         });
         const isLoggedIn = computed(()=>store.state.auth.isLoggedIn);
 

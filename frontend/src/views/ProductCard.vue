@@ -42,7 +42,7 @@ export default {
         // 計算屬性
         const isAdding = ref(false);
         const productId = computed(() => String(props.product.id).trim());
-        const productImageUrl = computed(() => props.product.image ? `/${props.product.image}` : '/backend/public/img/wrong.png');
+        const productImageUrl = computed(() => props.product.image ? props.product.image : '/img/wrong.png');
         const formattedPrice = computed(() =>{
         const price = parseFloat(props.product.price);
             return isNaN(price) 

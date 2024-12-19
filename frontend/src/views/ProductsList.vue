@@ -112,8 +112,7 @@ export default {
                         id: String(product.id).trim(),
                         price:Number(product.price),
                         tags: Array.isArray(product.tags) ? product.tags : [],
-                        image: product.image ? `api/img/products/${product.image.split('/').pop()}` : '/img/default-product.jpg'
-
+                        image: product.image ? `${process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL}/${product.image.split('/').pop()}` : '/img/default-product.jpg'
                     }))
                 }else{
                     products.value =[];
