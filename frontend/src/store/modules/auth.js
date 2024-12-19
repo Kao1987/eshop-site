@@ -1,15 +1,6 @@
 // frontend/src/store/modules/auth.js
 import ApiService from '@/services/api';
-import jwt from 'jsonwebtoken';
 
-const verifyToken = (token, secret) => {
-    return new Promise((resolve, reject) => {
-        jwt.verify(token, secret, (err, decoded) => {
-            if (err) reject(err);
-            resolve(decoded);
-        });
-    });
-};
 
 
 export default {
@@ -41,9 +32,6 @@ export default {
             try {
                 const response = await ApiService.userAPI.login(credentials);
                 const { data } = response;
-                const decoded = await verifyToken(token, process.env.VUE_APP_JWT_SECRET);
-
-
                 console.log('Login Response Data:', data); // 調試用日誌
 
                 if (!data || !data.token) {
@@ -56,15 +44,9 @@ export default {
                 const user = {id,name,email,role,phone,address};
                 
                 // 儲存 token
-                if (token) {
-                    localStorage.setItem('authToken', token);
-                    console.log('authToken stored:', token); 
-                } else {
-                    console.error('登入成功，但未收到 Token');
-                }
-                // 儲存用戶資訊
+                localStorage.setItem('authToken', token);
                 localStorage.setItem('user', JSON.stringify(user));
-                
+                console.log('authToken stored:', token); 
                 console.log('Stored Token:', token);
                 console.log('Stored User:', user);
 
