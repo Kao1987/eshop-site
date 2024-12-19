@@ -22,37 +22,66 @@ async getAllUsers(req, res) {
         });
     }
 }
-    async register(req, res) {
+async register(req, res) {
+    const connection = await pool.getConnection();
     try {
+        await connection.beginTransaction();
+        
         const { name, email, phone, address, password, role = 'user' } = req.body;
 
         // 檢查必填欄位
         if (!name || !email || !phone || !address || !password) {
-        return res.status(400).json({ success: false, message: '所有欄位都是必填的' });
+            return res.status(400).json({ success: false, message: '所有欄位都是必填的' });
         }
 
         // 檢查電子郵件是否重複
-        const [existingUsers] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+        const [existingUsers] = await connection.query(
+            'SELECT id FROM users WHERE email = ?', 
+            [email]
+        );
+        
         if (existingUsers.length > 0) {
-        return res.status(400).json({ success: false, message: '此電子郵件已被註冊' });
+            await connection.rollback();
+            return res.status(400).json({ success: false, message: '此電子郵件已被註冊' });
         }
 
         // 加密密碼
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // 插入新用戶
-        const result = await pool.query(
-        'INSERT INTO users (name, email, phone, address, password, role) VALUES (?, ?, ?, ?, ?, ?)',
-        [name, email, phone, address, hashedPassword, role]
+        // 插入新用戶（不需要指定 created_at，讓它使用預設值）
+        const [result] = await connection.query(
+            `INSERT INTO users (name, email, phone, address, password, role) 
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [name, email, phone, address, hashedPassword, role]
         );
 
-        res.status(201).json({ success: true, message: '註冊成功', userId: result.insertId });
-    } catch (error) {
-        console.error('註冊錯誤:', error);
-        res.status(500).json({ success: false, message: '註冊失敗，請稍後再試' });
-    }
-    }
+        await connection.commit();
 
+        // 查詢剛插入的用戶資料
+        const [newUser] = await connection.query(
+            'SELECT id, name, email, role, created_at FROM users WHERE id = ?',
+            [result.insertId]
+        );
+
+        res.status(201).json({ 
+            success: true, 
+            message: '註冊成功', 
+            userId: result.insertId,
+            user: newUser[0]
+        });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error('註冊錯誤:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: '註冊失敗，請稍後再試',
+            error: error.message 
+        });
+    } finally {
+        connection.release();
+    }
+}
 // 獲取單個用戶
 async getUserById(req, res) {
     const { id } = req.params;
