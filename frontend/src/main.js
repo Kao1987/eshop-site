@@ -22,7 +22,7 @@ const app = createApp(App);
 
 // 掛載全域 Axios
 app.config.globalProperties.$axios = request;
-
+app.config.globalProperties.$getImageUrl = getImageUrl;
 // 使用插件
 app.use(router);
 app.use(store);

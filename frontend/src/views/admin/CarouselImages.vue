@@ -97,7 +97,7 @@
 <script>
 import ApiService from '@/services/api';
 import { handleApiError } from '@/utils/errorHandler';
-import { getImageUrl as fetchImageUrl } from '@/utils/imageUrl';
+import { getImageUrl } from '@/utils/imageUrl';
 
 export default {
     name: 'AdminCarouselImages',
@@ -195,7 +195,7 @@ export default {
             }
         },
         getImageUrl(url, type) {
-            const finalUrl = fetchImageUrl(url, type);
+            const finalUrl = getImageUrl(url, type);
             console.log(`[getImageUrl] url=${url}, type=${type}, finalUrl=${finalUrl}`);
             return finalUrl;
         },

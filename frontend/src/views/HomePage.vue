@@ -198,7 +198,9 @@ export default {
         }
     },
     methods: {
-        getImageUrl,
+        getImageUrl(url, type) {
+            return getImageUrl(url, type);
+        },
         handleError(section, error) {
             console.error(`Error in ${section}:`, error.message || error);
             this.errors[section] = `無法加載 ${section} 數據，請稍後再試。`;
