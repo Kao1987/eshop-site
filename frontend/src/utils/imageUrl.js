@@ -3,16 +3,16 @@
 export const getImageUrl = (path, type) => {
     if (!path) return '/img/wrong.png';
 
-    const baseUrl = process.env.VUE_APP_API_BASE_URL;
+    const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || '';
 
     switch(type) {
         case 'carousel':
-            return `${baseURL}/api/img/carousel/${path.split('/').pop()}`;
+          return `${API_BASE_URL}/img/carousel/${path.split('/').pop()}`;
         case 'product':
-            return `${baseURL}/api/img/products/${path.split('/').pop()}`;
+          return `${API_BASE_URL}/img/products/${path.split('/').pop()}`;
         default:
-            return `${baseURL}${path}`;
-        }
+          return path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
+      }
 
     // if (!imagePath) return '/img/wrong.png';
     // if (imagePath.startsWith('http')) return imagePath;
@@ -28,3 +28,4 @@ export const getImageUrl = (path, type) => {
 
 };
 
+export default getImageUrl;

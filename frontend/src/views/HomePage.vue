@@ -330,12 +330,13 @@ export default {
                     .filter(image => image.visible)
                     .map(image => ({
                         ...image,
-                        url: image.url.startsWith('/') ? image.url : `/${image.url}`
+                        url: this.$getImageUrl(image.url,'carousel')
                     }));
                     console.log('處理後的輪播圖數據:', this.carouselImages);
                 }
             } catch (error) {
                 console.error('載入輪播圖失敗:', error);
+                this.handleError('carousel',error);
             }
         },
         async loadProductsData(){
@@ -432,6 +433,9 @@ export default {
         },
         viewDetails(product) {
             this.$router.push(`/product/${product.product_id}`);
+        },
+        getProductImage(productId) {
+            return this.$getImageUrl(`${productId}`, 'product');
         }
     },
     computed:{
