@@ -158,8 +158,14 @@ import SpecialOffers from '@/views/admin/SpecialOffers.vue';
 ];
 
 const router = createRouter({
-    history: createWebHistory(),
-    routes,
+    history: createWebHistory(process.env.NODE_ENV === 'production' ? '/ECshop' : '/'),
+    routes:[
+        {
+            path:'/',
+            name:'HomePage',
+            component: () => import('@/views/HomePage.vue')
+        }
+    ]
     });
     router.beforeEach((to,from,next)=>{
         const isLoggedIn = !!localStorage.getItem('authToken'); //檢查是某有登入

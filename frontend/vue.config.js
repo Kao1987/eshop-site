@@ -11,8 +11,14 @@
     lintOnSave: false, 
     transpileDependencies: true, // 編譯依賴
 
-
-    configureWebpack: {
+    chainWebpack: config => {
+        config.plugin('define').tap(args => {
+            const env = args[0]['process.env'];
+            env.BASE_URL = JSON.stringify(process.env.NODE_ENV === 'production' ? '/ECshop/' : '/');
+            return args;
+        }); 
+    },
+configureWebpack: {
         resolve: {
             alias: {
                 '@': path.resolve(__dirname, 'src'),

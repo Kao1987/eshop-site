@@ -3,7 +3,7 @@
 export const getImageUrl = (path, type) => {
     if (!path) return '/img/wrong.png';
 
-    const baseUrl = process.env.VUE_APP_API_BASE_URL ||'';
+    const baseUrl = process.env.VUE_APP_API_BASE_URL;
 
     switch(type) {
         case 'carousel':
