@@ -1,7 +1,6 @@
 // frontend/src/services/api.js
 import request from '@/utils/request';
 import axios from 'axios';
-import getImageUrl from '@/utils/imageUrl';
 
 const ApiService = {
     setHeader(header, value) {

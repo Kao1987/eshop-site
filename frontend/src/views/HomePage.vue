@@ -36,7 +36,7 @@
                         :key="'slide-'+index" 
                         :class="['carousel-item',{active:index === 0}]">
                         <div class="carousel-image-container">
-                            <img :src="getImageUrl(image.url,'carousel')" 
+                            <img :src="$getImageUrl(image.url,'carousel')" 
                                 class="d-block w-100" 
                                 :alt="'商品圖片'">
                         </div>
@@ -198,10 +198,6 @@ export default {
         }
     },
     methods: {
-        getImageUrl(url, type) {
-            if (!url) return '/img/wrong.png';
-            return `${process.env.VUE_APP_API_BASE_URL}/img/${type}/${url}`;
-        },
         handleError(section, error) {
             console.error(`Error in ${section}:`, error.message || error);
             this.errors[section] = `無法加載 ${section} 數據，請稍後再試。`;
@@ -370,9 +366,6 @@ export default {
             const minutes = Math.floor((seconds % 3600) / 60);
             const remainingSeconds = seconds % 60;
             return `${hours}時${minutes}分${remainingSeconds}秒`;
-        },
-        getImageUrl(url, type) {
-            return getImageUrl(url, type);
         },
         getProductImage(productId){
             const id = Number(productId);

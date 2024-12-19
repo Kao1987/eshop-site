@@ -12,7 +12,7 @@
                 class="image-card"
             >
                 <div class="image-wrapper">
-                    <img :src="getImageUrl(image.url, 'carousel')"
+                    <img :src="$getImageUrl(image.url, 'carousel')"
                             @load="onImgLoad(index)" 
                             @error="onImgError(index)"
                             class="carousel-image"
@@ -193,11 +193,6 @@ export default {
             }catch(error) {
                 handleApiError(error,'更新圖片狀態失敗');
             }
-        },
-        getImageUrl(url, type) {
-            const finalUrl = getImageUrl(url, type);
-            console.log(`[getImageUrl] url=${url}, type=${type}, finalUrl=${finalUrl}`);
-            return finalUrl;
         },
         onImgLoad(index){
             console.log(`image #${index} 載入成功！`);
