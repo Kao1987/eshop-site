@@ -38,7 +38,8 @@
                         <div class="carousel-image-container">
                             <img :src="$getImageUrl(image.url,'carousel')" 
                                 class="d-block w-100" 
-                                :alt="'商品圖片'">
+                                :alt="'商品圖片'"
+                                @error="handleImageError">
                         </div>
                     </div>
                 </div>
@@ -69,7 +70,7 @@
                 :style="{ animationDelay: index * 0.1 + 's' }"
             >
                 <div class="product-image-wrapper">
-                    <img :src="getProductImage(product.product_id)" class="product-image">
+                    <img :src="getImageUrl(product.image,'product')" class="product-image" @error="handleImageError">
                     <div class="product-overlay">
                         <button class="view-details-btn" @click="viewDetails(product)">
                             查看詳情
@@ -90,7 +91,7 @@
             <div v-for="(product, index) in sevenDaySalesRanking"
                 :key="index" 
                 class="product-item">
-                <img :src="getProductImage(product.product_id)" class="product-thumbnail">
+                <img :src="getImageUrl(product.image,'product')" class="product-thumbnail" @error="handleImageError">
                 <div>{{ index + 1 }}.{{ product.name }}</div>
                 <div>賣出 {{ product.quantity_sold }}件</div>
             </div>
@@ -104,7 +105,7 @@
                 <div v-for="(product,index) in monthSalesRanking" 
                     :key="index"
                     class="product-item">
-                    <img :src="getProductImage(product.product_id)" class="product-thumbnail">
+                    <img :src="getImageUrl(product.image,'product')" class="product-thumbnail" @error="handleImageError">
                     <div>{{ index + 1 }}.{{ product.name }}</div> 
                     <div>賣出{{ product.quantity_sold }}件</div>
                 </div>
@@ -118,7 +119,7 @@
         <div class="product-list">
                 <div v-for="(offer, index) in processedSpecialOffers" 
                 :key="index" class="product-item">
-                <img :src="getProductImage(offer.product_id)" class="product-thumbnail">
+                <img :src="getImageUrl(offer.image,'product')" class="product-thumbnail" @error="handleImageError">
                 <div>{{ offer.name }} </div>
                 <div>特價 {{ offer.price }}元</div>
                 <div class="countdown-timer">
@@ -182,6 +183,11 @@ export default {
         }
     },
     async mounted(){
+        console.log('環境變數:', {
+            API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
+            CAROUSEL_IMAGE_URL: process.env.VUE_APP_CAROUSEL_IMAGE_BASE_URL,
+            PRODUCT_IMAGE_URL: process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL
+        });
         try{
             console.log('開始載入首頁資料');
             await this.loadHomePageData();
@@ -278,35 +284,58 @@ export default {
                 this.isLoading.offers = false;
             }
         },
-        async loadCarouselData(){
-            this.isLoading.carousel = true;
-            try{
-                const response = await ApiService.carouselAPI.getAllCarouselImages();
-                console.log('原始後端回傳:', response);
+        // async loadCarouselData(){
+        //     // this.isLoading.carousel = true;
+        //     try{
+        //         const response = await ApiService.carouselAPI.getAllCarouselImages();
+        //         console.log('原始後端回傳:', response);
 
-                if(Array.isArray(response)){
-                    this.carouselImages = response.filter(image => image.visible);
-                    console.log('載入的輪播圖片:', this.carouselImages);
-                    await this.$nextTick();
-                    if(this.carouselImages.length > 0){
-                        this.initializeCarousel();
-                        console.log(this.carouselImages);
-                    }
-                }else{
-                    console.error('輪播圖的格式不正確',response);
-                    this.carouselImages = FALLBACK_DATA.carouselImages;
-                    await this.$nextTick();
-                    this.initializeCarousel();
-                    console.log(this.carouselImages);
+        //         if(Array.isArray(response)){
+        //             this.carouselImages = response
+        //             .filter(image => image.visible)
+        //             .map(image => ({
+        //                 ...image,
+        //                 url: image.url.startsWith('/img/') ? image.url : `/${image.url}`
+        //             }));
+        //             console.log('載入的輪播圖片:', this.carouselImages);
+        //             // await this.$nextTick();
+        //             // if(this.carouselImages.length > 0){
+        //             //     this.initializeCarousel();
+        //             //     console.log(this.carouselImages);
+        //             // }
+        //         }else{
+        //             console.error('輪播圖的格式不正確',response);
+        //             this.carouselImages = FALLBACK_DATA.carouselImages;
+        //             await this.$nextTick();
+        //             this.initializeCarousel();
+        //             console.log(this.carouselImages);
+        //         }
+        //     } catch(error){
+        //         console.error('加載輪播圖片失敗',error);
+        //         this.errors.carousel = '無法加載輪播圖片';
+        //         this.carouselImages = FALLBACK_DATA.carouselImages;
+        //         await this.$nextTick();
+        //         this.initializeCarousel();
+        //     } finally{
+        //         this.isLoading.carousel = false; 
+        //     }
+        // },
+        async loadCarouselData() {
+            try {
+                const response = await ApiService.carouselAPI.getAllCarouselImages();
+                console.log('輪播圖原始數據:', response);
+                
+                if (Array.isArray(response)) {
+                    this.carouselImages = response
+                    .filter(image => image.visible)
+                    .map(image => ({
+                        ...image,
+                        url: image.url.startsWith('/') ? image.url : `/${image.url}`
+                    }));
+                    console.log('處理後的輪播圖數據:', this.carouselImages);
                 }
-            } catch(error){
-                console.error('加載輪播圖片失敗',error);
-                this.errors.carousel = '無法加載輪播圖片';
-                this.carouselImages = FALLBACK_DATA.carouselImages;
-                await this.$nextTick();
-                this.initializeCarousel();
-            } finally{
-                this.isLoading.carousel = false; 
+            } catch (error) {
+                console.error('載入輪播圖失敗:', error);
             }
         },
         async loadProductsData(){
