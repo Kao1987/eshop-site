@@ -29,9 +29,12 @@ app.use(store);
 app.use(ElementPlus);
 app.use(BootstrapVue3);
 // 確認環境變數載入
-console.log('API Base URL:', process.env.VUE_APP_API_BASE_URL);
-console.log('Carousel Image Base URL:', process.env.VUE_APP_CAROUSEL_IMAGE_BASE_URL);
-console.log('Product Image Base URL:', process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL);
+console.log('環境變數檢查:', {
+    NODE_ENV: process.env.NODE_ENV,
+    API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
+    CAROUSEL_IMAGE_URL: process.env.VUE_APP_CAROUSEL_IMAGE_BASE_URL,
+    PRODUCT_IMAGE_URL: process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL
+});
 // 註冊全局自定義指令 v-tooltip
 app.directive('tooltip', {
     mounted(el) {

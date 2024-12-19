@@ -62,7 +62,20 @@ module.exports = {
     pool:promisePool,
     testConnection
 };
+pool.on('connection', (connection) => {
+    console.log('📦 新的資料庫連線已建立', {
+        時間: new Date().toLocaleString('zh-TW'),
+        執行緒ID: connection.threadId
+    });
+});
 
+pool.on('error', (err) => {
+    console.error('💥 資料庫錯誤:', {
+        時間: new Date().toLocaleString('zh-TW'),
+        錯誤: err.message,
+        代碼: err.code
+    });
+});
 if (process.env.NODE_ENV === 'development') {
     console.log('資料庫配置檢查完成');
 }
