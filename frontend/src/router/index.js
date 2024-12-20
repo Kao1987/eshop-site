@@ -1,5 +1,5 @@
 // frontend/src/router/views FrontStages
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 import HomePage from '@/views/HomePage.vue';
 import AboutUsPage from '@/views/AboutUsPage.vue';
 import ShopCart from '@/views/ShopCart.vue';
@@ -35,7 +35,7 @@ import SpecialOffers from '@/views/admin/SpecialOffers.vue';
 ];
 
 const router = createRouter({
-    history: createWebHistory(process.env.NODE_ENV === 'production' ? '/ECshop' : '/'),
+    history: createWebHashHistory(process.env.NODE_ENV === 'production' ? '/ECshop' : '/'),
     routes:[
         {
             path:'/',
@@ -46,19 +46,19 @@ const router = createRouter({
             path: '/admin',
             name: 'AdminDashBoard',
             component: AdminDashBoard,
-            // meta:{requiresAuth: true,role:'admin'}
+            meta:{requiresAuth: true,role:'admin'}
         },
         {
             path: '/admin/Products',
             name: 'AdminProducts',
             component: AdminProducts,
-            // meta:{requiresAuth: true,role:'admin'}
+            meta:{requiresAuth: true,role:'admin'}
         },
         {
             path: '/admin/Users',
             name: 'AdminUsers',
             component: AdminUsers,
-            // meta:{requiresAuth: true,role:'admin'}
+            meta:{requiresAuth: true,role:'admin'}
     
         },
         {
@@ -72,33 +72,39 @@ const router = createRouter({
             name: 'OrderDetail',
             component: OrderDetail,
             props:true,
+            meta: { requiresAuth: true, role: 'admin' }
         },
         {
             path: '/admin/CreateProduct',
             name: 'CreateProduct',
             component: CreateProduct,
-            // meta:{requiresAuth: true,role:'admin'}
+            meta:{requiresAuth: true,role:'admin'}
         },
         {
             path: '/admin/EditProduct/:id',
             name: 'EditProduct',
             component: EditProduct,
-            // meta:{requiresAuth: true,role:'admin'}
+            meta:{requiresAuth: true,role:'admin'}
         },
         {
             path: '/admin/AdminContact',
             name: 'AdminContact',
-            component: AdminContact
+            component: AdminContact,
+            meta: { requiresAuth: true, role: 'admin' }
+
         },
         {
             path: '/admin/CarouselImages',
             name: 'CarouselImages',
-            component: CarouselImages
+            component: CarouselImages,
+            meta: { requiresAuth: true, role: 'admin' }
+
         },
         {
             path: '/admin/SpecialOffers',
             name: 'SpecialOffers',
-            component: SpecialOffers
+            component: SpecialOffers,
+            meta: { requiresAuth: true, role: 'admin' }
         },
         
         {

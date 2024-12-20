@@ -23,7 +23,7 @@
         width: 100%;
         left: 0;
         background: fixed;
-        background-image: url(/public/img/header_bg.jpg);
+        background-image: url(/img/header_bg.jpg);
         color:aqua;
         text-align: center;
     }

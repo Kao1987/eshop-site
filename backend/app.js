@@ -40,6 +40,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // 靜態資源配置
 app.use('/api/img', express.static(path.join(__dirname, 'public', 'img')));
+app.use('/', express.static(path.join(__dirname, 'public', 'index.html')));
 
 
 // 路由配置
