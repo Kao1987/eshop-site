@@ -5,7 +5,12 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="image-container">
-                        <img :src="productImageUrl" alt="Product Image" class="product-image">
+                        <img 
+                            :src="$getImageUrl(product.image, 'product')"
+                            alt="Product Image" 
+                            class="product-image"
+                            @error="handleImageError"
+                        >
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -57,11 +62,21 @@ export default {
                 return;
             }
             try{
-                product.value = await ApiService.productAPI.getProductById(productId.value);
+                const response = await ApiService.productAPI.getProductById(productId.value);
+                // 處理圖片路徑
+                product.value = {
+                    ...response,
+                    image: response.image ? 
+                        `${process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL}/${response.image.split('/').pop()}` : 
+                        '/img/default-product.jpg'
+                };
             }catch(error){
                 console.error("加載商品詳情時出錯",error);
                 notifiy('error','加載商品詳情失敗，請稍後再試！');
             }
+        };
+        const handleImageError = (event) => {
+            event.target.src = '/img/wrong.png';
         };
         const addToCart=()=>{
             if (!isLoggedIn.value) {
@@ -89,7 +104,8 @@ export default {
                 goBack,
                 product,
                 productId,
-                productImageUrl
+                productImageUrl,
+                handleImageError
             };
     },
 };

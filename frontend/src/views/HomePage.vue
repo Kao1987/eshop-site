@@ -62,7 +62,6 @@
             <h2 class="section-title">為您推薦</h2>
             <div class="section-subtitle">精選優質商品，專屬於您</div>
         </div>
-        
         <div class="product-grid">
             <div v-for="(product,index) in randomProducts"
                 :key="index"
@@ -72,7 +71,7 @@
                 <div class="product-image-wrapper">
                     <img :src="$getImageUrl(product.image,'product')" class="product-image" @error="handleImageError">
                     <div class="product-overlay">
-                        <button class="view-details-btn" @click="viewDetails(product)">
+                        <button class="view-details-btn" @click="viewDetails(product)" :disabled="!product || !product.id">
                             查看詳情
                         </button>
                     </div>
@@ -84,6 +83,10 @@
             </div>
         </div>
     </div>
+
+    <!-- 添加分隔線 -->
+    <div class="section-divider"></div>
+
     <!-- 七日銷售排行 -->
     <div class="sales-ranking mt-5" v-if="sevenDaySalesRanking && sevenDaySalesRanking.length >0">
         <h2>過去7日銷售排行</h2>
@@ -103,6 +106,9 @@
             </div>
         </div>
     </div>
+
+    <!-- 添加分隔線 -->
+    <div class="section-divider"></div>
 
     <!-- 月銷售排行 -->
     <div class="sales-ranking mt-5" v-if=" monthSalesRanking && monthSalesRanking.length>0">
@@ -124,6 +130,8 @@
             </div>
     </div>
 
+    <!-- 添加分隔線 -->
+    <div class="section-divider"></div>
 
     <!-- 特價商品倒數計時 -->
     <div class="countdown-special-offers mt-4" v-if="processedSpecialOffers.length > 0">
@@ -323,6 +331,7 @@ export default {
             this.isLoading.products = true;
             try{
                     const response = await ApiService.productAPI.getAllProducts();
+                    console.log('商品資料:', response); // 檢查資料結構
                 this.products = response || [];
             } catch(error){
                 console.error('加載商品數據失敗',error);
@@ -390,9 +399,7 @@ export default {
                 [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
             return shuffled.slice(0, count).map(product =>({
-                product_id:product.id,
-                name: product.name,
-                image: this.getProductImage(product.id),
+                ...product,
                 quantity_sold:'-'
             }));
         },
@@ -410,7 +417,22 @@ export default {
             });
         },
         viewDetails(product) {
-            this.$router.push(`/product/${product.product_id}`);
+            console.log('查看商品:', product); // 檢查傳入的商品資料
+            if(product && product.id){
+                this.$router.push({
+                    name:'ProductDetail',
+                    params:{
+                        id:String(product.id)
+                    }
+                });
+            }else{
+                console.error('無效的商品ID:', product);
+                this.$store.dispatch('notifications/showNotification', {
+            type: 'error',
+                    message: '無法查看商品詳情，請稍後再試'
+                });
+
+            }
         },
     },
     computed:{
@@ -440,16 +462,18 @@ export default {
 }
 
 .homepage.container {
-    max-width: 764.4px; 
-    width: 95%;
+    max-width: 1200px;  /* 大螢幕最大寬度 */
+    width: 95%;         /* 響應式寬度 */
     margin: 0 auto;
     padding: 0 15px;
+    margin-top: 2rem !important;    /* 與 header 的間距 */
 }
 
 /* 輪播區塊樣式 */
 .carousel-section {
+    max-width: 780px;   /* 1200px * 0.65 = 780px */
     width: 100%;
-    margin: 0 auto 3rem;
+    margin: 0 auto;
 }
 
 .carousel-inner {
@@ -460,7 +484,7 @@ export default {
 .carousel-image-container {
     position: relative;
     width: 100%;
-    padding-top: 48.41%; /* 69.16% * 0.7 = 48.41% (再縮小 30%) */
+    padding-top: 42%;   /* 16:9 的黃金比例（56% * 0.75） */
 }
 
 .carousel-image-container img {
@@ -473,7 +497,7 @@ export default {
     background-color: #f8f9fa;
 }
 
-/* 自定義指示器 */
+/* ��定義指示器 */
 .custom-indicators {
     bottom: 20px;
 }
@@ -517,9 +541,9 @@ export default {
 
 .product-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.5rem;
-    padding: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* 商品卡片最佳寬度 */
+    gap: 24px;  /* 商品之間的間距 */
+    padding: 1.5rem;
 }
 
 .product-card {
@@ -539,7 +563,7 @@ export default {
 
 .product-image-wrapper {
     position: relative;
-    padding-top: 100%;
+    padding-top: 100%;  /* 1:1 的商品圖片比例 */
     overflow: hidden;
 }
 
@@ -801,7 +825,7 @@ export default {
 .product-grid .product-image-wrapper {
     position: relative;
     width: 100%;
-    padding-top: 100%; /* 確保 1:1 的比例 */
+    padding-top: 100%; /* 確��� 1:1 的比例 */
     overflow: hidden;
 }
 
@@ -876,6 +900,106 @@ export default {
     
     .carousel-image-container {
         padding-top: 66.25%; /* 94.64% * 0.7 = 66.25% */
+    }
+}
+
+/* 新增分隔線樣式 */
+.section-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+    margin: 4rem auto;    /* 區塊之間的間距 */
+    position: relative;
+}
+
+.section-divider::before {
+    content: '✦';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 0 1rem;
+    color: #42b983;
+    font-size: 1.2rem;
+}
+
+/* 響應式設計最佳實踐 */
+@media (max-width: 1400px) {
+    .homepage.container {
+        max-width: 1140px;
+    }
+    .carousel-section {
+        max-width: 741px;  /* 1140px * 0.65 */
+    }
+}
+
+@media (max-width: 1200px) {
+    .homepage.container {
+        max-width: 960px;
+    }
+    .carousel-section {
+        max-width: 624px;  /* 960px * 0.65 */
+    }
+}
+
+@media (max-width: 992px) {
+    .homepage.container {
+        max-width: 720px;
+    }
+    .carousel-section {
+        max-width: 720px;  /* 平板尺寸下佔滿寬度 */
+    }
+    .carousel-image-container {
+        padding-top: 48%;  /* 調整圖片比例 */
+    }
+}
+
+@media (max-width: 768px) {
+    .homepage.container {
+        max-width: 540px;
+        padding: 0 10px;
+    }
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 16px;
+    }
+}
+
+@media (max-width: 576px) {
+    .homepage.container {
+        width: 100%;
+        padding: 0 8px;
+    }
+    .carousel-image-container {
+        padding-top: 56%;  /* 手機版保持 16:9 比例 */
+    }
+}
+
+/* 文字大小最佳實踐 */
+.section-title {
+    font-size: 2rem;      /* 32px */
+    margin-bottom: 1rem;
+}
+
+.section-subtitle {
+    font-size: 1.125rem;  /* 18px */
+    margin-bottom: 2rem;
+}
+
+.product-name {
+    font-size: 1rem;      /* 16px */
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+}
+
+/* 響應式文字大小 */
+@media (max-width: 768px) {
+    .section-title {
+        font-size: 1.75rem;  /* 28px */
+    }
+    .section-subtitle {
+        font-size: 1rem;     /* 16px */
     }
 }
 </style>
