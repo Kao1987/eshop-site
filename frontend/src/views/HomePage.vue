@@ -440,7 +440,7 @@ export default {
 }
 
 .homepage.container {
-    max-width: 1092px; /* 1560px * 0.7 = 1092px (縮小 30%) */
+    max-width: 764.4px; 
     width: 95%;
     margin: 0 auto;
     padding: 0 15px;
@@ -460,7 +460,7 @@ export default {
 .carousel-image-container {
     position: relative;
     width: 100%;
-    padding-top: 69.16%; /* 98.8% * 0.7 = 69.16% (縮小 30%) */
+    padding-top: 48.41%; /* 69.16% * 0.7 = 48.41% (再縮小 30%) */
 }
 
 .carousel-image-container img {
@@ -865,7 +865,7 @@ export default {
     }
     
     .carousel-image-container {
-        padding-top: 81.9%; /* 117% * 0.7 = 81.9% */
+        padding-top: 57.33%; /* 81.9% * 0.7 = 57.33% */
     }
 }
 
@@ -875,7 +875,7 @@ export default {
     }
     
     .carousel-image-container {
-        padding-top: 94.64%; /* 135.2% * 0.7 = 94.64% */
+        padding-top: 66.25%; /* 94.64% * 0.7 = 66.25% */
     }
 }
 </style>
