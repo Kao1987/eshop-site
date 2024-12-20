@@ -22,7 +22,7 @@
         bottom: 0;
         width: 100%;
         left: 0;
-        background: fixed;
+        background-attachment: fixed;
         background-image: url(/img/header_bg.jpg);
         color:aqua;
         text-align: center;
