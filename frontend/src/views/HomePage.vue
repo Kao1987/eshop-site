@@ -38,7 +38,7 @@
                         <div class="carousel-image-container">
                             <img :src="$getImageUrl(image.url,'carousel')" 
                                 class="d-block w-100" 
-                                :alt="'商品圖片'"
+                                :alt="'促銷圖片'"
                                 @error="handleImageError">
                         </div>
                     </div>
@@ -91,9 +91,15 @@
             <div v-for="(product, index) in sevenDaySalesRanking"
                 :key="index" 
                 class="product-item">
-                <img :src="$getImageUrl(product.image,'product')" class="product-thumbnail" @error="handleImageError">
-                <div>{{ index + 1 }}.{{ product.name }}</div>
-                <div>賣出 {{ product.quantity_sold }}件</div>
+                <div class="product-thumbnail-wrapper">
+                    <img :src="$getImageUrl(product.image,'product')" 
+                        class="product-thumbnail" 
+                        @error="handleImageError">
+                </div>
+                <div class="product-details">
+                    <div class="rank-name">{{ index + 1 }}. {{ product.name }}</div>
+                    <div class="sales-count">賣出 {{ product.quantity_sold }}件</div>
+                </div>
             </div>
         </div>
     </div>
@@ -105,9 +111,15 @@
                 <div v-for="(product,index) in monthSalesRanking" 
                     :key="index"
                     class="product-item">
-                    <img :src="$getImageUrl(product.image,'product')" class="product-thumbnail" @error="handleImageError">
-                    <div>{{ index + 1 }}.{{ product.name }}</div> 
-                    <div>賣出{{ product.quantity_sold }}件</div>
+                    <div class="product-thumbnail-wrapper">
+                        <img :src="$getImageUrl(product.image,'product')" 
+                            class="product-thumbnail" 
+                            @error="handleImageError">
+                    </div>
+                    <div class="product-details">
+                        <div class="rank-name">{{ index + 1 }}. {{ product.name }}</div>
+                        <div class="sales-count">賣出 {{ product.quantity_sold }}件</div>
+                    </div>
                 </div>
             </div>
     </div>
@@ -119,11 +131,17 @@
         <div class="product-list">
                 <div v-for="(offer, index) in processedSpecialOffers" 
                 :key="index" class="product-item">
-                <img :src="$getImageUrl(offer.image,'product')" class="product-thumbnail" @error="handleImageError">
-                <div>{{ offer.name }} </div>
-                <div>特價 {{ offer.price }}元</div>
-                <div class="countdown-timer">
-                    倒數{{ formatTime(offer.countdown) }}
+                <div class="product-thumbnail-wrapper">
+                    <img :src="$getImageUrl(offer.image,'product')" 
+                        class="product-thumbnail" 
+                        @error="handleImageError">
+                </div>
+                <div class="product-details">
+                    <div class="product-name">{{ offer.name }}</div>
+                    <div class="price">特價 {{ offer.price }}元</div>
+                    <div class="countdown-timer">
+                        倒數{{ formatTime(offer.countdown) }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -282,42 +300,6 @@ export default {
                 this.isLoading.offers = false;
             }
         },
-        // async loadCarouselData(){
-        //     // this.isLoading.carousel = true;
-        //     try{
-        //         const response = await ApiService.carouselAPI.getAllCarouselImages();
-        //         console.log('原始後端回傳:', response);
-
-        //         if(Array.isArray(response)){
-        //             this.carouselImages = response
-        //             .filter(image => image.visible)
-        //             .map(image => ({
-        //                 ...image,
-        //                 url: image.url.startsWith('/img/') ? image.url : `/${image.url}`
-        //             }));
-        //             console.log('載入的輪播圖片:', this.carouselImages);
-        //             // await this.$nextTick();
-        //             // if(this.carouselImages.length > 0){
-        //             //     this.initializeCarousel();
-        //             //     console.log(this.carouselImages);
-        //             // }
-        //         }else{
-        //             console.error('輪播圖的格式不正確',response);
-        //             this.carouselImages = FALLBACK_DATA.carouselImages;
-        //             await this.$nextTick();
-        //             this.initializeCarousel();
-        //             console.log(this.carouselImages);
-        //         }
-        //     } catch(error){
-        //         console.error('加載輪播圖片失敗',error);
-        //         this.errors.carousel = '無法加載輪播圖片';
-        //         this.carouselImages = FALLBACK_DATA.carouselImages;
-        //         await this.$nextTick();
-        //         this.initializeCarousel();
-        //     } finally{
-        //         this.isLoading.carousel = false; 
-        //     }
-        // },
         async loadCarouselData() {
             try {
                 const response = await ApiService.carouselAPI.getAllCarouselImages();
@@ -457,11 +439,17 @@ export default {
     background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
 }
 
+.homepage.container {
+    max-width: 1092px; /* 1560px * 0.7 = 1092px (縮小 30%) */
+    width: 95%;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
 /* 輪播區塊樣式 */
 .carousel-section {
-    max-width: 1200px;
+    width: 100%;
     margin: 0 auto 3rem;
-    padding: 0 0.5rem;
 }
 
 .carousel-inner {
@@ -469,12 +457,10 @@ export default {
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
-
-/* 修改輪播圖片容器樣式 */
 .carousel-image-container {
     position: relative;
     width: 100%;
-    padding-top: 38%;
+    padding-top: 69.16%; /* 98.8% * 0.7 = 69.16% (縮小 30%) */
 }
 
 .carousel-image-container img {
@@ -637,7 +623,7 @@ export default {
         font-size: 1rem;
     }
     .carousel-image-container {
-        padding-top: 45%;
+        padding-top: 90%;
     }
     
     .carousel-image-container img {
@@ -650,7 +636,7 @@ export default {
     }
     
     .carousel-image-container {
-        padding-top: 52%;
+        padding-top: 104%;
     }
     
     .product-grid {
@@ -718,6 +704,178 @@ export default {
 
     .product-item {
         padding: 0.8rem;
+    }
+}
+
+/* 統一商品網格樣式基礎設定 */
+.product-grid,
+.product-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 統一商品卡片基礎樣式 */
+.product-card,
+.product-item {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 統一商品圖片容器樣式 */
+.product-image-wrapper,
+.product-thumbnail-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 100%; /* 1:1 比例 */
+    overflow: hidden;
+}
+
+/* 統一商品圖片樣式 */
+.product-image,
+.product-thumbnail {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 商品資訊區塊統一樣式 */
+.product-info,
+.product-details {
+    padding: 1rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* 響應式設計調整 */
+@media (max-width: 1200px) {
+    .product-grid,
+    .product-list {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .product-grid,
+    .product-list {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .product-grid,
+    .product-list {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+    }
+}
+
+/* 統一推薦商品卡片樣式 */
+.product-grid .product-card {
+    width: 100%;
+    max-width: none; /* 移除原本的 max-width: 280px 限制 */
+    margin: 0;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* 統一推薦商品圖片容器樣式 */
+.product-grid .product-image-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 100%; /* 確保 1:1 的比例 */
+    overflow: hidden;
+}
+
+.product-grid .product-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 統一商品資訊區塊樣式 */
+.product-grid .product-info {
+    padding: 1rem;
+    text-align: center;
+}
+
+/* 確保網格布局一致 */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 1rem;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 16px;
+    }
+}
+
+@media (max-width: 576px) {
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 12px;
+    }
+}
+
+/* 響應式設計調整 */
+@media (max-width: 1600px) {
+    .homepage.container {
+        max-width: 90vw;
+    }
+}
+
+@media (max-width: 992px) {
+    .homepage.container {
+        max-width: 95vw;
+        padding: 0 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .homepage.container {
+        width: 100%;
+        max-width: 100%;
+        padding: 0 8px;
+    }
+    
+    .carousel-image-container {
+        padding-top: 81.9%; /* 117% * 0.7 = 81.9% */
+    }
+}
+
+@media (max-width: 576px) {
+    .homepage.container {
+        padding: 0 5px;
+    }
+    
+    .carousel-image-container {
+        padding-top: 94.64%; /* 135.2% * 0.7 = 94.64% */
     }
 }
 </style>

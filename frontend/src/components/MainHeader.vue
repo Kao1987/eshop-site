@@ -8,7 +8,7 @@
                 <BNavbarToggle @click="toggleNav"></BNavbarToggle>
                 <div v-if="!isNavOpen" class="nav-toggle-wrapper d-flex align-items-center ms-2">
                     <img 
-                    :src="$getImageUrl('arrowleft.png')"
+                    :src="$getImageUrl('arrowleft.png','icon')"
                     alt="導航提示" class="nav-toggle-image" @click="toggleNav"/>
                     <span class="nav-toggle-text ms-1">請點選此處開啟導航欄</span>
 
@@ -47,7 +47,7 @@
                     <!-- 導覽右—快捷 -->
                     <div class="cartmember d-flex">
                         <router-link class="cart-item me-3" to="/ShopCart" @click="closeNav">
-                            <img :src="$getImageUrl('shopping_cart.png')" alt="" class="icon-img">
+                            <img :src="$getImageUrl('shopping_cart.png','icon')" alt="" class="icon-img">
                             <span class="cart-text">購物車</span>
                         </router-link>
                         <template v-if="isLoggedIn">
@@ -58,7 +58,7 @@
                         </template>
                         <template v-else>
                             <router-link class="member-item" to="/UserLogin" @click="closeNav">
-                                <img :src="$getImageUrl('member_login.png')" alt="" class="icon-img">
+                                <img :src="$getImageUrl('member_login.png','icon')" alt="" class="icon-img">
                                 <span class="cart-text">會員登入</span>                            
                             </router-link>
                         </template>
