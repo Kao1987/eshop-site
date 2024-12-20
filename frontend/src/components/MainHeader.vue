@@ -155,14 +155,14 @@ export default {
 }
 
 .header-container{
-    --header-bg-image:url('/public/img/header_bg.jpg');
+    --header-bg-image:url('../assets/img/header_bg.jpg');
     background:var(--header-bg-image);
     background-size: cover;
     background-repeat: no-repeat;
 }
 
 .navbar-overlay{
-    background: rgba(255, 255, 255, 0.8); /* 半透明背景 */
+    background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(5px);
     --bs-bg-opacity:0;
 }

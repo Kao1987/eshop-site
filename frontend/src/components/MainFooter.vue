@@ -12,26 +12,25 @@
     
     <script>
     export default {
-        name: 'MainFooter', // 為元件命名
+        name: 'MainFooter',
     };
     </script>
     
-    <style scoped>
-    /* 你的樣式 */
-    .footer{
-        bottom: 0;
-        width: 100%;
-        left: 0;
-        background-attachment: fixed;
-        background-image: url(/img/header_bg.jpg);
-        color:aqua;
-        text-align: center;
-    }
-    .flex-grow-1{
-        flex-grow: 1;
-    }
-    body {
-        padding-bottom: 50px;
-    }
-    </style>
+<style scoped>
+.footer{
+    bottom: 0;
+    width: 100%;
+    left: 0;
+    background-attachment: fixed;
+    background-image: url('../assets/img/header_bg.jpg'); /* 使用相對路徑引用背景圖片 */
+    color:aqua;
+    text-align: center;
+}
+.flex-grow-1{
+    flex-grow: 1;
+}
+body {
+    padding-bottom: 50px;
+}
+</style>
     
