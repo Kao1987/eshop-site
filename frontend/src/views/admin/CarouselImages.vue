@@ -13,8 +13,8 @@
             >
                 <div class="image-wrapper">
                     <img :src="$getImageUrl(image.url, 'carousel')"
-                            @load="onImgLoad" 
-                            @error="onImgError"
+                            @load="onImgLoad(event,index)" 
+                            @error="onImgError(event,index)"
                             class="carousel-image"
                             alt="輪播圖片"
                     >                    
@@ -194,11 +194,11 @@ export default {
                 handleApiError(error,'更新圖片狀態失敗');
             }
         },
-        onImgLoad(){
-            console.log(`image #${index} 載入成功！`);
+        onImgLoad(event,index){
+            console.log(`圖片 #${index} 載入成功！`);
         },
-        onImgError(){
-            console.error(`image #${index} 載入失敗！`);
+        onImgError(event,index){
+            console.error(`圖片 #${index} 載入失敗！`);
             event.target.src = '/img/wrong.png' || process.env.VUE_APP_API_URL + '/img/wrong.png';
         },
         handleFileDrop(event) {
