@@ -46,13 +46,13 @@ const router = createRouter({
             path: '/admin',
             name: 'AdminDashBoard',
             component: AdminDashBoard,
-            meta:{requiresAuth: true,role:'admin'}
+            // meta:{requiresAuth: true,role:'admin'}
         },
         {
             path: '/admin/Products',
             name: 'AdminProducts',
             component: AdminProducts,
-            meta:{requiresAuth: true,role:'admin'}
+            // meta:{requiresAuth: true,role:'admin'}
         },
         {
             path: '/admin/Users',

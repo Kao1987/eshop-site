@@ -6,10 +6,14 @@ export function handleApiError(error, fallbackMessage = '操作失敗', options 
 
     if (error.response) {
         const { status, data } = error.response;
-        const errorMessage = data?.message || fallbackMessage;
+        const errorMessage = data?.message || error.message || fallbackMessage;
 
-        console.error('錯誤回應:', error.response);
-
+        console.log('完整錯誤資訊:', {
+            status,
+            data,
+            message: errorMessage,
+            stack: error.stack
+        });
         // 執行自定義錯誤處理器
         if (typeof customHandler === 'function') {
             return customHandler(error);

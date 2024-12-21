@@ -1,3 +1,4 @@
+<!-- frontend/src/views/admin/AdminProduct.vue -->
 <template> 
     <div class="admin-dashboard container mt-5">
         <h2 class="text-center">商品管理</h2>
@@ -70,59 +71,56 @@
                             </thead>
                             <tbody>
                                 <tr v-for="(product,index) in paginatedProducts" :key="product.id">
-                                    <td>
-                                        <div class="product-name-container text-truncate" style="max-width: 150px;">
-                                            <p class="product-name mb-1">
-                                                {{ product.name }}
-                                            </p>
+                                    <td class="product-info-cell">
+                                        <span class="product-name" :title="product.name">
+                                            {{ product.name }}
+                                        </span>
                                         <button 
-                                            v-if="product.name.length > 20" 
-                                            class="btn btn-link btn-sm p-0"
-                                            @click="toggleName(product)"
+                                            class="btn btn-link btn-sm"
+                                            @click="showProductDetail(product)"
                                         >
-                                            {{ product.isNameExpanded ? '收起' : '查看更多' }}
+                                            查看詳情
                                         </button>
-                                    </div>
                                     </td>
-                                <td>NT${{ Math.round(product.price) }}</td>
-                                <td class="text-nowrap text-center">
-                                    <span :class="product.stock <= 10 ? 'text-danger' : 'text-success'">
-                                        {{ product.stock }}
-                                    </span>
-                                </td>
-                                <td>            
-                                    <div class="product-description-container">
-                                        <p class="product-description mb-1" 
-                                            :class="{'expanded':product.isDescriptionExpanded}"
-                                            style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;"
-                                        >
-                                            {{ product.isDescriptionExpanded ? product.description : product.description.slice(0,50) + '...' }}
-                                        </p>
-                                        <button 
-                                            v-if="product.description.length > 50" 
-                                            class="btn btn-link btn-sm p-0"
-                                            @click="toggleDescription(product)"
-                                        >
-                                            {{ product.isDescriptionExpanded ? '收起' : '查看更多' }}
-                                        </button>
-                                    </div>
-                                </td>
-                                <td class="text-center align-middle">
-                                    <div class="d-flex justify-content-center">
-                                        <router-link 
-                                            :to="{ name:'EditProduct', params: { id: product.id } }" 
-                                            class="btn btn-warning btn-sm me-2" 
-                                        >
-                                            編輯
-                                        </router-link>
-                                        <button 
-                                            class="btn btn-danger btn-sm" 
-                                            @click="deleteProduct(product.id, index)"
-                                        >
-                                            刪除
-                                        </button>
-                                    </div>
-                                </td>
+                                    <td>NT${{ Math.round(product.price) }}</td>
+                                    <td class="text-nowrap text-center">
+                                        <span :class="product.stock <= 10 ? 'text-danger' : 'text-success'">
+                                            {{ product.stock }}
+                                        </span>
+                                    </td>
+                                    <td>            
+                                        <div class="product-description-container">
+                                            <p class="product-description mb-1" 
+                                                :class="{'expanded':product.isDescriptionExpanded}"
+                                                style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;"
+                                            >
+                                                {{ product.isDescriptionExpanded ? product.description : product.description.slice(0,50) + '...' }}
+                                            </p>
+                                            <button 
+                                                v-if="product.description.length > 50" 
+                                                class="btn btn-link btn-sm p-0"
+                                                @click="toggleDescription(product)"
+                                            >
+                                                {{ product.isDescriptionExpanded ? '收起' : '查看更多' }}
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <div class="d-flex justify-content-center">
+                                            <router-link 
+                                                :to="{ name:'EditProduct', params: { id: product.id } }" 
+                                                class="btn btn-warning btn-sm me-2" 
+                                            >
+                                                編輯
+                                            </router-link>
+                                            <button 
+                                                class="btn btn-danger btn-sm" 
+                                                @click="deleteProduct(product.id, index)"
+                                            >
+                                                刪除
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>    
@@ -259,6 +257,35 @@
             </div>
         </div>
     </div>
+    <!-- Modal 移到表格外面 -->
+    <div class="modal fade" ref="productDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">商品詳細資訊</h5>
+                    <button type="button" class="btn-close" @click="closeProductDetailModal"></button>
+                </div>
+                <div class="modal-body" v-if="selectedProduct">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <img 
+                            :src="selectedProduct.image || '/img/default-product.jpg'" 
+                            class="img-fluid" 
+                            @error="$event.target.src = '/img/default-product.jpg'"
+                            :alt="selectedProduct.name"
+                            >
+                        </div>
+                        <div class="col-md-6">
+                            <h5>商品名稱: {{ selectedProduct.name }}</h5>
+                            <p>商品價格: {{ selectedProduct.price }}</p>
+                            <p>商品庫存: {{ selectedProduct.stock }}</p>
+                            <p>商品描述: {{ selectedProduct.description }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 <script>
 import ApiService from '@/services/api';
@@ -271,6 +298,7 @@ import { Modal } from 'bootstrap';
             return{
                 products:[],
                 tags:[],
+                selectedProduct:null,
                 brands:[],
                 productForm:{name: '',price:0,stock:0,description:'',brand_id:'',tag_ids:[]},
                 tagForm:{name:''},
@@ -313,7 +341,7 @@ import { Modal } from 'bootstrap';
             async loadProducts(){
                 try{
                     const response = await ApiService.productAPI.getAllProducts();
-                    console.log(response); // 添加這行
+                    console.log(response); 
 
                     this.products = response.map(product => ({
                         ...product,
@@ -326,13 +354,28 @@ import { Modal } from 'bootstrap';
                     handleApiError(error, '加載產品時出錯，請稍後再試！');
                 }
             },
+            showProductDetail(product){
+                this.selectedProduct = {...product};
+                const modal = new Modal(this.$refs.productDetailModal);
+                modal.show();
+            },
+            closeProductDetailModal(){
+                const modal = Modal.getInstance(this.$refs.productDetailModal);
+                if(modal){
+                    modal.hide();
+                    this.selectedProduct = null;
+                }
+            },
             // 加載標籤列表
             async loadTags(){
                 try{
                     const response = await ApiService.tagAPI.getAllTags();
-                    this.tags = response; 
+                    this.tags = Array.isArray(response) ? response : [];
+
                 }catch(error){
+                    console.error('加載標籤時出錯:', error);
                     handleApiError(error, '加載標籤時錯誤，請稍候再試！');
+                    this.tags = [];
                 }
             },
             // 加載廠牌列表
@@ -477,7 +520,18 @@ import { Modal } from 'bootstrap';
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.product-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 
+.product-name {
+    max-width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 .product-item {
     display: flex;
     flex-direction: row;
@@ -514,5 +568,19 @@ import { Modal } from 'bootstrap';
 .btn-group > .btn {
     display: inline-flex;
     align-items: center;
+}
+
+.product-info-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 250px; /* 調整寬度 */
+}
+
+.product-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 </style>

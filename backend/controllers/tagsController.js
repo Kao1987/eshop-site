@@ -1,5 +1,5 @@
 // backend/controllers/tagsController.js
-const pool = require('../config/db');
+const { pool } = require('../config/db');
 
 // 獲取所有標籤
 exports.getAlltags = async (req, res) => {

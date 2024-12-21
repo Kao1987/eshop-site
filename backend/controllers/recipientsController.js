@@ -1,5 +1,5 @@
 // backend/controllers/recipientsController.js
-const pool = require('../config/db');
+const { pool } = require('../config/db');
 
 // 獲取所有收件人
 exports.getAllrecipients = async (req, res) => {
