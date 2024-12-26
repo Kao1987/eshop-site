@@ -30,8 +30,8 @@ const ApiService = {
     },
     brandAPI: {
         getAllBrands: () => request.get('/brands'),
-        createBrand: (data) => request.post('/brands', data),
-        updateBrand: (id, data) => request.put(`/brands/${id}`, data),
+        createBrand: (name) => request.post('/brands', { name }),
+        updateBrand: (id, data) => request.put(`/brands/${id}`,data),
         deleteBrand: (id) => request.delete(`/brands/${id}`),
     },
     orderAPI: {

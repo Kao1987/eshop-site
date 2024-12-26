@@ -219,7 +219,7 @@ export default {
             PRODUCT_IMAGE_URL: process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL
         });
         try{
-            console.log('開始載入首頁資料');
+            console.log('開始載��首頁資料');
             await this.loadHomePageData();
             if(this.carouselImages.length && this.carouselImages.length > 0){
                 await this.$nextTick();
@@ -356,7 +356,7 @@ export default {
                         return {
                             product_id,
                             quantity_sold,
-                            name:product ? product.name:'未知商品',
+                            name:product ? product.name:'��知商品',
                             image:product ? product.image:'/img/wrong.png'
                         };
                     })
@@ -622,9 +622,10 @@ export default {
 }
 
 .product-name {
-    font-size: 1.1rem;
+    font-size: 1rem;      /* 16px */
+    line-height: 1.5;
     margin-bottom: 0.5rem;
-    color: #2c3e50;
+    font-weight: bold;    /* 新增粗體 */
 }
 
 .product-tag {
@@ -681,17 +682,17 @@ export default {
 
 .product-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* 縮小商品卡片寬度 */
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;           /* 將間距從 1.5rem 改為 1rem */
     padding: 1rem;
 }
 
 .product-item {
-    max-width: 250px; /* 限制最大寬度 */
+    max-width: 250px;
     margin: 0 auto;
     background: white;
     border-radius: 1rem;
-    padding: 1rem;
+    padding: 0.8rem;     /* 將內距從 1rem 改為 0.8rem */
     box-shadow: 0 5px 15px rgba(0,0,0,0.08);
     transition: all 0.3s ease;
 }
@@ -995,6 +996,11 @@ export default {
     font-size: 1rem;      /* 16px */
     line-height: 1.5;
     margin-bottom: 0.5rem;
+    font-weight: bold;    /* 新增粗體 */
+}
+
+.rank-name {
+    font-weight: bold;    /* 新增粗體 */
 }
 
 /* 響應式文字大小 */

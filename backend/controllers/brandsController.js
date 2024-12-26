@@ -29,14 +29,34 @@ exports.getbrandById = async (req, res) => {
 
 // 新增廠牌
 exports.createbrand = async (req, res) => {
-  const data = req.body;
-  try {
-    const [result] = await pool.query('INSERT INTO brands SET ?', data);
-    res.status(201).json({ id: result.insertId, ...data });
-  } catch (error) {
+  try{
+    let brandName;
+    if(typeof req.body ==='string'){
+      brandName = req.body;
+    }else{
+      brandName = req.body.name;
+    }
+    // if(!brandData.name||typeof brandData.name !=='string'){
+    //   return res.status(400).json({message:'廠牌名稱是必填的'});
+    // }
+    const [existing] = await pool.query('SELECT * FROM brands WHERE name = ?', [brandName]);
+    if(existing.length > 0){
+      return res.status(400).json({message:'廠牌名稱已存在'});
+    }
+    const [result] = await pool.query('INSERT INTO brands SET ?', brandName);
+    res.status(201).json({id:result.insertId, name:brandData.name});
+  }catch(error){
     console.error(error);
-    res.status(500).json({ message: '伺服器錯誤' });
+    res.status(500).json({message:'伺服器錯誤'});
   }
+  // try {
+    //   const [result] = await pool.query('INSERT INTO brands SET ?', data);
+    //   res.status(201).json({ id: result.insertId, ...data });
+    // } catch (error) {
+      //   console.error(error);
+      //   res.status(500).json({ message: '伺服器錯誤' });
+      // }
+      
 };
 
 // 更新廠牌

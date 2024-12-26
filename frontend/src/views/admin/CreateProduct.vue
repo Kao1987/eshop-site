@@ -130,7 +130,7 @@ export default {
         const  loadBrands = async () => {
             try {
                 const response = await ApiService.brandAPI.getAllBrands();
-                brands.value = Array.isArray(response.data) ? response.data : [];
+                brands.value = Array.isArray(response) ? response : [];
                 console.log('加載的品牌資料:',brands.value);
             } catch (error) {
                 handleApiError(error, '讀取品牌資料時出錯，請稍後再試！');
@@ -140,7 +140,7 @@ export default {
         const loadTags = async() => {
             try {
                 const response = await ApiService.tagAPI.getAllTags();
-                tags.value = Array.isArray(response.data) ? response.data : [];
+                tags.value = Array.isArray(response) ? response : [];
                 console.log('加載的標籤資料:', tags.value);
             } catch (error) {
                 handleApiError(error, '讀取標籤資料時出錯，請稍後再試！');

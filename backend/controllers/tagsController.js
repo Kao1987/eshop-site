@@ -29,14 +29,34 @@ exports.gettagById = async (req, res) => {
 
 // 新增標籤
 exports.createtag = async (req, res) => {
-  const data = req.body;
   try {
-    const [result] = await pool.query('INSERT INTO tags SET ?', data);
-    res.status(201).json({ id: result.insertId, ...data });
-  } catch (error) {
-    console.error(error);
+    // 檢查請求內容
+    let tagName;
+    if (typeof req.body === 'string') {
+        tagName = req.body;
+    } else if (req.body.name) {
+        tagName = req.body.name;
+    } else {
+        return res.status(400).json({ message: '標籤名稱不能為空' });
+    }
+
+    // 檢查標籤是否已存在
+    const [existing] = await pool.query('SELECT * FROM tags WHERE name = ?', [tagName]);
+    if (existing.length > 0) {
+        return res.status(409).json({ message: '此標籤已存在' });
+    }
+
+    // 新增標籤
+    const [result] = await pool.query('INSERT INTO tags (name) VALUES (?)', [tagName]);
+    
+    res.status(201).json({
+        id: result.insertId,
+        name: tagName
+    });
+} catch (error) {
+    console.error('新增標籤時出錯:', error);
     res.status(500).json({ message: '伺服器錯誤' });
-  }
+}
 };
 
 // 更新標籤
