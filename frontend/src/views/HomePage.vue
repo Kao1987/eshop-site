@@ -219,7 +219,7 @@ export default {
             PRODUCT_IMAGE_URL: process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL
         });
         try{
-            console.log('開始載��首頁資料');
+            console.log('開始載入首頁資料');
             await this.loadHomePageData();
             if(this.carouselImages.length && this.carouselImages.length > 0){
                 await this.$nextTick();
@@ -229,6 +229,7 @@ export default {
                 images:this.carouselImages,
                 domElement:document.getElementById('mainCarousel'),
             });
+            this.startCountdown();
         }catch(error){
             console.error('讀取首頁資料失敗',error);
         }
@@ -251,7 +252,7 @@ export default {
                 this.loadCarouselData(),
                 ]);
             }catch (error) {
-                console.error('讀取主頁資料失敗', error);
+                console.error('���取主頁資料失敗', error);
             }
         },
         async loadSalesData(){
@@ -356,7 +357,7 @@ export default {
                         return {
                             product_id,
                             quantity_sold,
-                            name:product ? product.name:'��知商品',
+                            name:product ? product.name:'未知商品',
                             image:product ? product.image:'/img/wrong.png'
                         };
                     })
@@ -675,26 +676,28 @@ export default {
 
 /* 特價商品和銷售排行區塊樣式 */
 .sales-ranking {
-    max-width: 1000px; /* 與其他區塊保持一致 */
+    max-width: 1000px;
     margin: 3rem auto;
     padding: 0 1rem;
 }
 
 .product-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1rem;           /* 將間距從 1.5rem 改為 1rem */
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
     padding: 1rem;
 }
 
 .product-item {
-    max-width: 250px;
-    margin: 0 auto;
+    width: 100%;
+    margin: 0;
     background: white;
-    border-radius: 1rem;
-    padding: 0.8rem;     /* 將內距從 1rem 改為 0.8rem */
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 .product-item:hover {
@@ -702,37 +705,73 @@ export default {
     box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
-.product-thumbnail {
+.product-thumbnail-wrapper {
+    position: relative;
     width: 100%;
-    height: 180px; /* 縮小圖片高度 */
-    object-fit: cover;
-    border-radius: 0.8rem;
+    padding-top: 100%;
+    overflow: hidden;
+    border-radius: 8px;
     margin-bottom: 1rem;
 }
 
+.product-thumbnail {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rank-name {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.sales-count {
+    font-size: 0.9rem;
+    color: #666;
+}
+
 /* 響應式調整 */
+@media (max-width: 992px) {
+    .product-list {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+    }
+}
+
 @media (max-width: 768px) {
     .product-list {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
     }
-
-    .product-thumbnail {
-        height: 150px;
+    
+    .product-item {
+        padding: 0.8rem;
     }
 }
 
 @media (max-width: 576px) {
     .product-list {
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
     }
-
-    .product-thumbnail {
-        height: 130px;
+    
+    .rank-name {
+        font-size: 0.9rem;
     }
-
-    .product-item {
-        padding: 0.8rem;
+    
+    .sales-count {
+        font-size: 0.8rem;
     }
 }
 

@@ -169,8 +169,9 @@ export default {
 
 .nav-content{
     display:flex;
-    flex-wrap:wrap;
+    flex-wrap:nowrap;
     align-items:center;
+    width:100%;
 }
 
 .nav-links{
@@ -277,6 +278,7 @@ export default {
     justify-content: center;
     flex-grow:1;
     max-width: 400px;
+    margin:0 1rem;
 }
 
 .cartmember{
@@ -436,6 +438,8 @@ export default {
         margin: 0 1rem; /* 在兩側加一些間距 */
         min-width: 200px; /* 設置最小寬度 */
         flex-shrink: 1; /* 允許搜索框縮小 */
+        flex-grow: 0;
+        width:300px;
     }
     .nav-item-container {
         padding: 0.5rem; /* 稍微減少水平內邊距 */
