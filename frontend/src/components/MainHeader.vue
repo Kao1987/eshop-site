@@ -167,16 +167,17 @@ export default {
     --bs-bg-opacity:0;
 }
 
-.nav-content{
-    display:flex;
-    flex-wrap:nowrap;
-    align-items:center;
-    width:100%;
+.nav-content {
+    display: flex;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
 }
 
-.nav-links{
-    display: flex;
-    flex-wrap: wrap;
+.nav-links {
+    flex: 0 0 auto;
+    margin-right: 1rem;
 }
 .nav-link-text{
     color:#ffffff;
@@ -188,11 +189,12 @@ export default {
     width: 100%;
 }
 .nav-item-container {
-    padding: 0.8rem 1.2rem;
+    padding: 0.5rem 0.8rem;
+    white-space: nowrap;
+    margin: 0 0.2rem;
     display: flex;
     align-items: center;
     position: relative;
-    margin: 0 0.3rem;
     border-radius: 8px;
     transition: all 0.3s ease;
     cursor: pointer;
@@ -246,11 +248,11 @@ export default {
     position: relative;
     display: flex;
     width: 100%;
-    max-width: 400px;
+    justify-content: center;
 }
 .search-box{
     border-radius:20px;
-    padding-right: 110px;
+    padding-right: 200px;
     border: 2px solid #ddd;
     transition:all 0.3s ease;    
     height: 38px;
@@ -276,16 +278,16 @@ export default {
 .search-container{
     display: flex;
     justify-content: center;
-    flex-grow:1;
+    align-items: center;
+    flex: 1;
     max-width: 400px;
-    margin:0 1rem;
+    margin: 0 8px;
+    padding: 0 8px;
 }
 
 .cartmember{
-    display: flex;
-    align-items: center;
-    margin-left: auto;
-    gap: 1rem;
+    flex: 0 0 auto;
+    margin-left: 1rem;
 }
 .cart-item{
     display: flex;
@@ -351,7 +353,10 @@ export default {
     .cartmember{
         white-space: nowrap;
     }
-
+    .search-container {
+        flex: 0 1 400px;
+        margin: 0 auto;
+    }
 }
 
 @media (max-width: 991px) {
@@ -425,7 +430,7 @@ export default {
 @media (min-width: 992px) and (max-width: 1121px) {
     .nav-content {
         justify-content: space-between;
-        flex-wrap: nowrap; /* 防止項目換行 */
+        flex-wrap: nowrap; /* 防止項目行 */
     }
     .cartmember {
         white-space: nowrap;
@@ -498,6 +503,14 @@ export default {
     .cart-text {
         display: none;  /* 在手機尺寸下隱藏 */
     }
+}
+
+/* 確保文字不換行 */
+.nav-link-text,
+.cart-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 </style>
