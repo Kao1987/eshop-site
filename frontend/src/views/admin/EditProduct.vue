@@ -246,11 +246,7 @@ export default{
                         formData.append('image', productForm.imageFile);
                     }
                     // 發送put請求更新商品。
-                    await axios.put(`/api/products/${productId}`,formData,{
-                        headers:{
-                            'Content-Type':'multipart/form-data'
-                        }
-                    });
+                    await ApiService.productAPI.updateProduct(productId,formData);
                     alert('更新商品成功！');
                     router.push({name:'AdminProducts'});
                 }catch(error){

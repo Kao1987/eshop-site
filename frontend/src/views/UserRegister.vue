@@ -157,7 +157,7 @@ export default {
                     name: this.sanitizeInput(this.username),
                     phone: this.sanitizeInput(this.phone),
                     address: this.sanitizeInput(this.address),
-                    email: this.sanitizeInput(this.email),
+                    email: this.sanitizeInput(this.email.trim().toLowerCase()),
                     password: this.sanitizeInput(this.password),
                     role: "user",
                 });

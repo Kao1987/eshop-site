@@ -16,7 +16,7 @@
 </template>
 
 <script>
-import { computed } from 'vue';
+import { computed, onMounted  } from 'vue';
 import { useStore } from 'vuex';
 
 export default {
@@ -24,6 +24,21 @@ export default {
     setup() {
         const store = useStore();
         const notifications = computed(() => store.state.notifications.notifications);
+
+        onMounted(() => {
+            store.dispatch('notifications/showNotification',{
+                type:'warning',
+                message:
+                `歡迎來到小高的網站！👋
+                感謝您的蒞臨與支持 🙌
+
+                提醒您：由於本網站採用免費版的雲端架構，部分圖片可能需要稍微多一點時間加載 ⏳
+                我們正在努力優化體驗，感謝您的耐心等候與理解！🙏
+                希望您在這裡度過愉快的時光，祝您瀏覽愉快！😊`,
+                timeout:0
+            });
+        });
+
         const closeNotification = (id) =>{
             store.dispatch('notifications/removeNotification',id);
         };

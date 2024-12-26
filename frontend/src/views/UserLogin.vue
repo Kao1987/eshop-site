@@ -151,31 +151,25 @@ import { mapActions } from 'vuex';
             ...mapActions('auth',['login']),
             async handleLogin(){
                 try {
-                    const response = await this.login({email:this.email,password:this.password
+                    const response = await this.login({
+                        email:this.email.trim().toLowerCase(),
+                        password:this.password
                     });
+                    if(!response || !response.data){
+                        throw new Error('無法取得用戶資料或 token');
+                    }
                     const user = response.data;    
-
-                    if(user){
-                        console.log("找到的用戶",user);
-                        alert('登入成功!歡迎' + user.name);
-                        const redirectPath = this.$route.query.redirect;
-
-                        //登入邏輯
-                        if (user.role.toLowerCase() === 'admin') {
-                            if(redirectPath && redirectPath.startsWith('/admin')){
-                                this.$router.push(redirectPath);
-                            }else{
-                                this.$router.push('/admin'); // 管理員跳轉到控制台
-                            }
-                        } else if ( user.role.toLowerCase() === 'user') {
-                            if(redirectPath && !redirectPath.startsWith('/admin')){
-                                this.$router.push(redirectPath);
-                            }else{
-                                this.$router.push('/MembersPage');// 普通用戶跳轉到用戶中心
-                            }
-                        } else {
-                            alert('帳號或密碼錯誤');
-                        }
+                    if(!user){
+                        throw new Error('無法取得用戶資料');
+                    }
+                    console.log("找到的用戶",user);
+                    alert('登入成功!歡迎' + user.name);
+                    
+                    const redirectPath = this.$route.query.redirect || '';
+                    if (user.role.toLowerCase() === 'admin') {
+                        this.$router.push(typeof redirectPath === 'string' && redirectPath.startsWith('/admin') ? redirectPath : '/admin');
+                    } else {
+                        this.$router.push(typeof redirectPath === 'string' && !redirectPath.startsWith('/admin') ? redirectPath : '/MembersPage');
                     }
                 }catch (error){
                     handleApiError(error,'登入失敗，請稍後再試');
@@ -183,6 +177,4 @@ import { mapActions } from 'vuex';
             }
         }
     }
-    
-    </script>
-    
+</script>

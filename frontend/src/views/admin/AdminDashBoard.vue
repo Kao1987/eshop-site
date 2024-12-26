@@ -93,7 +93,7 @@
                     <i class="fas fa-chart-line me-2"></i>銷售趨勢
                 </h5>
                 <div class="chart-container">
-                    <canvas id="salesChart"></canvas>
+                    <canvas ref="salesChart"></canvas>
                 </div>
             </div>
         </div>
@@ -171,7 +171,9 @@ export default {
     },
     async mounted() {
         await this.loadDashboardData();
-        this.renderSalesChart();
+        this.$nextTick(() => {
+            this.renderSalesChart();
+        });
     },
     methods: {
         async loadDashboardData() {
@@ -246,83 +248,77 @@ export default {
             }
         },
         renderSalesChart() {
-            if (!this.salesData || this.salesData.length === 0) {
-                console.error("銷售數據未加載！");
-                return;
-            }
-
-            const ctx = document.getElementById('salesChart').getContext('2d');
-            
-            // 如果已存在圖表，先銷毀它
-            if (this.chart) {
-                this.chart.destroy();
-            }
-
-            this.chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: this.salesData.map(data => data.date),
-                    datasets: [{
-                        label: '銷售金額',
-                        data: this.salesData.map(data => data.amount),
-                        borderColor: 'rgba(75,192,192,1)',
-                        backgroundColor: 'rgba(75,192,192,0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed.y !== null) {
-                                        label += new Intl.NumberFormat('zh-TW', {
-                                            style: 'currency',
-                                            currency: 'TWD',
-                                            minimumFractionDigits: 0
-                                        }).format(context.parsed.y);
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
+            const canvas = this.$refs.salesChart;
+            if(canvas){
+                const ctx = canvas.getContext('2d');
+                this.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: this.salesData.map(data => data.date),
+                        datasets: [{
+                            label: '銷售金額',
+                            data: this.salesData.map(data => data.amount),
+                            borderColor: 'rgba(75,192,192,1)',
+                            backgroundColor: 'rgba(75,192,192,0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
                     },
-                    scales: {
-                        x: {
-                            grid: {
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
                                 display: false
                             },
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return new Intl.NumberFormat('zh-TW', {
-                                        style: 'currency',
-                                        currency: 'TWD',
-                                        minimumFractionDigits: 0
-                                    }).format(value);
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += new Intl.NumberFormat('zh-TW', {
+                                                style: 'currency',
+                                                currency: 'TWD',
+                                                minimumFractionDigits: 0
+                                            }).format(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
                                 }
                             }
-                        }
+                        },
+                        // scales: {
+                        //     x: {
+                        //         grid: {
+                        //             display: false
+                        //         },
+                        //         ticks: {
+                        //             maxRotation: 45,
+                        //             minRotation: 45
+                        //         }
+                        //     },
+                        //     y: {
+                        //         beginAtZero: true,
+                        //         ticks: {
+                        //             callback: function(value) {
+                        //                 return new Intl.NumberFormat('zh-TW', {
+                        //                     style: 'currency',
+                        //                     currency: 'TWD',
+                        //                     minimumFractionDigits: 0
+                        //                 }).format(value);
+                        //             }
+                        //         }
+                        //     }
+                        // }
                     }
-                }
-            });
+                });
+            }else{
+                console.error('無法獲取銷售圖表的canvas元素');
+            }
         },
         formatNumber(amount) {
             return Number(amount).toLocaleString('zh-TW', {
@@ -348,6 +344,17 @@ export default {
                 this.todayOrders++;
                 this.todaySales += Number(newOrder.total);
             }
+        },
+        showEmptyChartMessage(){
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            if(this.chart){
+                this.chart.destroy();
+            }
+            ctx.clearRect(0,0,ctx.width,ctx.height);
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#666';
+            ctx.textAlign = 'center';
+            ctx.fillText('資料尚未加載',ctx.width/2,ctx.height/2);
         }
     }
 };

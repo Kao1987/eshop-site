@@ -128,12 +128,12 @@ export default {
                 return;
             }
             try{
-                const response = await ApiService.productAPI.getProductById(productId.value);
+                const productData = await ApiService.productAPI.getProductById(productId.value);
                 // 處理圖片路徑
                 product.value = {
-                    ...response,
-                    image: response.image ? 
-                        `${process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL}/${response.image.split('/').pop()}` : 
+                    ...productData,
+                    image: productData.image ? 
+                        `${process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL}/${productData.image.split('/').pop()}` : 
                         '/img/default-product.jpg'
                 };
             }catch(error){

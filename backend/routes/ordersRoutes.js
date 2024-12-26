@@ -39,8 +39,6 @@ router.post('/', ordersController.createOrder);
 
 // 更新訂單
 router.put('/:id', ordersController.updateOrder);
-router.put('/:id/status', ordersController.updateOrderStatus);
-
 
 // 刪除訂單
 router.delete('/:id', ordersController.deleteOrder);

@@ -3,17 +3,7 @@ const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
 const verify = promisify(jwt.verify);
 
-const TOKEN_EXPIRATION_IN = '4h'; // 4小時
-const generateToken = (user) => {
-    return jwt.sign(
-        {
-            id: user.id,
-            role: user.role,
-        },
-        process.env.JWT_SECRET,
-        {expiresIn: TOKEN_EXPIRATION_IN}
-    );
-};
+const TOKEN_EXPIRATION_IN = '2h';
 
 const authMiddleware = async (req, res, next) => {
     try {
@@ -37,13 +27,13 @@ const authMiddleware = async (req, res, next) => {
             return res.status(403).json({ message: '令牌無效' });
         }
         // 檢查解碼後的用戶角色
-        if (decoded.role.toLowerCase() !=='admin') {
+        if (!decoded.role) {
             return res.status(403).json({ message: '用戶角色未定義',errorCode: 'USER_ROLE_NOT_DEFINED' });
-        } else if (decoded.role !== 'admin') {
-            return res.status(401).json({ 
-                message: '未授權，請重新登入',
-                errorCode: 'NOT_AUTHORIZED'
-            });
+        }
+
+        const allowedRoles = ['admin', 'user'];
+        if (!allowedRoles.includes(decoded.role.toLowerCase())) {
+            return res.status(403).json({ message: '用戶角色未授權',errorCode: 'USER_ROLE_NOT_AUTHORIZED' });
         }
         req.user = decoded; // 將解碼後的用戶資訊附加到 req 對象
         next(); // 確保請求繼續進行

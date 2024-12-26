@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const helmet = require('helmet');
 const {pool, testConnection} = require('./config/db');
+const authMiddleware = require('./middleware/auth');
 // 初始化 Express 應用
 const app = express();
 
@@ -58,22 +59,18 @@ const routes = {
     ranking: require('./routes/rankingRoutes')
 };
 
-app.use('/api/brands', routes.brands);
-app.use('/api/carousel_images', routes.carouselImages);
-app.use('/api/order_items', routes.orderItems);
-app.use('/api/orders', routes.orders);
-app.use('/api/products', routes.products);
-app.use('/api/recipients', routes.recipients);
-app.use('/api/sales', routes.sales);
-app.use('/api/special_offers', routes.specialOffers);
-app.use('/api/tags', routes.tags);
-app.use('/api/users', routes.users);
-app.use('/api/ranking', routes.ranking);
-
-// 註冊路由（修改路由命名規則）
-Object.entries(routes).forEach(([name, router]) => {
+// 動態註冊路由
+Object.entries(routes).forEach(([name,routeObj]) => {
     const routePath = name.replace(/([A-Z])/g, '_$1').toLowerCase();
-    app.use(`/api/${routePath}`, router);
+    if(routeObj.publicRouter){
+        app.use(`/api/${routePath}`, routeObj.publicRouter);
+    }
+    if(routeObj.protectedRouter){
+        app.use(`/api/${routePath}`, authMiddleware, routeObj.protectedRouter);
+    }
+    else if (!routeObj.publicRouter && !routeObj.protectedRouter) {
+        app.use(`/api/${routePath}`, routeObj);
+    }
 });
 
 // 檢查必要目錄
@@ -123,10 +120,6 @@ const startServer = async () => {
     try {
         ensureDirectories();
         await testConnection();
-
-        // 測試資料庫連線
-        // const db = require('./config/db');
-        // await db.query('SELECT 1');
         
         // 檢查端口是否被占用
         const server = app.listen(PORT)
@@ -154,6 +147,23 @@ const startServer = async () => {
         process.exit(1);
     }
 };
+// const bcrypt = require('bcryptjs');
+
+// // 從資料庫撈出來的雜湊值
+// const hashedFromDB = "6	test1224@test.com	$2a$10$9vK82f4dmRJKEhRoYvB6Ou//dsMkjpD7QQwp0j.teWzg0NF5.m8p.";
+
+// // 你聲稱要登入的密碼
+// const plainPassword = "test1224";
+
+// (async () => {
+//   const isMatch = await bcrypt.compare(plainPassword, hashedFromDB);
+//   console.log('密碼是否匹配?', isMatch);
+// })();
+// // 雜湊驗算測試
+// (async () => {
+//   const newHash = await bcrypt.hash("test1224", 10);
+//   console.log(newHash);  // 得到 $2a$10$xxxx....
+// })();
 
 // 啟動伺服器
 startServer();

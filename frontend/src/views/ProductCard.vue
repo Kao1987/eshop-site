@@ -3,7 +3,7 @@
         <div class="product-card">
             <router-link :to="{name: 'ProductDetail',params:{id:productId}}">
             <img :src="productImageUrl" class="product-image" alt="Product Image" @error="imageError">
-            <h5 class="card-title">{{ product.name }}</h5>
+            <h3 class="product-name" :title="product.name">{{ product.name }}</h3>
             <p class="card-text">{{ formattedPrice }} 元</p>  
             </router-link>
             <button class="btn btn-primary" 
@@ -82,11 +82,28 @@ export default {
 
 <style scoped>
 .product-card {
-    border: 1px solid #ddd;
-    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1rem;
     border-radius: 8px;
-    text-align: center;
+    transition: transform 0.3s ease;
+    background: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+.product-name {
+    font-size: 1rem;
+    margin: 0.5rem 0;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+.product-name:hover {
+    cursor: pointer;
+}
+
 .product-image {
     width: 100px;
     height: 100px;

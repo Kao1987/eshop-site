@@ -7,7 +7,7 @@
                     <p><strong>訂單號：</strong>{{ order.id }}</p>
                     <p><strong>會員編號：</strong>{{ order.user_id }}</p>
                     <p><strong>用戶名：</strong>{{ userName }}</p>
-                    <p><strong>建立日期：</strong>{{ formatDate(order.orderDate) }}</p>
+                    <p><strong>建立日期：</strong>{{ formatDate(order.created_at) }}</p>
                     <p><strong>總金額：</strong>{{ formatCurrency(order.total) }}</p>
                     <!-- 訂單狀態編輯 -->
                     <div class="mb-3">
@@ -52,27 +52,29 @@
 <script>
 import ApiService from '@/services/api';
 import { useStore } from 'vuex';
-    export default {
+export default {
         name: 'OrderDetail',
         props: ['id'],
         data() {
-        return {
-            order: null,
-            userName: '',
-            store: useStore(),
-        };
+            return {
+                order: null,
+                userName: '',
+                store: useStore(),
+            };
         },
         methods: {
             async fetchOrderDetails(orderId) {
                 try {
                     const response = await ApiService.orderAPI.getOrderById(orderId);
                     this.order = response || response.data;
-                    // 獲取用戶名稱
-                    this.fetchUserName(this.order.user_id);
+                    await this.fetchUserName(this.order.user_id);
                 } catch (error) {
                     console.error('加載訂單詳情時出錯', error);
-                    alert('加載訂單詳情時出錯，請稍候再試！');
-                    this.order = null;
+                    this.store.dispatch('notification/showNotification', {
+                        type: 'error',
+                        message: '加載訂單詳情時出錯，請稍候再試！',
+                        timeout: 2000
+                    });
                 }
             },
             async fetchUserName(userId) {
@@ -99,23 +101,33 @@ import { useStore } from 'vuex';
             },
             async updateOrderStatus() {
                 if (!this.order) return;
-                    try {
-                        await ApiService.orderAPI.updateOrderStatus(this.order.id,this.order.status);  
-                        store.dispatch('notification/showNotification', {
+                try {
+                    const response = await ApiService.orderAPI.updateOrder(this.order.id,
+                    {
+                        status:this.order.status
+                    });  
+                    if(response.success){
+                        this.order = {
+                            ...this.order,
+                            ...response.data
+                        };
+                        this.store.dispatch('notifications/showNotification', {
                             message: '訂單狀態已更新',
                             type: 'success',
                             timeout:3000
                         });
-                        alert('訂單狀態已更新');
-                    } catch (error) {
-                        console.error('更新訂單狀態時出錯', error);
-                        store.dispatch('notifications/showNotification', {
+                    }else{
+                        throw new Error(response.message || '訂單狀態更新失敗');
+                    }
+                } catch (error) {
+                    console.error('更新訂單狀態時出錯', error);
+                    this.store.dispatch('notifications/showNotification', {
                         type: 'error',
                         message: '更新訂單狀態時出錯，請稍後再試！',
                         timeout: 2000
                     });
-                    }
-                },
+                }
+            },
             goBack() {
                 this.$router.go(-1);
             },
@@ -124,7 +136,7 @@ import { useStore } from 'vuex';
             const orderId = this.id || this.$route.params.id;
             this.fetchOrderDetails(orderId);
         },
-    };
+};
 </script>
     
 <style scoped>

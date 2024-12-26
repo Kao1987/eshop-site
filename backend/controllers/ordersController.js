@@ -80,8 +80,8 @@ exports.createOrder = async (req, res) => {
     const  {user_id, items, total} = req.body;
     // 插入訂單表
     const [orderResult] = await connection.query(
-      'INSERT INTO orders (user_id, total) VALUES (?, ?)',
-      [user_id,total]);
+      'INSERT INTO orders (user_id, total, status) VALUES (?, ?, ?)',
+      [user_id,total,'pending']);
     const orderId = orderResult.insertId;
     // 構建orderItemData
     const orderItemsData = items.map( item => [orderId,item.product_id,item.quantity,item.price]);
@@ -91,6 +91,17 @@ exports.createOrder = async (req, res) => {
     
     const sql = `INSERT INTO order_items (order_id,product_id,quantity, price) VALUES ${placeholders}`;
     await connection.query(sql,flatData);
+      for(const item of items){
+        await connection.query(
+        'INSERT INTO sales (product_id, quantity_sold, total_amount, sale_date, customer_id) VALUES (?, ?, ?, NOW(), ?)',
+        [
+          item.product_id,
+          item.quantity,
+          item.quantity * item.price,
+          user_id
+        ]
+      );
+    }
     await connection.commit();
 
     res.status(201).json({message:'訂單創建成功',orderId});
@@ -107,15 +118,57 @@ exports.createOrder = async (req, res) => {
 exports.updateOrder = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
+
+  if(!id || !status){
+    return res.status(400).json({
+      success: false,
+      message: '訂單ID和狀態是必須的'
+    });
+  }
+
+  const validStatuses = ['pending', 'processing', 'shipped', 'completed', 'cancelled'];
+  if(!validStatuses.includes(status)){
+    return res.status(400).json({
+      success: false,
+      message: '無效的訂單狀態'
+    });
+  }
+
   try {
-    const [result] = await pool.query('UPDATE orders SET status = ? WHERE id = ?', [status, id]);
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: '訂單未找到' });
+    const [orders] = await pool.query(
+      'SELECT id,status FROM orders WHERE id = ?', [id]);
+
+    if (orders.length === 0) {
+      return res.status(404).json({ 
+        success: false,
+        message: '訂單未找到' 
+      });
     }
-    res.json({ id, status });
+
+    const [result] = await pool.query(
+      'UPDATE orders Set status = ? WHERE id = ?',
+      [status, id]
+    );
+
+    if(result.affectedRows > 0){
+      const [updatedOrder] = await pool.query(
+        'SELECT id,status,updated_at FROM orders WHERE id = ?',
+        [id]
+      );
+      return res.json({ 
+        success: true,
+        message: '訂單狀態已更新',
+        data:updatedOrder[0]
+      });
+    }
+    throw new Error('訂單狀態更新失敗');
   } catch (error) {
     console.error('更新訂單狀態時出錯',error);
-    res.status(500).json({ message: '伺服器錯誤' });
+    return res.status(500).json({ 
+      success: false,
+      message: '伺服器錯誤',
+      error: error.message
+    });
   }
 };
 
@@ -124,15 +177,32 @@ exports.updateOrderStatus = async (req, res) =>{
   const { id } = req.params;
   const {status} = req.body;
   try{
-    const [result] = await pool.query('UPDATE orders Set status = ? WHERE id = ?',[status, id]);
-    if(result.affectedRows === 0){
-      return res.status(404).json({ message: '訂單未找到' });
+    const [orderExists] = await pool.query('SELECT id FROM orders WHERE id = ?',[id]);
+    if(orderExists.length === 0){
+      return res.status(404).json({ 
+        success: false,
+        message: '訂單未找到' 
+      });
     }
-    res.json({ message: '訂單狀態已更新', id, status });
-
-  }catch(error){
-    console.error('更新訂單狀態時出錯,error');
-    res.status(500).json({ message: '伺服器錯誤' });
+    const [result] = await pool.query(
+      'UPDATE orders SET status = ? WHERE id = ?',[status, id]);
+    if(result.affectedRows > 0){
+      res.json({ 
+        success: true,
+        id,
+        status,
+        message: '訂單狀態已更新' 
+      });
+    }else{
+      throw new Error('訂單狀態更新失敗');
+    }
+  }catch (error) {
+    console.error('更新訂單狀態時出錯:', error);
+    res.status(500).json({ 
+      success: false,
+      message: '伺服器錯誤，更新訂單失敗',
+      error: error.message 
+    });
   }
 };
 

@@ -104,10 +104,10 @@ export default {
             error.value = null;
 
             try {
-                const response = await ApiService.productAPI.getAllProducts();
+                const productData = await ApiService.productAPI.getAllProducts();
 
-                if(Array.isArray(response)){
-                    products.value = response.map((product) => ({ 
+                if(Array.isArray(productData)){
+                    products.value = productData.map((product) => ({ 
                         ...product,
                         id: String(product.id).trim(),
                         price:Number(product.price),
@@ -200,8 +200,23 @@ export default {
     }
 };
 </script>
-
-
 <style scoped>
-/* 自定義樣式 */
+.product-name{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .product-name{
+        max-width: 150px;
+    }
+}
+@media (max-width: 576px) {
+    .product-name{
+        max-width: 100px;
+    }
+}
 </style>

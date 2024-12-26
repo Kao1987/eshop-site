@@ -1,4 +1,6 @@
 // frontend/src/router/views FrontStages
+import store from '@/store';
+
 import { createRouter, createWebHashHistory } from 'vue-router';
 import HomePage from '@/views/HomePage.vue';
 import AboutUsPage from '@/views/AboutUsPage.vue';
@@ -46,13 +48,13 @@ const router = createRouter({
             path: '/admin',
             name: 'AdminDashBoard',
             component: AdminDashBoard,
-            // meta:{requiresAuth: true,role:'admin'}
+            meta:{requiresAuth: true,role:'admin'}
         },
         {
             path: '/admin/Products',
             name: 'AdminProducts',
             component: AdminProducts,
-            // meta:{requiresAuth: true,role:'admin'}
+            meta:{requiresAuth: true,role:'admin'}
         },
         {
             path: '/admin/Users',
@@ -171,29 +173,34 @@ const router = createRouter({
         }
     ]
     });
-    router.beforeEach((to,from,next)=>{
+    router.beforeEach(async(to,from,next)=>{
         const isLoggedIn = !!localStorage.getItem('authToken'); //檢查是某有登入
-
         const user = JSON.parse(localStorage.getItem('user'));
-        const userRole = user ? user.role : null;
 
-        if(to.matched.some(record => record.meta.requiresAuth)){
-            // 如果頁面需要登入
-            if(!isLoggedIn){
-                // 未登入將導向登入頁面
-                alert('請先登入再使用！')
-                next({path:'/UserLogin',});
-            }else if(to.meta.role && to.meta.role !== userRole){
-                //使用者角色沒有權限
-                alert('你沒有權限進入此頁面');
-                next({path:'/'});
-            }else{
-                next();
+        if(to.path === '/UserLogin'){
+            if(isLoggedIn){
+                return next({path:'/'});
+            }
+            return next();
+        }
+
+        if(isLoggedIn){
+            try{
+                const isValid = await store.dispatch('auth/checkAuthStatus');
+                if(!isValid && to.meta.requiresAuth){
+                    next({path:'/UserLogin',query:{redirect:to.fullPath}});
+                }
+                return next();
+            }catch(error){
+                console.error('認證檢查失敗:',error);
+                return next({ path: '/UserLogin', query: { redirect: to.fullPath } });
             }
         }
-        else{
-            next();
+        if(to.meta.requiresAuth && !isLoggedIn){
+            return next({ path: '/UserLogin', query: { redirect: to.fullPath } });
         }
+        next();
     });
-    export default router;
+
+export default router;
     

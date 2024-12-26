@@ -12,7 +12,6 @@ const ApiService = {
         register: (data) => request.post('/users/register', data),
         getUserInfo: (id) => request.get(`/users/${id}`),
         updateUser: (id, data) => request.put(`/users/${id}`, data),
-        getRecipients: () => request.get('/recipients'),
     },
     productAPI: {
         getProducts: (params) => request.get('/products', { params }),
@@ -65,10 +64,7 @@ const ApiService = {
         deleteSpecialOffer: (id) => request.delete(`/special_offers/${id}`),
     },
     rankingAPI: {
-        getRanking: (days) => request.get('/ranking',{
-            params: { days },
-            baseURL: process.env.VUE_APP_API_BASE_URL,
-            }),
+        getRanking: (days) => request.get('/sales/ranking',{params: { days },}),
     },
     createCancelToken: () => {
         const source = axios.CancelToken.source();

@@ -20,7 +20,8 @@ export default {
     name: 'ForgotPwd',
     data(){
         return{
-            email:''
+            email:'',
+            newPassword:'',
         };
     },
     methods:{

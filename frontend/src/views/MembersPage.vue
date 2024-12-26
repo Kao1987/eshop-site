@@ -11,6 +11,10 @@
                     <div>
                         <h2 class="mb-1">{{ userInfo.name }}</h2>
                         <p class="text-muted mb-0">{{ userInfo.email }}</p>
+                        <button class="btn btn-secondary mt-2" @click="openEditModal"> 
+                            <i class="fas fa-edit me-2"></i>
+                            編輯個人資料
+                        </button>
                     </div>
                 </div>
             </div>
@@ -59,7 +63,38 @@
                             </div>
                         </div>
                     </div>
-
+                    <!-- 編輯會員資料模態視窗 -->
+                    <div class="modal fade" ref="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">編輯會員資料</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form @submit.prevent="saveUserInfo">
+                                        <div class="mb-3">
+                                            <label for="name">姓名</label>
+                                            <input type="text" class="form-control" id="name" v-model="editUserInfo.name">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="userEmail" class="form-label">電子郵件</label>
+                                            <input type="email" id="userEmail" v-model="editUserInfo.email" class="form-control" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="userPhone" class="form-label">聯絡電話</label>
+                                            <input type="text" id="userPhone" v-model="editUserInfo.phone" class="form-control" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="userAddress" class="form-label">聯絡地址</label>
+                                            <input type="text" id="userAddress" v-model="editUserInfo.address" class="form-control" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">保存變更</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <!-- 收件地址頁籤 -->
                     <div class="tab-pane fade" id="addresses">
                         <div class="card">
@@ -71,8 +106,8 @@
                                 </div>
                                 <div class="address-list">
                                     <div v-for="(recipient, index) in recipients" 
-                                         :key="recipient.id" 
-                                         class="address-item"
+                                        :key="recipient.id" 
+                                        class="address-item"
                                     >
                                         <div class="address-content">
                                             <h6 class="mb-2">{{ recipient.name }}</h6>
@@ -98,7 +133,36 @@
                             </div>
                         </div>
                     </div>
-
+                    <!-- 新增收件人 -->
+                    <div class="modal fade" ref="recipientModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">{{ isEditing ? '編輯收件地址' : '新增收件地址' }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form @submit.prevent="saveRecipient">
+                                        <div class="mb-3">
+                                            <label class="form-label">收件人姓名</label>
+                                            <input type="text" class="form-control" v-model="editRecipient.name" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">聯絡電話</label>
+                                            <input type="tel" class="form-control" v-model="editRecipient.phone" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">收件地址</label>
+                                            <input type="text" class="form-control" v-model="editRecipient.address" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            {{ isEditing ? '更新地址' : '新增地址' }}
+                                    </button>
+                                </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <!-- 訂單記錄頁籤 -->
                     <div class="tab-pane fade" id="orders">
                         <div class="card">
@@ -156,6 +220,280 @@
     </div>
 </template>
 
+
+<script>
+import { Modal } from 'bootstrap';
+import {mapState , mapActions} from 'vuex';
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler.js';
+
+const {userAPI,recipientAPI} = ApiService;
+
+
+export default {
+    name: "MemberPage",
+    data() {
+        return {
+            showRecipient:false,
+            expandedOrder:null,
+            isEditing:false,    
+            isLoadingRecipients:false,        
+            recipients:[],
+            editRecipient:{
+                name: ' ',
+                phone: ' ',
+                address:' '  
+            },
+            editingIndex:-1,
+            userInfo:{
+                id:null,
+                name:" ",
+                email:" ",
+                phone:'',
+                address:'',
+                },
+            editUserInfo:{
+                name:'',
+                email:'',
+                phone:'',
+                address:'',
+            },
+            orders:[ ],
+            };
+        },
+    computed:{
+        ...mapState('auth',{
+            isLoggedIn:(state) => state.isLoggedIn,
+            user: (state) => state.user || {},
+        }),
+        filteredOrders() {
+        return this.orders.map((order) => ({
+            ...order,
+            formattedDate: this.formatOrderDate(order.created_at),
+        }));
+        },
+        getUserInitials() {
+            return (this.userInfo.name) ? this.userInfo.name.substring(0, 2).toUpperCase() : '??';
+        }
+    },
+    async mounted(){
+        try{
+            if(!this.isLoggedIn){
+                alert('請先登入會員！');
+                this.$router.push('/UserLogin');
+                return;
+            }
+            const userId = this.user.id;
+            if(userId){
+                this.loadUserInfo(userId),
+                this.loadOrders(),
+                this.loadRecipients(userId)
+            }else{
+                console.error("用戶ID無效");
+                alert("請先登入會員！");
+                this.$router.push('/UserLogin');
+            }
+        }catch(error){
+            handleApiError(error,"加載用戶信息失敗，請重試。");
+        }
+
+    },
+    methods: {
+        async loadUserInfo(id){
+            try{
+                const response = await ApiService.userAPI.getUserInfo(id);
+                if(response.success){
+                    this.userInfo = response.data;
+                    console.log("用戶資料",this.userInfo);
+                }else{
+                    console.error("加載用戶資料失敗:",response.message);
+                }
+            }catch (error){
+                console.error("加載用戶信息時出錯:", error);
+                handleApiError(error, "加載用戶信息失敗，請重試。");
+            }
+        },
+        async loadOrders() {
+            try {
+                const response = await ApiService.orderAPI.getOrders();
+                if (response.success) {
+                    this.orders = response;
+                }
+            } catch (error) {
+                console.error('載入訂單失敗:', error);
+            }
+        },
+        
+        async loadRecipients(userId) {
+            try {
+                this.isLoadingRecipients = true;
+                const response = await ApiService.recipientAPI.getRecipients(userId);
+                this.recipients = Array.isArray(response.data) ? response.data : [];
+            } catch (error) {
+                console.error('載入收件人資料失敗:', error);
+                handleApiError(error, '載入收件人資料失敗');
+            } finally {
+                this.isLoadingRecipients = false;
+            }
+        },
+        isRecipientValid(recipient) {
+            const phoneRegex = /^[0-9]{10}$/;
+            return recipient.name.trim() && phoneRegex.test(recipient.phone) && recipient.address.trim();
+        },
+        async saveRecipient() {
+            if (!this.isRecipientValid(this.editRecipient)) {
+                alert('請檢查收件人資料是否完整且格式正確！');
+                return;
+            }
+
+            try {
+                let response;
+                if (this.isEditing) {
+                    response = await ApiService.recipientAPI.updateRecipient(
+                        this.editRecipient.id, 
+                        this.editRecipient
+                    );
+                    if (response.success) {
+                        this.recipients[this.editingIndex] = response.data;
+                    }
+                } else {
+                    response = await ApiService.recipientAPI.addRecipient({
+                        ...this.editRecipient,
+                        user_id: this.user.id
+                    });
+                    if (response.success) {
+                        this.recipients.push(response.data);
+                    }
+                }
+                this.hideModal();
+                alert(this.isEditing ? '收件人資料已更新' : '新增收件人成功');
+                await this.loadRecipients(this.user.id);
+            } catch (error) {
+                handleApiError(error, this.isEditing ? '更新收件人失敗' : '新增收件人失敗');
+            }
+        },
+        async deleteRecipient(index) {
+            if (!confirm('確定要刪除此收件人資料？')) return;
+            
+            try {
+                const recipientId = this.recipients[index].id;
+                const response = await ApiService.recipientAPI.deleteRecipient(recipientId);
+                if (response.success) {
+                    this.recipients.splice(index, 1);
+                    alert('收件人資料已刪除');
+                }
+            } catch (error) {
+                handleApiError(error, '刪除收件人敗');
+            }
+        },
+        toggleRecipient(){
+            this.showRecipient = !this.showRecipient;
+        },
+        addRecipient(){
+            this.isEditing = false;
+            this.editRecipient = {name: '',phone: '',address: '' };
+            this.showModal();
+        },
+        editRecipientInfo(index){
+            this.isEditing = true;
+            this.editingIndex = index;
+            this.editRecipient = {...this.recipients[index]};
+            this.showModal();
+        },
+        toggleOrderDetails(index){
+            const order = this.orders[index];
+            if (!order.items || !order.items.length) {
+                alert('該訂單無法顯示細節！');
+                return;
+            }
+            // 確保所有訂單項目數據正確
+            const isOrderItemValid = (item) =>
+                item.product_name && item.quantity > 0 && item.price >= 0;
+            if (!order.items.every(isOrderItemValid)) {
+                alert('該訂單數據不完整，無法展開！');
+                return;
+            }
+            this.expandedOrder = this.expandedOrder === index? null : index;
+        },
+        showModal() {
+            if(this.$refs.recipientModal){
+                const modal = new Modal(this.$refs.recipientModal);
+                modal.show();
+            }
+        },
+        hideModal(){
+            const modal = Modal.getInstance(this.$refs.recipientModal);
+            if(modal){
+                modal.hide();
+            }
+        },    
+        ...mapActions('auth',['logout']),
+            async handleLogout(){
+                await this.logout();
+                alert("已成功登出!");
+                this.$router.push("/UserLogin"); // 登出後導向登入頁面
+        },
+        formatOrderDate(dateString){
+            if(!dateString) return'';
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-TW',{
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+            });
+        },
+        getOrderStatusClass(status) {
+            const classes = {
+                'pending': 'badge bg-warning text-dark',
+                'processing': 'badge bg-info text-white',
+                'shipped': 'badge bg-primary text-white',
+                'completed': 'badge bg-success text-white',
+                'cancelled': 'badge bg-danger text-white'
+            };
+            return classes[status] || 'badge bg-secondary';
+        },
+
+        getOrderStatusText(status) {
+            const statusMap = {
+                'pending': '處理中',
+                'processing': '處理中',
+                'shipped': '已出貨',
+                'completed': '已完成',
+                'cancelled': '已取消'
+            };
+            return statusMap[status] || '未知狀態';
+        },
+        openEditModal(){
+            this.editUserInfo = {...this.userInfo};
+            const modal = new Modal(this.$refs.editModal);
+            modal.show();
+        },
+        async saveUserInfo(){
+            try{
+                const userId = this.user.id;
+                const response = await ApiService.userAPI.updateUser(userId,this.editUserInfo);
+                if(response.success){
+                    this.userInfo = response.data;
+                    this.hideEditModal();
+                    alert("個人資料已更新");
+                }
+            }catch(error){
+                handleApiError(error,"更新個人資料失敗");
+                alert('更新會員資料失敗，請稍後再試。');
+            }
+        },
+        hideEditModal(){
+            const modal = Modal.getInstance(this.$refs.editModal);
+            if(modal){
+                modal.hide();
+            }
+        },
+    }
+}
+
+</script>
 <style scoped>
 .member-page {
     min-height: 100vh;
@@ -292,241 +630,3 @@
     }
 }
 </style>
-
-<script>
-import { Modal } from 'bootstrap';
-import {mapState , mapActions} from 'vuex';
-import ApiService from '@/services/api';
-import { handleApiError } from '@/utils/errorHandler.js';
-
-const {userAPI,recipientAPI} = ApiService;
-
-
-export default {
-    name: "MemberPage",
-    data() {
-        return {
-            showRecipient:false,
-            expandedOrder:null,
-            isEditing:false,    
-            isLoadingRecipients:false,        
-            recipients:[],
-            editRecipient:{
-                name: ' ',
-                phone: ' ',
-                address:' '  
-            },
-            editingIndex:-1,
-            userInfo:{
-                name:" ",
-                email:" ",
-                phone:'',
-                address:'',
-                },
-            orders:[ ],
-            };
-        },
-    computed:{
-        ...mapState('auth',{
-            isLoggedIn:(state) => state.isLoggedIn,
-            user: (state) => state.user || {},
-        }),
-        filteredOrders() {
-        return this.orders.map((order) => ({
-            ...order,
-            formattedDate: this.formatOrderDate(order.created_at),
-        }));
-        },
-        getUserInitials() {
-            return this.userInfo.name ? this.userInfo.name.substring(0, 2).toUpperCase() : '??';
-        }
-    },
-    async mounted(){
-        try{
-            if(!this.isLoggedIn){
-                alert('請先登入會員！');
-                this.$router.push('/UserLogin');
-                return;
-            }
-            await Promise.all([
-            this.loadUserInfo(),
-            this.loadOrders(),
-            this.loadRecipients()
-            ]);
-        }catch(error){
-            handleApiError(error,"加載用戶信息失敗，請重試。");
-        }
-
-    },
-    methods: {
-        async loadUserInfo(){
-            try{
-                const userID = this.user.id;
-                console.log("用戶 ID:", userID); // 日誌用戶 ID
-                if(!userID){
-                    console.error("用戶ID無效");  
-                    return;
-                }
-                const response = await ApiService.userAPI.getUserInfo(userID); //請求API
-                this.userInfo = response.data;
-                console.log("用戶資料",this.userInfo);
-            }catch (error){
-                console.error("加載用戶信息時出錯:", error);
-                handleApiError(error, "加載用戶信息失敗，請重試。");
-            }
-        },
-        async loadOrders() {
-            try {
-                const response = await ApiService.userAPI.getOrders();
-                if (response.success) {
-                    this.orders = response.data;
-                }
-            } catch (error) {
-                console.error('載入訂單失敗:', error);
-            }
-        },
-        
-        async loadRecipients() {
-            try {
-                this.isLoadingRecipients = true;
-                const response = await ApiService.recipientAPI.getRecipients(this.user.id);
-                this.recipients = Array.isArray(response.data) ? response.data : [];
-            } catch (error) {
-                console.error('載入收件人資料失敗:', error);
-                handleApiError(error, '載入收件人資料失敗');
-            } finally {
-                this.isLoadingRecipients = false;
-            }
-        },
-        isRecipientValid(recipient) {
-            const phoneRegex = /^[0-9]{10}$/;
-            return recipient.name.trim() && phoneRegex.test(recipient.phone) && recipient.address.trim();
-        },
-        async saveRecipient() {
-            if (!this.isRecipientValid(this.editRecipient)) {
-                alert('請檢查收件人資料是否完整且格式正確！');
-                return;
-            }
-
-            try {
-                let response;
-                if (this.isEditing) {
-                    response = await ApiService.recipientAPI.updateRecipient(
-                        this.editRecipient.id, 
-                        this.editRecipient
-                    );
-                    if (response.success) {
-                        this.recipients[this.editingIndex] = response.data;
-                    }
-                } else {
-                    response = await ApiService.recipientAPI.addRecipient({
-                        ...this.editRecipient,
-                        user_id: this.user.id
-                    });
-                    if (response.success) {
-                        this.recipients.push(response.data);
-                    }
-                }
-                this.hideModal();
-                alert(this.isEditing ? '收件人資料已更新' : '新增收件人成功');
-            } catch (error) {
-                handleApiError(error, this.isEditing ? '更新收件人失敗' : '新增收件人失敗');
-            }
-        },
-        async deleteRecipient(index) {
-            if (!confirm('確定要刪除此收件人資料？')) return;
-            
-            try {
-                const recipientId = this.recipients[index].id;
-                const response = await ApiService.recipientAPI.deleteRecipient(recipientId);
-                if (response.success) {
-                    this.recipients.splice(index, 1);
-                    alert('收件人資料已刪除');
-                }
-            } catch (error) {
-                handleApiError(error, '刪除收件人敗');
-            }
-        },
-        toggleRecipient(){
-            this.showRecipient = !this.showRecipient;
-        },
-        addRecipient(){
-            this.isEditing = false;
-            this.editRecipient = {name: '',phone: '',address: '' };
-            this.showModal();
-        },
-        editRecipientInfo(index){
-            this.isEditing = true;
-            this.editingIndex = index;
-            this.editRecipient = {...this.recipients[index]};
-            this.showModal();
-        },
-        toggleOrderDetails(index){
-            const order = this.orders[index];
-            if (!order.items || !order.items.length) {
-                alert('該訂單無法顯示細節！');
-                return;
-            }
-            // 確保所有訂單項目數據正確
-            const isOrderItemValid = (item) =>
-                item.product_name && item.quantity > 0 && item.price >= 0;
-            if (!order.items.every(isOrderItemValid)) {
-                alert('該訂單數據不完整，無法展開！');
-                return;
-            }
-            this.expandedOrder = this.expandedOrder === index? null : index;
-        },
-        showModal() {
-            if(this.$refs.recipientModal){
-                const modal = new Modal(this.$refs.recipientModal);
-                modal.show();
-            }
-        },
-        hideModal(){
-            const modal = Modal.getInstance(this.$refs.recipientModal);
-            if(modal){
-                modal.hide();
-            }
-        },    
-        ...mapActions('auth',['logout']),
-            async handleLogout(){
-                await this.logout();
-                alert("已成功登出!");
-                this.$router.push("/UserLogin"); // 登出後導向登入頁面
-        },
-        formateOrderDate(dateString){
-            if(!dateString) return'';
-            const date = new Date(dateString);
-            return date.toLocaleString('zh-TW',{
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: 'numeric',
-            });
-        },
-        getOrderStatusClass(status) {
-            const classes = {
-                'pending': 'badge bg-warning text-dark',
-                'processing': 'badge bg-info text-white',
-                'shipped': 'badge bg-primary text-white',
-                'completed': 'badge bg-success text-white',
-                'cancelled': 'badge bg-danger text-white'
-            };
-            return classes[status] || 'badge bg-secondary';
-        },
-
-        getOrderStatusText(status) {
-            const statusMap = {
-                'pending': '處理中',
-                'processing': '處理中',
-                'shipped': '已出貨',
-                'completed': '已完成',
-                'cancelled': '已取消'
-            };
-            return statusMap[status] || '未知狀態';
-        }
-        }
-    }
-
-</script>

@@ -28,29 +28,40 @@ export default {
         }
     },
     actions: {
-        async login({ commit }, credentials) {
+        async login({ commit,dispatch }, credentials) {
+            commit('logout');
             try {
-                const response = await ApiService.userAPI.login(credentials);
-                const { data } = response;
-                console.log('Login Response Data:', data); // 調試用日誌
+                ApiService.setHeader('Authorization','');
 
-                if (!data || !data.token) {
+                const response = await ApiService.userAPI.login(credentials);
+                console.log('完整登入回應:', response);
+                if (!response || !response.data) {
+                    throw new Error('伺服器回應格式錯誤');
+                }
+                if (!response.data.token) {
+                    throw new Error('未收到認證令牌');
+                }
+                
+                if(!response || !response.data || !response.success){
+                    throw new Error('登入失敗');
+                }
+                const { data } = response;
+                console.log('Login Response Data:', data);
+
+                if (!data.token) {
                     throw new Error('無法取得用戶資料或 token');
                 }
-
-
-                const { token } = data;
-                const {id,name,email,role,phone,address} = data;
-                const user = {id,name,email,role,phone,address};
+                const {token , id, name, email, role, phone, address} = data;
+                const user = { id, name,email,role,phone,address};
                 
-                // 儲存 token
                 localStorage.setItem('authToken', token);
                 localStorage.setItem('user', JSON.stringify(user));
                 console.log('authToken stored:', token); 
                 console.log('Stored Token:', token);
                 console.log('Stored User:', user);
-
                 commit('login', user);
+                
+                ApiService.setHeader('Authorization', `Bearer ${token}`);
                 return response;
             } catch (error) {
                 console.error('登入失敗:', error);
@@ -60,24 +71,24 @@ export default {
         async checkAuthStatus({ commit }) {
             const token = localStorage.getItem('authToken');
             const user = JSON.parse(localStorage.getItem('user'));
-            // 自動登出
-            // if (token && user) {
-            //     try {
-            //         ApiService.setHeader('Authorization',`Bearer ${token}`);
-            //         await ApiService.userAPI.getUserInfo(user.id); // 假設有此 API 用於驗證用戶資訊
 
-            //         // 驗證 token 的 API 請求
-            //         commit('login', user);
-            //         return true;
-            //     } catch (error) {
-            //         commit('logout');
-            //         localStorage.removeItem('authToken');
-            //         localStorage.removeItem('user');
-            //         return false;
-            //     }
-            // }
-            commit('logout');
-            return false;
+            if (!token || !user) {
+                commit('logout');
+                return false;
+            }
+            try {
+                ApiService.setHeader('Authorization',`Bearer ${token}`);
+                const response = await ApiService.userAPI.getUserInfo(user.id); 
+                if(response.success){
+                        commit('login', user);
+                        return true;
+                    }
+                    throw new Error('Token 驗證失敗');
+            } catch (error) {
+                console.error('Token 驗證失敗:', error);
+                commit('logout');
+                return false;
+            }
         },
         logout({ commit }) {
             // 處理登出邏輯，例如 API 調用

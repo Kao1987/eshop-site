@@ -583,4 +583,23 @@ import { Modal } from 'bootstrap';
     overflow: hidden;
     text-overflow: ellipsis;
 }
+@media (max-width: 768px) {
+    .product-info-cell {
+        max-width: 150px;
+    }
+    
+    .product-name {
+        max-width: 120px;
+    }
+}
+
+@media (max-width: 576px) {
+    .product-info-cell {
+        max-width: 120px;
+    }
+    
+    .product-name {
+        max-width: 100px;
+    }
+}
 </style>

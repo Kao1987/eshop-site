@@ -2,7 +2,6 @@
     <div class="marquee">
         <span>2024.09.01，注意！本公司不會主動通知帳務問題，若有相關疑問請洽客服！小心詐騙！</span>
     </div>
-
 <div id="app">
   <NotificationComponent/>
   <MainHeader /> 

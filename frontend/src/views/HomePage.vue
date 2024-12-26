@@ -88,8 +88,11 @@
     <div class="section-divider"></div>
 
     <!-- 七日銷售排行 -->
-    <div class="sales-ranking mt-5" v-if="sevenDaySalesRanking && sevenDaySalesRanking.length >0">
+    <div class="sales-ranking mt-5">
         <h2>過去7日銷售排行</h2>
+        <div v-if="isLoading.sales">載入中...</div>
+        <div v-else-if="errors.sales">{{ errors.sales }}</div>
+        <div v-else-if="sevenDaySalesRanking.length === 0">暫無銷售數據</div>
         <div class="product-list">
             <div v-for="(product, index) in sevenDaySalesRanking"
                 :key="index" 
@@ -101,7 +104,7 @@
                 </div>
                 <div class="product-details">
                     <div class="rank-name">{{ index + 1 }}. {{ product.name }}</div>
-                    <div class="sales-count">賣出 {{ product.quantity_sold }}件</div>
+                    <div class="sales-count">賣出 {{ product.sales_count }}件</div>
                 </div>
             </div>
         </div>
@@ -111,8 +114,11 @@
     <div class="section-divider"></div>
 
     <!-- 月銷售排行 -->
-    <div class="sales-ranking mt-5" v-if=" monthSalesRanking && monthSalesRanking.length>0">
+    <div class="sales-ranking mt-5">
         <h2>過去30日銷售排行</h2>
+        <div v-if="isLoading.sales">載入中...</div>
+        <div v-else-if="errors.sales">{{ errors.sales }}</div>
+        <div v-else-if="monthSalesRanking.length === 0">暫無銷售數據</div>
         <div class="product-list">
                 <div v-for="(product,index) in monthSalesRanking" 
                     :key="index"
@@ -124,7 +130,7 @@
                     </div>
                     <div class="product-details">
                         <div class="rank-name">{{ index + 1 }}. {{ product.name }}</div>
-                        <div class="sales-count">賣出 {{ product.quantity_sold }}件</div>
+                        <div class="sales-count">賣出 {{ product.sales_count }}件</div>
                     </div>
                 </div>
             </div>
@@ -249,25 +255,28 @@ export default {
             }
         },
         async loadSalesData(){
+            console.log('開始載入銷售數據');
             this.isLoading.sales = true;
             try{
-                console.log(this.$axios.defaults.baseURL); // 打印 Axios 的 baseURL
-
-                const [sevenDaysResponse, monthResponse] = await Promise.all([
+                const [resp7, resp30] = await Promise.all([
                     ApiService.rankingAPI.getRanking(7),
                     ApiService.rankingAPI.getRanking(30),
                 ]);
-                this.sevenDaySalesRanking = this.processSalesRanking(sevenDaysResponse || []);
-                this.monthSalesRanking = this.processSalesRanking(monthResponse || []);
-
-                console.log('Processed Seven Day Sales Ranking:', this.sevenDaySalesRanking);
-                console.log('Processed Month Sales Ranking:', this.monthSalesRanking);
-
+                console.log('原始銷售數據:', resp7.data, resp30.data);
+                if(resp7.success && Array.isArray(resp7.data)){
+                    this.sevenDaySalesRanking = this.processSalesRanking(resp7.data);
+                }else{
+                    this.sevenDaySalesRanking = [];
+                }    
+                console.log('處理後的銷售數據:', this.sevenDaySalesRanking);
+                if(resp30.success && Array.isArray(resp30.data)){
+                    this.monthSalesRanking = this.processSalesRanking(resp30.data);
+                }else{
+                    this.monthSalesRanking = [];
+                }
+                console.log('月排行:', this.monthSalesRanking);
             } catch(error){
-                console.error('加載銷售數據失敗',error);
-                this.errors.sales = '無法加載銷售排行數據';
-                this.sevenDaySalesRanking = [];
-                this.monthSalesRanking = [];
+                console.error('銷售數據載入失敗:', error);
             } finally{
                 this.isLoading.sales = false;
             }
@@ -276,16 +285,14 @@ export default {
             if(!Array.isArray(salesData)) return [];    
 
             return salesData.map((item)=>{
-                const productId = Number(item.product_id);
-                const product = this.products.find((p) => p.id === productId);
                 return{
-                    product_id: productId,
-                    name: product? product.name : `Product ID: ${productId}`,
-                    quantity_sold: item.sale_count || 0,
-                    image: product && product.image ? this.$getImageUrl(product.image,'product') : '/img/wrong.png'
+                    id: item.product_id,
+                    name: item.name,
+                    sales_count: item.sales_count || 0,
+                    image: item.image ? this.$getImageUrl(item.image,'product') : '/img/wrong.png'
                 };
             })
-            .filter(item => item.quantity_sold > 0)  // 過濾掉銷售量為 0 的商品
+            .filter(item => item.sales_count > 0) 
             .slice(0,10);
         },
         async loadOffersData(){
@@ -456,10 +463,7 @@ export default {
 </script>
 
 <style scoped>
-/* 基礎設置 */
-.homepage {
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-}
+
 
 .homepage.container {
     max-width: 1200px;  /* 大螢幕最大寬度 */
@@ -497,7 +501,7 @@ export default {
     background-color: #f8f9fa;
 }
 
-/* ��定義指示器 */
+/* 定義指示器 */
 .custom-indicators {
     bottom: 20px;
 }
@@ -825,7 +829,7 @@ export default {
 .product-grid .product-image-wrapper {
     position: relative;
     width: 100%;
-    padding-top: 100%; /* 確��� 1:1 的比例 */
+    padding-top: 100%; /* 確 1:1 的比例 */
     overflow: hidden;
 }
 

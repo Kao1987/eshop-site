@@ -1,6 +1,7 @@
 // src/utils/request.js
 import axios from 'axios';
 import store from '@/store';
+import router from '@/router';
 
 const request = axios.create({
     baseURL: process.env.VUE_APP_API_BASE_URL,
@@ -11,10 +12,6 @@ const request = axios.create({
 // 請求攔截器
 request.interceptors.request.use(
     config => {
-        // 從 localStorage 獲取 token
-        const token = localStorage.getItem('authToken');
-        
-        // 加入調試日誌
         console.log('🚀 發送請求:', {
             url: config.url,
             method: config.method,
@@ -22,52 +19,74 @@ request.interceptors.request.use(
             headers: config.headers,
             data: config.data
         });
-
-        if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
-        if(!config.headers['Content-Type']){
-            config.headers['Content-Type'] = 'application/json';
-        }
         return config;
     },
     error => {
-        console.error('❌ 請求發送失敗:', error);
-        return Promise.reject(error);
+        // if (error.response) {
+        //     console.log('❌ 錯誤回應:', {
+        //     url: error.config.url,
+        //     method: error.config.method,
+        //     baseURL: error.config.baseURL,
+        //     headers: error.config.headers,
+        //     data: error.config.data,
+        //     status: error.response.status,
+        //     statusText: error.response.statusText
+        //     });
+        //     if (error.response.status === 401) {
+        //         alert('登入已過期，請重新登入');
+        //         localStorage.removeItem('authToken');
+        //         localStorage.removeItem('user');
+        //         router.push('/UserLogin');
+        //     }
+            return Promise.reject(error);
+        
     }
 );
 
 // 響應攔截器
 request.interceptors.response.use(
     response => {
-        // 加入調試日誌
-        console.log('✅ 收到回應:', {
-            status: response.status,
+        console.log('✅ 成功回應:', {
             url: response.config.url,
-            data: response.data
+            method: response.config.method,
+            baseURL: response.config.baseURL,
+            data: response.config.data,
+            status: response.status
         });
         return response.data;
     },
     error => {
-        // 加入錯誤調試日誌
-        console.error('❌ 回應錯誤:', {
-            status: error.response?.status,
-            url: error.config?.url,
-            message: error.message,
-            response: error.response?.data
-        });
-
-        const { response } = error;
-        let message = '發生錯誤';
-
-        if (response) {
-            // ... 原有的錯誤處理邏輯 ...
-        }else if(error.code === 'ECONNABORTED') {
-            message = '請求超時，請稍後再試！';
+        if(error.response){
+            console.log('✅ 收到回應:', {
+                url: error.config?.url,
+                method: error.config?.method,
+                baseURL: error.config?.baseURL,
+                headers: error.config?.headers,
+                data: error.config?.data,
+                status: error.response.status,
+                statusText: error.response.statusText,
+            });
+            if(error.response.status === 401){
+                alert('登入已過期，請重新登入');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('user');
+                router.push('/UserLogin');
+            }
+        }else{
+            console.error('❌ 無法取得有效回應:', error.message);
         }
 
-        return Promise.reject(new Error(message));
-    }
+        // 如果不是登入或註冊請求，則添加 Authorization 標頭
+        const isAuthRoute = error.config?.url.includes('/login') || error.config?.url?.includes('/register');
+        const token = localStorage.getItem('authToken');
+        if(token &&!isAuthRoute && error.config){
+            error.config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        if(error.config && !error.config.headers['Content-Type']){
+            error.config.headers['Content-Type'] = 'application/json';
+        }
+        console.error('❌ 請求發送失敗:', error);
+        return Promise.reject(error);
+    },
 );
-
 export default request;

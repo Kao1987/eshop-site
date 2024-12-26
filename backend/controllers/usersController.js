@@ -47,12 +47,12 @@ async register(req, res) {
 
         // 加密密碼
         const hashedPassword = await bcrypt.hash(password, 10);
-
+        const lowercasedEmail = email.toLowerCase();
         // 插入新用戶（不需要指定 created_at，讓它使用預設值）
         const [result] = await connection.query(
             `INSERT INTO users (name, email, phone, address, password, role) 
              VALUES (?, ?, ?, ?, ?, ?)`,
-            [name, email, phone, address, hashedPassword, role]
+            [name, lowercasedEmail, phone, address, hashedPassword, role]
         );
 
         await connection.commit();
@@ -163,11 +163,20 @@ async updateUser(req, res) {
         const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
         await pool.query(updateQuery, updateValues);
 
-        res.json({
-            success: true,
-            message: '用戶更新成功'
-        });
+        const [updatedUser] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
 
+        if(updatedUser.length > 0){
+            res.json({  
+                success: true,
+                message: '用戶更新成功',
+                data: updatedUser[0]
+            });
+        }else{
+            res.status(404).json({
+                success: false,
+                message: '用戶不存在'
+            });
+        }
     } catch (error) {
         console.error('更新用戶錯誤:', error);
         res.status(500).json({
@@ -203,16 +212,14 @@ async deleteUser(req, res) {
 
 // 用戶登入
 async login(req, res) {
-    const { email, password } = req.body;
-
     try {
+        const { email, password } = req.body;
         if (!email || !password) {
             return res.status(400).json({
                 success: false,
                 message: '請輸入電子郵件和密碼'
             });
         }
-
         const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email.toLowerCase()]);
         if (users.length === 0) {
             return res.status(401).json({
@@ -220,10 +227,11 @@ async login(req, res) {
                 message: '帳號或密碼錯誤'
             });
         }
-
         const user = users[0];
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
+            console.log(`密碼比對失敗：用戶 ${email} 嘗試登入但提供的密碼不正確。`);
+            console.log('資料庫密碼雜湊值:', user.password);
             return res.status(401).json({
                 success: false,
                 message: '帳號或密碼錯誤'
@@ -233,7 +241,7 @@ async login(req, res) {
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: '2h' }
         );
         
         // 移除密碼資訊

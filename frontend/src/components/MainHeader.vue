@@ -178,7 +178,7 @@ export default {
     flex-wrap: wrap;
 }
 .nav-link-text{
-    color: #333;
+    color:#ffffff;
     position: relative;
     text-decoration: none;
     cursor:pointer;
@@ -187,10 +187,60 @@ export default {
     width: 100%;
 }
 .nav-item-container {
-    padding: 0.5rem 1rem;
+    padding: 0.8rem 1.2rem;
     display: flex;
     align-items: center;
+    position: relative;
+    margin: 0 0.3rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
+
+.nav-item-container:hover {
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* 添加滑鼠懸停時的底線動畫效果 */
+.nav-item-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: #0056b3;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-item-container:hover::after {
+    width: 80%;
+}
+
+/* 活躍狀態樣式 */
+.nav-item-container.active {
+    background: linear-gradient(145deg, #f0f0f0, #e6e6e6);
+    color: #0056b3;
+}
+
+/* 添加點擊效果 */
+.nav-item-container:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 確保文字顏色過渡效果 */
+.nav-link-text {
+    transition: color 0.3s ease;
+}
+
+.nav-item-container:hover .nav-link-text {
+    color: #0056b3;
+}
+
 .search-input-wrapper{
     position: relative;
     display: flex;
@@ -239,14 +289,15 @@ export default {
     display: flex;
     align-items: center;
     padding: 0.5rem;
-    color: #333;
+    color: #ffffff;
     text-decoration: none;
     transition: all 0.3s ease;
     border-radius: 20px;
     white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 .cart-item:hover{
-    background-color: red;
+    background-color: #2563b3;
     transform: translateY(-2px);
 }
 .icon-img{
@@ -406,15 +457,16 @@ export default {
     display: flex;
     align-items: center;
     padding: 0.5rem;
-    color: #333;
+    color: #ffffff;
     text-decoration: none;
     transition: all 0.3s ease;
     border-radius: 20px;
     white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .member-item:hover{
-    background-color: #f0f0f0; /* 更改為適合會員區塊的顏色 */
+    background-color: #2563b3;
     transform: translateY(-2px);
 }
 
@@ -423,17 +475,18 @@ export default {
 }
 
 .member-item .btn-link{
-    color: #333;
+    color: #ffffff;
     text-decoration: none;
 }
 
 .member-item .btn-link:hover{
-    color: #0056b3;
+    color: #e6f3ff;
 }
 
 
 .cart-text {
-    display: inline;  /* 預設顯示 */
+    color: #ffffff;
+    display: inline;
 }
 
 
