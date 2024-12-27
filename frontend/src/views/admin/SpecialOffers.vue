@@ -35,7 +35,7 @@
                                 <tr v-for="(offer, index) in specialOffers" :key="offer?.id">
                                     <td>{{ getProductName(offer.product_id) }}</td>
                                     <td>{{ offer.price }}</td>
-                                    <td>{{ offer.countdown }}</td>
+                                    <td>{{ formatTime(offer.countdown) }}</td>
                                     <td>{{ formatDate(offer.created_at) }}</td>
                                     <td>
                                         <button class="btn btn-warning btn-sm me-2" @click="openEditSpecialOfferModal(index)">編輯</button>
@@ -86,12 +86,16 @@
                             <input type="number" id="priceInput" v-model="specialOfferForm.price" class="form-control" placeholder="請輸入特價價格" required />
                         </div>
                         <div class="mb-3">
-                            <label for="countdownInput" class="form-label">倒數時間 (秒)</label>
-                            <input type="number" id="countdownInput" v-model="specialOfferForm.countdown" class="form-control" placeholder="請輸入倒數時間" required />
-                        </div>
-                        <div class="mb-3">
                             <label for="createdAtInput" class="form-label">創建日期</label>
                             <input type="date" id="createdAtInput" v-model="specialOfferForm.created_at" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="startTimeInput" class="form-label">開始時間</label>
+                            <input type="datetime-local" id="startTimeInput" v-model="specialOfferForm.start_time" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="durationInput" class="form-label">持續時間 (秒)</label>
+                            <input type="number" id="durationInput" v-model="specialOfferForm.duration" class="form-control" placeholder="請輸入持續時間" required />
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -118,17 +122,18 @@ export default {
             products: [],
             productMap:{},
             specialOfferForm: {
-                id: null,
                 product_id: '',
-                price: 0,
-                countdown: 0,
-                created_at: '',
+                price: '',
+                start_time: '',
+                duration: '',
+                created_at: new Date().toISOString().split('T')[0],
             },
             isEditing: false,
             currentIndex: null,
             productSearchKeyword: '',
             searchResults: [],
-            selectedProduct: null
+            selectedProduct: null,
+            countdownIntervals: [],
         };
     },
     mounted() {
@@ -136,13 +141,20 @@ export default {
         this.loadProducts();
         this.debouncedSearchProducts = debounce(this.searchProducts,500);
     },
+    beforeUnmount() { 
+        this.clearCountdownIntervals();
+    },
     methods: {
         // 加載特價商品列表
         async loadSpecialOffers() {
             try {
                 const response = await ApiService.specialOffersAPI.getAllSpecialOffers();
                 console.log('loadSpecialOffers response:', response); 
-                this.specialOffers = response;
+                this.specialOffers = response.map(offer => ({
+                    ...offer,
+                    countdown: Math.floor((new Date(offer.start_time).getTime() + offer.duration * 1000 - Date.now()) / 1000)
+                }));
+                this.startCountdown();
             } catch (error) {
                 handleApiError(error, '加載特價商品時出錯，請稍後再試！');
             }
@@ -233,11 +245,6 @@ export default {
         // 獲取商品名稱時根據商品ID
         getProductName(productId){
             return this.productMap[productId] || '未知商品';
-            // if (!this.products || !Array.isArray(this.products)) {
-            //     return '未知商品'; // 確保 products 已正確加載
-            // }
-            // const product = this.products.find(p => p.id === productId);
-            // return product ? product.name : '未知商品';
 
         },
         // 關閉特價商品的 Modal
@@ -249,27 +256,52 @@ export default {
         },
         // 保存或更新特價商品
         async saveSpecialOffer() {
+            console.log('FormData',this.specialOfferForm);
             // 表單驗證
-            if (!this.specialOfferForm.product_id || !this.specialOfferForm.price || !this.specialOfferForm.countdown || !this.specialOfferForm.created_at) {
+            if (!this.specialOfferForm.product_id || 
+                this.specialOfferForm.price === undefined || 
+                this.specialOfferForm.price === '' || 
+                !this.specialOfferForm.start_time || 
+                this.specialOfferForm.duration === undefined || 
+                this.specialOfferForm.duration === '') 
+                {
                 alert('請填寫所有必填欄位！');
                 return;
-            }
-
+                }
             try {
+                const formData = {
+                    product_id: parseInt(this.specialOfferForm.product_id),
+                    price: parseFloat(this.specialOfferForm.price),
+                    start_time: new Date(this.specialOfferForm.start_time).toISOString().slice(0, 19).replace('T', ' '),
+                    duration: parseInt(this.specialOfferForm.duration)
+                }
+                console.log('FormData資料:',formData);
+
                 if (this.isEditing) {
                     // 更新特價商品
-                    const updatedOffer = await ApiService.specialOffersAPI.updateSpecialOfferById(this.specialOfferForm.id,this.specialOfferForm);
-                    this.$set(this.specialOffers,this.currentIndex,updatedOffer);
+                    await ApiService.specialOffersAPI.updateSpecialOfferById(this.editingId,formData);
                     alert('特價商品已更新！');
                 } else {
                     // 新增特價商品
-                    const newOffer = await ApiService.specialOffersAPI.createSpecialOffer(this.specialOfferForm);
-                    this.specialOffers.push(newOffer);
+                    await ApiService.specialOffersAPI.createSpecialOffer(formData);
                     alert('特價商品已新增！');
+                    this.closeSpecialOfferModal();
+                    this.loadSpecialOffers();
+
+                    this.$store.dispatch('notifications/showNotification',{
+                        type: 'success',
+                        message:this.isEditing ? '特價商品已更新！' : '特價商品已新增！',
+                        timeout: 3000
+                    });
                 }
                 this.closeSpecialOfferModal();
             } catch (error) {
                 handleApiError(error, '保存特價商品時出錯，請稍後再試！');
+                this.$store.dispatch('notifications/showNotification', {
+                    type: 'error',
+                    message: '保存失敗，請稍後再試！',
+                    timeout: 2000
+                });
             }
         },
         // 刪除特價商品
@@ -283,7 +315,46 @@ export default {
                     handleApiError(error, '刪除特價商品時出錯，請稍後再試！');
                 }
             }
-        }
+        },
+            // 開始倒數計時
+        startCountdown() {
+            this.clearCountdownIntervals();
+            if (!this.specialOffers || this.specialOffers.length === 0) return;
+
+            this.specialOffers.forEach((offer, index) => {
+                if (offer.countdown <= 0) return; // 如果倒數時間已結束，跳過
+
+                const interval = setInterval(() => {
+                    if (this.specialOffers[index].countdown > 0) {
+                        this.specialOffers[index].countdown -= 1;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 1000);
+
+                this.countdownIntervals.push(interval);
+            });
+        },
+        // 清除所有倒數計時器
+        clearCountdownIntervals() {
+            this.countdownIntervals.forEach(interval => clearInterval(interval));
+            this.countdownIntervals = [];
+        },
+        formatTime(seconds) {
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        },
+
+        // 格式化日期為 YYYY-MM-DD
+        formatDate(date) {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = (`0${d.getMonth() + 1}`).slice(-2);
+            const day = (`0${d.getDate()}`).slice(-2);
+            return `${year}-${month}-${day}`;
+        },
     }
 };
 </script>

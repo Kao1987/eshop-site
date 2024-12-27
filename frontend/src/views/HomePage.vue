@@ -447,14 +447,24 @@ export default {
         processedSpecialOffers() {
             if (!this.specialOffers || !this.products) return [];
 
+            const now = new Date().getTime();
+
             return [...this.specialOffers]
-            .filter(offer => offer.countdown > 0)
+            .filter(offer => {
+                const startTime = new Date(offer.start_time).getTime();
+                const endTime = startTime + (offer.duration * 1000);
+                return now >= startTime && now <= endTime;
+            })
             .map(offer => {
                 const product = this.products.find(p => p.id === offer.product_id);
+                const startTime = new Date(offer.start_time).getTime();
+                const remainingTime = Math.max(0,
+                 startTime + (offer.duration * 1000) - now);
                 return {
                     ...offer,
                     name: product ? product.name : '未知商品',
-                    image: product ? product.image : '/img/wrong.png'
+                    image: product ? product.image : '/img/wrong.png',
+                    countdown:Math.floor(remainingTime / 1000)
                 };
             });
         },

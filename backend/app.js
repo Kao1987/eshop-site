@@ -114,6 +114,10 @@ app.use((err, req, res, next) => {
         });
     }
 });
+app.use((req, res, next) => {
+    process.env.TZ = 'Asia/Taipei';
+    next();
+  });
 
 // 伺服器啟動函數
 const startServer = async () => {
