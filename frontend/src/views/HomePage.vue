@@ -1,4 +1,7 @@
 <template>
+    <div class="loading-overlay" v-if="isPageLoading">
+        <img src="/static/img/loading.gif" alt="載入中" class="loading-gif">
+    </div>
     <div class="homepage container mt-5">
         <!-- 圖片輪播 -->
         <div class="carousel-section">
@@ -184,6 +187,7 @@ export default {
     data() {
         return {
             isPageLoading: true,
+            loadingTimeout: null,
             // 七日銷售排行
             sevenDaySalesRanking: [],
             // 月銷售排行
@@ -213,11 +217,26 @@ export default {
         }
     },
     async mounted(){
-        console.log('環境變數:', {
-            API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
-            CAROUSEL_IMAGE_URL: process.env.VUE_APP_CAROUSEL_IMAGE_BASE_URL,
-            PRODUCT_IMAGE_URL: process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL
+        this.loadingTimeout = setTimeout(()=>{
+            if(this.isPageLoading){
+                window.location.reload();
+            }
+        }, 15000);
+        this.loadHomePageData()
+        .then(()=>{
+            this.isPageLoading = false;
+        })
+        .catch((error)=>{
+            console.error('載入首頁資料失敗',error);
+        })
+        .finally(()=>{
+            clearTimeout(this.loadingTimeout);
         });
+        // console.log('環境變數:', {
+        //     API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
+        //     CAROUSEL_IMAGE_URL: process.env.VUE_APP_CAROUSEL_IMAGE_BASE_URL,
+        //     PRODUCT_IMAGE_URL: process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL
+        // });
         try{
             console.log('開始載入首頁資料');
             await this.loadHomePageData();
@@ -443,6 +462,11 @@ export default {
             }
         },
     },
+    beforeUnmount(){
+        if(this.isPageLoading){
+            clearTimeout(this.loadingTimeout);
+        }
+    },
     computed:{
         processedSpecialOffers() {
             if (!this.specialOffers || !this.products) return [];
@@ -474,7 +498,23 @@ export default {
 </script>
 
 <style scoped>
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
 
+.loading-gif {
+    max-width: 200px;
+    max-height: 200px;
+}
 
 .homepage.container {
     max-width: 1200px;  /* 大螢幕最大寬度 */
