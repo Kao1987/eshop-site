@@ -1,6 +1,6 @@
 <template>
     <div class="loading-overlay" v-if="isPageLoading">
-        <img src="/static/img/loading.gif" alt="載入中" class="loading-gif">
+        <img :src="loadingGif" alt="載入中" class="loading-gif">
     </div>
     <div class="homepage container mt-5">
         <!-- 圖片輪播 -->
@@ -169,8 +169,10 @@
 import ApiService from '@/services/api';
 import axios from 'axios';
 import { handleApiError } from '@/utils/errorHandler';
-import * as bootstrap from 'bootstrap'
-import 'bootstrap/dist/css/bootstrap.min.css'
+import * as bootstrap from 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import loadingGif from '@/assets/loading.gif' 
+
 
 const FALLBACK_DATA = {
         carouselImages:[
@@ -188,6 +190,7 @@ export default {
         return {
             isPageLoading: true,
             loadingTimeout: null,
+            loadingGif,
             // 七日銷售排行
             sevenDaySalesRanking: [],
             // 月銷售排行
