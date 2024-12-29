@@ -66,8 +66,60 @@
         </div>
     </div>
 </template>
+<script>
+import ApiService from '@/services/api';
+import { handleApiError } from '@/utils/errorHandler';
+import { mapActions } from 'vuex';
 
+    export default {
+        name: 'UserLogin',
+        data(){
+            return{
+                email:'',
+                password:'',
+                showPassword: false
+            };
+        },
+        methods:{
+            ...mapActions('auth',['login']),
+            async handleLogin(){
+                try {
+                    const response = await this.login({
+                        email:this.email.trim().toLowerCase(),
+                        password:this.password
+                    });
+                    if(!response || !response.data){
+                        throw new Error('無法取得用戶資料或 token');
+                    }
+                    const user = response.data;    
+                    if(!user){
+                        throw new Error('無法取得用戶資料');
+                    }
+                    console.log("找到的用戶",user);
+                    alert('登入成功!歡迎' + user.name);
+                    
+                    const redirectPath = this.$route.query.redirect || '';
+                    if (user.role.toLowerCase() === 'admin') {
+                        this.$router.push(typeof redirectPath === 'string' && redirectPath.startsWith('/admin') ? redirectPath : '/admin');
+                    } else {
+                        this.$router.push(typeof redirectPath === 'string' && !redirectPath.startsWith('/admin') ? redirectPath : '/MembersPage');
+                    }
+                }catch (error){
+                    handleApiError(error,'登入失敗，請稍後再試');
+                }
+            }
+        }
+    }
+</script>
 <style scoped>
+.form-floating label {
+    font-size: 1rem !important; /* 強制設定基礎字體大小 */
+}
+.form-floating input {
+    height: calc(3.5rem + 2px); /* 確保輸入框高度足夠 */
+    padding-top: 1.625rem;
+    padding-bottom: 0.625rem;
+}
 .login-page {
     min-height: 100vh;
     display: flex;
@@ -130,51 +182,13 @@
     .auth-card {
         padding: 1.5rem;
     }
+    .form-floating label {
+        font-size: 0.875rem !important;
+    }
+}
+@media (min-width: 577px) and (max-width: 992px) {
+    .form-floating label {
+        font-size: 0.925rem !important;
+    }
 }
 </style>
-    
-<script>
-import ApiService from '@/services/api';
-import { handleApiError } from '@/utils/errorHandler';
-import { mapActions } from 'vuex';
-
-    export default {
-        name: 'UserLogin',
-        data(){
-            return{
-                email:'',
-                password:'',
-                showPassword: false
-            };
-        },
-        methods:{
-            ...mapActions('auth',['login']),
-            async handleLogin(){
-                try {
-                    const response = await this.login({
-                        email:this.email.trim().toLowerCase(),
-                        password:this.password
-                    });
-                    if(!response || !response.data){
-                        throw new Error('無法取得用戶資料或 token');
-                    }
-                    const user = response.data;    
-                    if(!user){
-                        throw new Error('無法取得用戶資料');
-                    }
-                    console.log("找到的用戶",user);
-                    alert('登入成功!歡迎' + user.name);
-                    
-                    const redirectPath = this.$route.query.redirect || '';
-                    if (user.role.toLowerCase() === 'admin') {
-                        this.$router.push(typeof redirectPath === 'string' && redirectPath.startsWith('/admin') ? redirectPath : '/admin');
-                    } else {
-                        this.$router.push(typeof redirectPath === 'string' && !redirectPath.startsWith('/admin') ? redirectPath : '/MembersPage');
-                    }
-                }catch (error){
-                    handleApiError(error,'登入失敗，請稍後再試');
-                }
-            }
-        }
-    }
-</script>

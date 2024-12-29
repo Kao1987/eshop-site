@@ -2,7 +2,7 @@
 /* 針對PC（大於1200px） */
 @media (min-width: 1200px) {
     body {
-        font-size: 1.75rem;
+        font-size: 1.25rem;
         
     }
 }
@@ -10,14 +10,14 @@
 /* 針對NB（大於768px） */
 @media (min-width: 992px) {
     body {
-        font-size: 1.5rem;
+        font-size: 1.15rem;
     }
 }
 
 /* 針對平板（大於576px，小於768px） */
 @media (min-width: 576px) and (max-width: 767.98px) {
     body {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
 }
 
