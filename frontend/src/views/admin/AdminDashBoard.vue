@@ -355,6 +355,28 @@ export default {
             ctx.fillStyle = '#666';
             ctx.textAlign = 'center';
             ctx.fillText('資料尚未加載',ctx.width/2,ctx.height/2);
+        },
+        toggleRecipients(index) {
+            if (!this.users[index]) return;
+            
+            // 先關閉其他展開的面板
+            this.users.forEach((user, idx) => {
+                if (idx !== index && user.showRecipients) {
+                    this.$set(user, 'showRecipients', false);
+                }
+            });
+            
+            // 切換當前面板
+            const currentUser = this.users[index];
+            if (!currentUser.recipients || !currentUser.recipients.length) {
+                this.$store.dispatch('notifications/showNotification', {
+                    type: 'warning',
+                    message: '該用戶沒有收件地址'
+                });
+                return;
+            }
+            
+            this.$set(currentUser, 'showRecipients', !currentUser.showRecipients);
         }
     }
 };

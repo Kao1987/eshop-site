@@ -106,8 +106,8 @@
                                 </div>
                                 <div class="address-list">
                                     <div v-for="(recipient, index) in recipients" 
-                                        :key="recipient.id" 
-                                        class="address-item"
+                                        :key="recipient.id || index"  
+                                        class="address-item mb-3 p-3 rounded"
                                     >
                                         <div class="address-content">
                                             <h6 class="mb-2">{{ recipient.name }}</h6>
@@ -325,6 +325,11 @@ export default {
         },
         
         async loadRecipients(userId) {
+            if(!userId) {
+                console.error('用戶ID無效');
+                return;
+            }
+
             try {
                 this.isLoadingRecipients = true;
                 const response = await ApiService.recipientAPI.getRecipients(userId);
@@ -332,6 +337,7 @@ export default {
             } catch (error) {
                 console.error('載入收件人資料失敗:', error);
                 handleApiError(error, '載入收件人資料失敗');
+                this.recipients = [];
             } finally {
                 this.isLoadingRecipients = false;
             }

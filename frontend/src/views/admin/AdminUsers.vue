@@ -13,7 +13,6 @@
                 </button>
             </div>
         </div>
-
         <!-- 用戶列表卡片 -->
         <div class="card shadow-sm">
             <div class="table-responsive">
@@ -45,17 +44,20 @@
                                         {{ getRoleDisplayName(user.role) }}
                                     </span>
                                 </td>
-                                <td>
-                                    <button 
-                                        class="btn btn-link btn-sm text-decoration-none"
-                                        @click="toggleRecipients(index)"
-                                        v-if="user.recipients && user.recipients.length"
-                                    >
-                                        {{ user.recipients.length }} 個地址
-                                        <i :class="['fas', user.showRecipients ? 'fa-chevron-up' : 'fa-chevron-down', 'ms-1']"></i>
-                                    </button>
-                                    <span v-else class="text-muted">無收件地址</span>
+                                <td class="address-section">
+                                    <div class="d-flex align-items-center">
+                                        <button 
+                                            class="btn btn-link btn-sm text-decoration-none d-flex align-items-center"
+                                            @click.stop="toggleRecipients(index)"
+                                            v-if="user.recipients?.length"
+                                        >
+                                            <span class="me-2">{{ user.recipients ? user.recipients.length : 0 }} 個地址</span>
+                                            <i :class="['fas', user.showRecipients ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
+                                        </button>
+                                        <span v-else class="text-muted">無收件地址</span>
+                                    </div>
                                 </td>
+                                <!-- 收件地址展開面板 -->
                                 <td class="text-end">
                                     <div class="btn-group">
                                         <button 
@@ -64,6 +66,13 @@
                                             title="編輯用戶"
                                         >
                                             <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button 
+                                            class="btn btn-outline-success btn-sm" 
+                                            @click="addRecipient(index)"
+                                            title="新增收件地址"
+                                        >
+                                            <i class="fas fa-map-marker-alt"></i>
                                         </button>
                                         <button 
                                             class="btn btn-outline-danger btn-sm" 
@@ -76,41 +85,44 @@
                                 </td>
                             </tr>
                             <!-- 收件人資訊展開區 -->
-                            <tr v-if="user.showRecipients && user.recipients && user.recipients.length">
-                                <td colspan="4" class="bg-light">
+                            <tr v-if="user.showRecipients  && user.recipients && user.recipients?.length"
+                                > 
+                                <td colspan="6">
                                     <div class="recipient-list p-3">
                                         <div v-for="(recipient, recipientIndex) in user.recipients" 
-                                             :key="recipientIndex"
-                                             class="recipient-item"
-                                        >
-                                            <div class="recipient-info">
-                                                <h6 class="mb-2">{{ recipient.name }}</h6>
-                                                <p class="mb-1">
-                                                    <i class="fas fa-phone me-2 text-muted"></i>
-                                                    {{ recipient.phone }}
-                                                </p>
-                                                <p class="mb-0">
-                                                    <i class="fas fa-map-marker-alt me-2 text-muted"></i>
-                                                    {{ recipient.address }}
-                                                </p>
+                                            :key="recipient.id || recipientIndex"
+                                            class="address-item"
+                                            >
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <div class="fw-bold">{{ recipient.name }}</div>
+                                                    <div class="text-muted small">
+                                                        <i class="fas fa-phone me-1"></i>{{ recipient.phone }}
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        <i class="fas fa-map-marker-alt me-1"></i>{{ recipient.address }}
+                                                    </div>
+                                                </div>
+                                                    <div class="recipient-actions">
+                                                        <button 
+                                                        class="btn btn-outline-primary btn-sm me-2"
+                                                        @click="editRecipient(index, recipientIndex)"
+                                                        title="編輯收件人"
+                                                        >
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button 
+                                                        class="btn btn-outline-danger btn-sm"
+                                                        @click="deleteRecipient(index, recipientIndex)"
+                                                        title="刪除收件人"
+                                                        >
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div class="recipient-actions">
-                                                <button 
-                                                    class="btn btn-outline-primary btn-sm me-2"
-                                                    @click="editRecipient(index, recipientIndex)"
-                                                >
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button 
-                                                    class="btn btn-outline-danger btn-sm"
-                                                    @click="deleteRecipient(index, recipientIndex)"
-                                                >
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </div>
+                                        </div>      
                                     </div>
-                                </td>
+                                </td>   
                             </tr>
                         </template>
                     </tbody>
@@ -211,77 +223,41 @@
                 </div>
             </div>
         </div>
+        <!-- 收件人編輯 Modal -->
+        <div class="modal fade" tabindex="-1" ref="recipientModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header border-0">
+                <h5 class="modal-title">{{ isEditingRecipient ? '編輯收件地址' : '新增收件地址' }}</h5>
+                    <button type="button" class="btn-close" @click="closeRecipientModal"></button>
+                </div>
+                <div class="modal-body">
+                    <form @submit.prevent="saveRecipient">
+                        <div class="mb-3">
+                        <label class="form-label">收件人姓名</label>
+                        <input type="text" class="form-control" v-model="editRecipient.name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">聯絡電話</label>
+                        <input type="tel" class="form-control" v-model="editRecipient.phone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">收件地址</label>
+                        <input type="text" class="form-control" v-model="editRecipient.address" required>
+                    </div>
+                </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary" @click="closeRecipientModal">取消</button>
+                    <button type="submit" class="btn btn-primary" @click="saveRecipient">
+                        {{ isEditingRecipient ? '更新地址' : '新增地址' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
-
-<style scoped>
-.user-avatar {
-    width: 40px;
-    height: 40px;
-    background-color: #e9ecef;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    color: #6c757d;
-}
-
-.recipient-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.recipient-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 1rem;
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.recipient-info {
-    flex: 1;
-}
-
-.recipient-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.btn-group .btn {
-    padding: 0.375rem 0.75rem;
-}
-
-.badge {
-    padding: 0.5em 0.75em;
-    font-weight: 500;
-}
-
-.modal-content {
-    border: none;
-    border-radius: 1rem;
-}
-
-.form-control, .form-select {
-    padding: 0.75rem 1rem;
-}
-
-@media (max-width: 768px) {
-    .recipient-item {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .recipient-actions {
-        width: 100%;
-        justify-content: flex-end;
-    }
-}
-</style>
 
 <script>
 import * as bootstrap from 'bootstrap';
@@ -307,19 +283,67 @@ import { handleApiError } from '@/utils/errorHandler';
                 isEditing:false,
                 currentIndex: null,
                 showPassword: false,
+                editRecipient: {
+                    name: '',
+                    phone: '',
+                    address: '',
+                    user_id: null
+                },
+                isEditingRecipient: false,
+                editingRecipientIndex: -1
             };
         },
         mounted(){
             this.loadUsers();
+            document.addEventListener('click', this.handleClick);
+        },
+        beforeDestroy(){
+            document.removeEventListener('click', this.handleClick);
+        },
+        handleClick(event){
+            if(!event.target.closest('.address-section')){
+                this.users.forEach(user => {
+                    if(user.showRecipients){
+                        user.showRecipients = false;
+                    }
+                });
+            }
         },
         // 開啟新增用戶的視窗
         methods:{
             async loadUsers(){
                 try{
                     const response = await ApiService.userAPI.getAllUsers();
-                    this.users = response.data;
+                    // this.users = response.data.map(user =>({
+                    //     ...user,
+                    //     showRecipients: false
+                    // }))
+                    const usersData = response.data;
+                    for(let user of usersData) {
+                        try {
+                            const recipientsResponse = await ApiService.recipientAPI.getRecipients(user.id);
+                            user.recipients = recipientsResponse.data || [];
+                            user.showRecipients = false;
+                        } catch(error) {
+                            console.error(`無法加載用戶 ${user.id} 的收件人資料:`, error);
+                            user.recipients = [];
+                        }
+                    }
+                    this.users = usersData;
                 }catch(error){
                     handleApiError(error, '無法加載用戶資料');
+                }
+            },
+            async deleteRecipient(userIndex, recipientIndex) {
+                try {
+                    const user = this.users[userIndex];
+                    const recipient = user.recipients[recipientIndex];
+                    if(confirm('確定要刪除此收件人資料？')) {
+                        await ApiService.recipientAPI.deleteRecipient(recipient.id);
+                        user.recipients.splice(recipientIndex, 1);
+                    }
+                } catch(error) {
+                    handleApiError(error, '刪除收件人失敗');
                 }
             },
             openCreateUserModal(){
@@ -421,10 +445,199 @@ import { handleApiError } from '@/utils/errorHandler';
             },
 
             toggleRecipients(index) {
-                this.$set(this.users[index], 'showRecipients', !this.users[index].showRecipients);
-            }
-        },
+                if(!this.users[index]) return;
 
+                // 檢查是否有收件人資料
+                const currentUser = this.users[index];
+                if(!currentUser.recipients?.length){
+                    alert('此用戶沒有收件人資料');
+                    return;
+                }
+                // 關閉其他展開面板
+                this.users.forEach((u, idx) => {
+                    if(idx !== index){
+                        u.showRecipients = false;
+                    }
+                });
+                currentUser.showRecipients = !currentUser.showRecipients;
+            },
+            addRecipient(userIndex) {
+                const userId = this.users[userIndex].id;
+                this.isEditingRecipient = false;
+                this.editRecipient = {
+                    name: '',
+                    phone: '',
+                    address: '',
+                    user_id: userId
+                };
+                this.showRecipientModal();
+            },
+            editRecipientInfo(userIndex, recipientIndex) {
+                this.isEditingRecipient = true;
+                this.editingRecipientIndex = recipientIndex;
+                const recipient = this.users[userIndex].recipients[recipientIndex];
+                this.editRecipient = { ...recipient };
+                this.showRecipientModal();
+            },
+            async saveRecipient() {
+            if (!this.isRecipientValid(this.editRecipient)) {
+                alert('請檢查收件人資料是否完整且格式正確！');
+                return;
+            }
+            try {
+                let response;
+                if (this.isEditingRecipient) {
+                    response = await ApiService.recipientAPI.updateRecipient(
+                        this.editRecipient.id,
+                        this.editRecipient
+                    );
+                } else {
+                    response = await ApiService.recipientAPI.addRecipient(this.editRecipient);
+                }
+                
+
+                const modalElement = this.$refs.recipientModal;
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                modal.hide();
+                await this.loadUsers(); // 重新載入用戶資料
+                alert(this.isEditingRecipient ? '收件人資料已更新' : '新增收件人成功');
+            } catch (error) {
+                    handleApiError(error, this.isEditingRecipient ? '更新收件人失敗' : '新增收件人失敗');
+                }
+            },
+            isRecipientValid(recipient) {
+                const phoneRegex = /^[0-9]{10}$/;
+                return recipient.name.trim() && phoneRegex.test(recipient.phone) && recipient.address.trim();
+            },
+            showRecipientModal() {
+                const modal = new bootstrap.Modal(this.$refs.recipientModal);
+                modal.show();
+            },
+            closeRecipientModal() {
+                const modalInstance = bootstrap.Modal.getInstance(this.$refs.recipientModal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+            }
         
+    }
 };
 </script>
+
+<style scoped>
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background-color: #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.recipient-panel {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+.recipient-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background-color: #f8f9fa;
+}
+
+.recipient-item {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+
+}
+
+.recipient-item:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+}
+
+.recipient-info {
+    width: 100%;
+}
+
+.recipient-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* 動畫效果 */
+.recipient-list-enter-active,
+.recipient-list-leave-active {
+    transition: all 0.3s ease;
+}
+
+.recipient-list-enter-from,
+.recipient-list-leave-to {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .recipient-item {
+        padding: 0.75rem;
+    }
+    
+    .recipient-actions {
+        margin-top: 0.5rem;
+        justify-content: flex-end;
+    }
+}
+
+.badge {
+    padding: 0.5em 0.75em;
+    font-weight: 500;
+}
+
+.modal-content {
+    border: none;
+    border-radius: 1rem;
+}
+
+.form-control, .form-select {
+    padding: 0.75rem 1rem;
+}
+
+.address-section {
+    position: relative;
+}
+
+.address-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    min-width: 300px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 0.5rem;
+}
+
+.address-item {
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.address-item:hover {
+    background-color: #e9ecef;
+}
+
+td.address-section {
+    overflow: visible;
+}
+</style>
