@@ -22,22 +22,6 @@ request.interceptors.request.use(
         return config;
     },
     error => {
-        // if (error.response) {
-        //     console.log('❌ 錯誤回應:', {
-        //     url: error.config.url,
-        //     method: error.config.method,
-        //     baseURL: error.config.baseURL,
-        //     headers: error.config.headers,
-        //     data: error.config.data,
-        //     status: error.response.status,
-        //     statusText: error.response.statusText
-        //     });
-        //     if (error.response.status === 401) {
-        //         alert('登入已過期，請重新登入');
-        //         localStorage.removeItem('authToken');
-        //         localStorage.removeItem('user');
-        //         router.push('/UserLogin');
-        //     }
             return Promise.reject(error);
         
     }

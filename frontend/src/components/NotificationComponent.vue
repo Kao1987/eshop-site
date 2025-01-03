@@ -38,6 +38,7 @@ export default {
                 希望您在這裡度過愉快的時光，祝您瀏覽愉快！😊`,
                 timeout:0
             });
+
         });
 
         const closeNotification = (id) =>{
