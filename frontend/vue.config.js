@@ -1,5 +1,6 @@
 const { defineConfig } = require('@vue/cli-service');
 const webpack = require('webpack');
+const CompressionWebpackPlugin = require('compression-webpack-plugin');
 const path = require('path');
 
 module.exports = defineConfig({
@@ -56,6 +57,12 @@ module.exports = defineConfig({
             new webpack.ProvidePlugin({
                 Buffer: ['buffer', 'Buffer'],
                 process: 'process/browser'
+            }),
+            new CompressionWebpackPlugin({
+                algorithm: 'gzip',
+                test: /\.(js|css|html|svg)$/,
+                threshold: 10240,
+                minRatio: 0.8,
             })
         ]
     },
