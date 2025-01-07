@@ -104,6 +104,13 @@
                     <img :src="$getImageUrl(product.image,'product')" 
                         class="product-thumbnail" 
                         @error="handleImageError">
+                        <div class="product-overlay">
+                            <button class="view-details-btn" 
+                                    @click="viewDetails(product)" 
+                                    :disabled="!product || !product.id">
+                            查看詳情
+                            </button>
+                        </div>
                 </div>
                 <div class="product-details">
                     <div class="rank-name">{{ index + 1 }}. {{ product.name }}</div>
@@ -130,6 +137,13 @@
                         <img :src="$getImageUrl(product.image,'product')" 
                             class="product-thumbnail" 
                             @error="handleImageError">
+                            <div class="product-overlay">
+                                <button class="view-details-btn" 
+                                        @click="viewDetails(product)" 
+                                        :disabled="!product || !product.id">
+                                查看詳情
+                                </button>
+                            </div>
                     </div>
                     <div class="product-details">
                         <div class="rank-name">{{ index + 1 }}. {{ product.name }}</div>
@@ -241,16 +255,15 @@ export default {
         //     PRODUCT_IMAGE_URL: process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL
         // });
         try{
-            console.log('開始載入首頁資料');
             await this.loadHomePageData();
             if(this.carouselImages.length && this.carouselImages.length > 0){
                 await this.$nextTick();
                 this.initializeCarousel();
             }
-            console.log('輪播圖片狀態:',{
-                images:this.carouselImages,
-                domElement:document.getElementById('mainCarousel'),
-            });
+            // console.log('輪播圖片狀態:',{
+            //     images:this.carouselImages,
+            //     domElement:document.getElementById('mainCarousel'),
+            // });
             this.startCountdown();
         }catch(error){
             console.error('讀取首頁資料失敗',error);
@@ -268,36 +281,37 @@ export default {
             try{
                 await this.loadProductsData();
                 this.randomProducts = this.getRandomProducts(5);
-                await Promise.allSettled([
-                this.loadSalesData(),
-                this.loadOffersData(),
                 this.loadCarouselData(),
-                ]);
+
+                setTimeout(() => {
+                    this.loadSalesData();
+                    this.loadOffersData();
+                },2000);
+
             }catch (error) {
                 console.error('���取主頁資料失敗', error);
             }
         },
         async loadSalesData(){
-            console.log('開始載入銷售數據');
             this.isLoading.sales = true;
             try{
                 const [resp7, resp30] = await Promise.all([
                     ApiService.rankingAPI.getRanking(7),
                     ApiService.rankingAPI.getRanking(30),
                 ]);
-                console.log('原始銷售數據:', resp7.data, resp30.data);
+                // console.log('原始銷售數據:', resp7.data, resp30.data);
                 if(resp7.success && Array.isArray(resp7.data)){
                     this.sevenDaySalesRanking = this.processSalesRanking(resp7.data);
                 }else{
                     this.sevenDaySalesRanking = [];
                 }    
-                console.log('處理後的銷售數據:', this.sevenDaySalesRanking);
+                // console.log('處理後的銷售數據:', this.sevenDaySalesRanking);
                 if(resp30.success && Array.isArray(resp30.data)){
                     this.monthSalesRanking = this.processSalesRanking(resp30.data);
                 }else{
                     this.monthSalesRanking = [];
                 }
-                console.log('月排行:', this.monthSalesRanking);
+                // console.log('月排行:', this.monthSalesRanking);
             } catch(error){
                 console.error('銷售數據載入失敗:', error);
             } finally{
@@ -309,7 +323,7 @@ export default {
 
             return salesData.map((item)=>{
                 return{
-                    id: item.product_id,
+                    id: item.id,
                     name: item.name,
                     sales_count: item.sales_count || 0,
                     image: item.image ? this.$getImageUrl(item.image,'product') : '/img/wrong.png'
@@ -328,7 +342,7 @@ export default {
                         countdown: offer.countdown || 36000, //預設倒數時間
                         product_id: Number(offer.product_id),
                     }));
-                    console.log('讀取到的特價商品:', this.specialOffers);
+                    // console.log('讀取到的特價商品:', this.specialOffers);
                 } 
             } catch(error){
                 console.error('加載特價商品失敗',error);
@@ -341,7 +355,6 @@ export default {
         async loadCarouselData() {
             try {
                 const response = await ApiService.carouselAPI.getAllCarouselImages();
-                console.log('輪播圖原始數據:', response);
                 
                 if (Array.isArray(response)) {
                     this.carouselImages = response
@@ -350,7 +363,7 @@ export default {
                         ...image,
                         url: this.$getImageUrl(image.url,'carousel')
                     }));
-                    console.log('處理後的輪播圖數據:', this.carouselImages);
+                    // console.log('處理後的輪播圖數據:', this.carouselImages);
                 }
             } catch (error) {
                 console.error('載入輪播圖失敗:', error);
@@ -361,7 +374,7 @@ export default {
             this.isLoading.products = true;
             try{
                     const response = await ApiService.productAPI.getAllProducts();
-                    console.log('商品資料:', response); // 檢查資料結構
+                    // console.log('商品資料:', response); // 檢查資料結構
                 this.products = response || [];
             } catch(error){
                 console.error('加載商品數據失敗',error);
@@ -624,7 +637,17 @@ export default {
     padding-top: 100%;  /* 1:1 的商品圖片比例 */
     overflow: hidden;
 }
+.product-item:hover .product-thumbnail {
+  transform: scale(1.05); /* 與 product-card 一致的放大效果 */
+}
 
+.product-item:hover .product-overlay {
+  opacity: 1; /* 顯示浮層 */
+}
+
+.product-item:hover .view-details-btn {
+  transform: translateY(0); /* 按鈕上移動態 */
+}
 .product-image {
     position: absolute;
     top: 0;
