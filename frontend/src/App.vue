@@ -106,7 +106,6 @@ body{
   box-sizing: border-box;
   padding: 10px; /* 增加一些內邊距來美化 */
   background-color: #85bffa; /* 背景色 */
-  border: 1px solid #ccc; /* 邊框 */
 }
 .marquee span{
   display: inline-block;

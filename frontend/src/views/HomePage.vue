@@ -292,7 +292,7 @@ export default {
                 },2000);
 
             }catch (error) {
-                console.error('���取主頁資料失敗', error);
+                console.error('獲取主頁資料失敗', error);
             }
         },
         async loadSalesData(){
