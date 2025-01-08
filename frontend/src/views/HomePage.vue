@@ -278,6 +278,7 @@ export default {
             }
         },
         handleCarouselImageError(e){
+            e.target.onerror = null;
             e.target.src = '/static/img/happynewyear.png'
         },
         async loadHomePageData(){
