@@ -66,6 +66,9 @@ const ApiService = {
     rankingAPI: {
         getRanking: (days) => request.get('/sales/ranking',{params: { days },}),
     },
+    messageAPI: {
+        createMessage: (data) => request.post('/message', data),
+    },
     createCancelToken: () => {
         const source = axios.CancelToken.source();
         return source;

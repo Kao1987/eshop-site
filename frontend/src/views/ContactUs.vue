@@ -40,33 +40,48 @@
             <h4>或者透過以下表格聯絡</h4>
         </div>
     <div class="contact-form">
-    <form>
+    <form @submit.prevent="submitMessage">
         <div class="mb-3">
             <label for="name" class="form-label">姓名</label>
-            <input type="text" class="form-control" id="name" placeholder="請輸入您的姓名">
+            <input type="text" v-model="formData.name" class="form-control" id="name" placeholder="請輸入您的姓名">
+        </div>
+        <div class="mb-3">
+            <label for="phone" class="form-label">聯絡電話</label>
+            <input type="phone" v-model="formData.phone" class="form-control" id="phone" placeholder="請輸入您的聯絡電話">
         </div>
         <div class="mb-3">
             <label for="email" class="form-label">電子郵件</label>
-            <input type="email" class="form-control" id="email" placeholder="請輸入您的電子郵件">
+            <input type="email" v-model="formData.email" class="form-control" id="email" placeholder="請輸入您的電子郵件">
         </div>
         <div class="mb-3">
             <label for="message" class="form-label">留言</label>
-            <textarea class="form-control" id="message" rows="4" placeholder="請輸入您的訊息"></textarea>
+            <textarea v-model="formData.message" class="form-control" id="message" rows="4" placeholder="請輸入您的訊息"></textarea>
         </div>
-        <button type="submit" class="btn btn-primary">送出</button>
+        <button type="submit" class="btn btn-primary">送出留言</button>
     </form>
     </div>
     </div>
 </template>
     
 <script>
+import ApiService from '../services/api';
     export default {
         name: 'ContactUs',
+        data(){
+            return{
+                formData:{
+                    name:'',
+                    phone:'',
+                    email:'',
+                    message:''
+                }
+            }
+        },
         mounted(){
             const faqSearch = document.getElementById('faqSearch');
             if(faqSearch){
                 faqSearch.addEventListener('input',function(){
-                    const searchValue = this.ariaValueMax.toLowerCase();
+                    const searchValue = faqSearch.value.toLowerCase();
                     document.querySelectorAll('.faq-item').forEach(function(item){
                         const question = item.querySelector('according-button').innerText.toLowerCase();
                         const answer = item.querySelector('.according-body').innerText.toLowerCase();
@@ -78,11 +93,23 @@
                         });
                     });
                 }
-
+            },
+            methods:{
+                async submitMessage(){
+                    try{
+                        await ApiService.messageAPI.createMessage(this.formData)
+                        this.$notify.success('訊息已成功送出，我們會盡快回覆您');
+                        setTimeout(()=>{
+                            this.$router.push('/');
+                        },2000);
+                    }catch(error){
+                        this.$notify.error('訊息送出失敗，請稍後再試');
+                    }
+                }
             }
+        }
+    
 
-
-};
 </script>
 
 <style scoped>

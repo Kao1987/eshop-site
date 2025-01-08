@@ -56,7 +56,8 @@ const routes = {
     specialOffers: require('./routes/specialOffersRoutes'),
     tags: require('./routes/tagsRoutes'),
     users: require('./routes/usersRoutes'),
-    ranking: require('./routes/rankingRoutes')
+    ranking: require('./routes/rankingRoutes'),
+    message: require('./routes/messageRoutes')
 };
 
 // 動態註冊路由
