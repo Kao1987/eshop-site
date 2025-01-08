@@ -3,16 +3,12 @@
         <img :src="loadingGif" alt="載入中" class="loading-gif">
     </div>
     <div class="homepage container mt-5">
-        <!-- 圖片輪播 -->
+        <!-- 輪播圖片載入中 -->
         <div class="carousel-section">
             <div v-if="isLoading.carousel" class="loading-spinner">
                 <div class="spinner-border" role="status">
                     <span class="visually-hidden">加載中...</span>
                 </div>
-            </div>
-
-            <div v-else-if="errors.carousel" class="alert alert-warning">
-                {{ errors.carousel }} 
             </div>
             <!-- 輪播圖片 -->
             <div v-else-if="carouselImages && carouselImages.length" 
@@ -41,7 +37,7 @@
                         <div class="carousel-image-container">
                             <img :src="$getImageUrl(image.url,'carousel')" 
                                 class="d-block w-100" 
-                                :alt="'促銷圖片'"
+                                :alt="'輪播圖片'"
                                 @error="handleCarouselImageError">
                         </div>
                     </div>
@@ -190,8 +186,8 @@ import loadingGif from '@/assets/loading.gif'
 
 const FALLBACK_DATA = {
         carouselImages:[
-            {url:'/static/img/welcome.jpg'},
-            {url:'/static/img/welcome.jpg'},
+        {url:'/static/img/happynewyear.png'},
+        {url:'/static/img/welcome.jpg'},
         ]
     };
 
@@ -211,8 +207,6 @@ export default {
             monthSalesRanking: [],
             // 特價商品
             specialOffers: [],
-            // 輪播圖片
-            carouselImages: [],
             // 產品列表
             products: [],
             // 儲存倒數計時
@@ -230,6 +224,7 @@ export default {
                 products: null,
             },
             randomProducts:null,
+            carouselImages: [...FALLBACK_DATA.carouselImages],
 
         }
     },
@@ -278,6 +273,9 @@ export default {
             }
         },
         handleCarouselImageError(e){
+            if (e.target.src.includes('happynewyear.png')) {
+                return;
+            }
             e.target.onerror = null;
             e.target.src = '/static/img/happynewyear.png'
         },
@@ -357,10 +355,11 @@ export default {
             }
         },
         async loadCarouselData() {
+
             try {
                 const response = await ApiService.carouselAPI.getAllCarouselImages();
                 
-                if (Array.isArray(response)) {
+                if (Array.isArray(response) && response.length > 0) {
                     this.carouselImages = response
                     .filter(image => image.visible)
                     .map(image => ({
@@ -368,10 +367,14 @@ export default {
                         url: this.$getImageUrl(image.url,'carousel')
                     }));
                     // console.log('處理後的輪播圖數據:', this.carouselImages);
+                } else {
+                    this.carouselImages = FALLBACK_DATA.carouselImages;
                 }
             } catch (error) {
                 console.error('載入輪播圖失敗:', error);
-                this.handleError('carousel',error);
+                this.carouselImages = FALLBACK_DATA.carouselImages;
+            }finally{
+                this.isLoading.carousel = false;
             }
         },
         async loadProductsData(){
