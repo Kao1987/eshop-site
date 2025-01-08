@@ -42,7 +42,7 @@
                             <img :src="$getImageUrl(image.url,'carousel')" 
                                 class="d-block w-100" 
                                 :alt="'促銷圖片'"
-                                @error="handleImageError">
+                                @error="handleCarouselImageError">
                         </div>
                     </div>
                 </div>
@@ -276,6 +276,9 @@ export default {
             if (section === 'carousel') {
                 this.carouselImages = FALLBACK_DATA.carouselImages;
             }
+        },
+        handleCarouselImageError(e){
+            e.target.src = '/static/img/happynewyear.png'
         },
         async loadHomePageData(){
             try{
