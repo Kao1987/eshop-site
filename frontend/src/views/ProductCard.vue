@@ -2,9 +2,9 @@
 <template>
         <div class="product-card">
             <router-link :to="{name: 'ProductDetail',params:{id:productId}}">
-            <img :src="productImageUrl" class="product-image" alt="Product Image" @error="imageError">
-            <h3 class="product-name" :title="product.name">{{ product.name }}</h3>
-            <p class="card-text">{{ formattedPrice }} 元</p>  
+                <img :src="productImageUrl" class="product-image" alt="Product Image" @error="imageError">
+                <h3 class="product-name" :title="product.name">{{ product.name }}</h3>
+                <p class="card-text">{{ formattedPrice }} 元</p>  
             </router-link>
             <button class="btn btn-primary" 
             @click="handleAddToCart"
@@ -17,6 +17,7 @@
 <script>
 import { computed , ref } from 'vue';
 import ApiService from '@/services/api';
+import { getImageUrl } from '@/utils/imageUrl';
 
 export default {
     name: 'ProductCard',
@@ -41,8 +42,9 @@ export default {
     setup(props, {emit}) {
         // 計算屬性
         const isAdding = ref(false);
+        const hasError = ref(false);
         const productId = computed(() => String(props.product.id).trim());
-        const productImageUrl = computed(() => props.product.image ? props.product.image : '/img/wrong.png');
+        const productImageUrl = computed(() => getImageUrl(props.product.image,'product'));
         const formattedPrice = computed(() =>{
         const price = parseFloat(props.product.price);
             return isNaN(price) 
@@ -65,7 +67,10 @@ export default {
             }, 1000); // 1 秒後重製按鈕
         };
         const imageError = (event) => {
-            event.target.src = '/img/wrong.png'; // 預設圖片
+            if(!hasError.value){
+                hasError.value = true;
+                event.target.src = getImageUrl('','icon'); // 預設圖片
+            }
         };
 
         return {

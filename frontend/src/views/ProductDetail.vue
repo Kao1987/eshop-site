@@ -105,6 +105,8 @@ import { handleApiError } from '@/utils/errorHandler';
 import { ref, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import { useRoute,useRouter} from 'vue-router';
+import { getImageUrl } from '@/utils/imageUrl';
+
 
 export default {
     name: 'ProductDetail',
@@ -112,7 +114,7 @@ export default {
         const store = useStore();
         const route = useRoute();
         const router = useRouter();
-
+        const hasError = ref(false);
         const product = ref(null);
         const productId = computed(()=> route.params.id);
         const productImageUrl = computed(()=> {
@@ -132,9 +134,7 @@ export default {
                 // 處理圖片路徑
                 product.value = {
                     ...productData,
-                    image: productData.image ? 
-                        `${process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL}/${productData.image.split('/').pop()}` : 
-                        '/img/default-product.jpg'
+                    image:getImageUrl(productData.image,'product'),
                 };
             }catch(error){
                 console.error("加載商品詳情時出錯",error);
@@ -142,7 +142,10 @@ export default {
             }
         };
         const handleImageError = (event) => {
-            event.target.src = '/img/wrong.png';
+            if(!hasError.value) {
+                hasError.value = true;
+                event.target.src =getImageUrl('','icon');
+            }
         };
         const addToCart=()=>{
             if (!isLoggedIn.value) {
@@ -187,6 +190,7 @@ export default {
                 quantity,
                 increaseQuantity,
                 decreaseQuantity,
+                getImageUrl,
             };
     },
 };

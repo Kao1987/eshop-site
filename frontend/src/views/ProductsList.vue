@@ -54,6 +54,7 @@ import { useRouter, useRoute } from 'vue-router';
 import ProductCard from './ProductCard.vue';
 import ApiService from '@/services/api';
 import { handleApiError } from '@/utils/errorHandler';
+import { getImageUrl } from '@/utils/imageUrl';
 
 
 
@@ -112,12 +113,12 @@ export default {
                         id: String(product.id).trim(),
                         price:Number(product.price),
                         tags: Array.isArray(product.tags) ? product.tags : [],
-                        image: product.image ? `${process.env.VUE_APP_PRODUCT_IMAGE_BASE_URL}/${product.image.split('/').pop()}` : '/img/default-product.jpg'
+                        image: getImageUrl(product.image,'product'),
                     }))
                 }else{
                     products.value =[];
                 }
-                console.log('加載後的商品列表:',products.value);
+                // console.log('加載後的商品列表:',products.value);
                 priceRange.value = maxPrice.value;
                 // 獲取所有標籤     
                 const tagsSet = new Set();
@@ -172,7 +173,7 @@ export default {
         onMounted(() => {
             searchQuery.value = route.query.search || '';
             loadProducts().then(() => {
-                console.log('加載後的商品列表:', products.value);
+                // console.log('加載後的商品列表:', products.value);
             });
         });
         watch(
