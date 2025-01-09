@@ -273,11 +273,12 @@ export default {
             }
         },
         handleCarouselImageError(e){
+            if (!e || !e.target) return;
             if (e.target.src.includes('happynewyear.png')) {
                 return;
             }
             e.target.onerror = null;
-            e.target.src = '/static/img/happynewyear.png'
+            e.target.src = './static/img/happynewyear.png'
         },
         async loadHomePageData(){
             try{
