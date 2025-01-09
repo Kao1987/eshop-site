@@ -1,4 +1,6 @@
 {
+    "_comment": "backend/package.json - 這是後端項目的 package.json 文件",
+
     "name": "eshop-backend",
     "version": "1.0.0",
     "engines": {

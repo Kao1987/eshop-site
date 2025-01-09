@@ -1,4 +1,5 @@
 {
+  "_comment": "package.json - 這是根目錄的 package.json 文件",
   "name": "eshop-site",
   "version": "0.1.0",
   "private": true,

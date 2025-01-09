@@ -1,3 +1,4 @@
+// frontend/vue.config.js
 const { defineConfig } = require('@vue/cli-service');
 const webpack = require('webpack');
 const CompressionWebpackPlugin = require('compression-webpack-plugin');
@@ -29,6 +30,7 @@ module.exports = defineConfig({
                     ? 'https://ecshop-backend.onrender.com/api/img/products'
                     : 'http://localhost:5002/api/img/products'
             );
+            env.NODE_ENV = JSON.stringify(process.env.NODE_ENV);
             return args;
         });
         config.resolve.alias
@@ -52,7 +54,9 @@ module.exports = defineConfig({
             new webpack.DefinePlugin({
                 __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: JSON.stringify(false),
                 __VUE_OPTIONS_API__: JSON.stringify(true),
-                __VUE_PROD_DEVTOOLS__: JSON.stringify(false)
+                __VUE_PROD_DEVTOOLS__: JSON.stringify(false),
+                'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+
             }),
             new webpack.ProvidePlugin({
                 Buffer: ['buffer', 'Buffer'],
