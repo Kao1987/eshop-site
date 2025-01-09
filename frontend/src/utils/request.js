@@ -12,13 +12,15 @@ const request = axios.create({
 // 請求攔截器
 request.interceptors.request.use(
     config => {
-        console.log('🚀 發送請求:', {
-            url: config.url,
-            method: config.method,
-            baseURL: config.baseURL,
-            headers: config.headers,
-            data: config.data
-        });
+        if(process.env.NODE_ENV === 'production'){
+            console.log('🚀 發送請求:', {
+                url: config.url,
+                method: config.method,
+                baseURL: config.baseURL,
+                headers: config.headers,
+                data: config.data
+            });
+        }
         return config;
     },
     error => {
@@ -30,26 +32,30 @@ request.interceptors.request.use(
 // 響應攔截器
 request.interceptors.response.use(
     response => {
-        console.log('✅ 成功回應:', {
-            url: response.config.url,
-            method: response.config.method,
-            baseURL: response.config.baseURL,
-            data: response.config.data,
-            status: response.status
-        });
+        if(process.env.NODE_ENV === 'production'){
+            console.log('✅ 成功回應:', {
+                url: response.config.url,
+                method: response.config.method,
+                baseURL: response.config.baseURL,
+                data: response.config.data,
+                status: response.status
+            });
+        }
         return response.data;
     },
     error => {
         if(error.response){
-            console.log('✅ 收到回應:', {
-                url: error.config?.url,
-                method: error.config?.method,
-                baseURL: error.config?.baseURL,
-                headers: error.config?.headers,
-                data: error.config?.data,
-                status: error.response.status,
-                statusText: error.response.statusText,
-            });
+            if(process.env.NODE_ENV === 'production'){
+                console.log('✅ 收到回應:', {
+                    url: error.config?.url,
+                    method: error.config?.method,
+                    baseURL: error.config?.baseURL,
+                    headers: error.config?.headers,
+                    data: error.config?.data,
+                    status: error.response.status,
+                    statusText: error.response.statusText,
+                });
+            }
             if(error.response.status === 401){
                 alert('登入已過期，請重新登入');
                 localStorage.removeItem('authToken');
@@ -71,6 +77,6 @@ request.interceptors.response.use(
         }
         console.error('❌ 請求發送失敗:', error);
         return Promise.reject(error);
-    },
-);
+    }
+)
 export default request;
