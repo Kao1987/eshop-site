@@ -1,47 +1,65 @@
 <!-- frontend/src/views/ProductsList.vue -->
 <template>
-    <div class="container mt-5">
-        <h2 class="mb-4">商品列表</h2>
-        <div v-if="filteredProducts.length === 0">
-            <p>暫無符合條件的商品，請修改查詢條件！</p>
-        </div>
-        <div class="row">
-            <div class="tag-filter mb-4">
-            <h4>選擇標籤</h4>
-                <div>
-                    <button 
+    <div class="container">
+        <div class="mainArea text-center">
+            <h2 class="mb-4 section-title">商品列表</h2>
+            <h4 class="filter-title">篩選條件</h4>
+
+            <!-- 篩選區域 -->
+            <div class="filter-container">
+                <!-- 篩選標籤區域 -->
+                <div class="col-lg-10 mx-auto">
+                    <h4 class="filter-title">選擇標籤</h4>
+                    <div class="tag-container">
+                        <button 
                         v-for="tag in availableTags" 
                         :key="tag" 
                         @click="toggleTag(tag)"
                         :class="{'btn': true, 'btn-primary': selectedTags.includes(tag), 'btn-outline-primary': !selectedTags.includes(tag)}"
-                        class="me-2 mb-2"
+                        class="tag-btn"
                     >
-                        {{ tag }}
-                    </button>
+                            {{ tag }}
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="search-bar mb-4">
-                <input type="text" v-model="searchQuery" class="form-control" placeholder="搜尋產品...">
-            </div>
-            <div class="col-md-3">
-                <h4>篩選條件</h4>
-                <div>
-                    <label>價格區間</label>
-                    <input type="range" v-model="priceRange" min="0" :max="maxPrice" step="500"/>
-                    <p>價格：{{ priceRange }}元</p>
+                <!-- 搜尋區域 -->
+                <div class="search-bar mb-4">
+                    <input type="text" 
+                        v-model="searchQuery" 
+                        class="form-control" 
+                        placeholder="請輸入你想搜尋的關鍵字"
+                        >
                 </div>
-
+                <!-- 篩選價格-->
+                <div class="filter-section mb-4">
+                    <div class="price-filter">
+                        <label class="price-label">價格區間</label>
+                        <input 
+                        type="range" 
+                        v-model="priceRange" 
+                        min="0" :max="maxPrice" 
+                        step="500" class="price-slider form-range"
+                        />
+                        <p class="price-value">現在最高價格：{{ priceRange }}元</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-md-3 mb-4" v-for="product in filteredProducts" :key="product.id">
+    <!-- 商品列表區域 -->
+    <div v-if="filteredProducts.length ===  0" class="no-products">
+        <p style="text-align: center; font-size: 2rem; color:red;">暫無符合條件的商品，請修改查詢條件！</p>
+    </div>
+    <div class="product-container mt-4">
+        <div class="product-grid">
+                <div class="product-card-wrapper" v-for="product in filteredProducts" 
+                :key="product.id" 
+                >
                     <ProductCard 
                     :product="product"
                     @add-to-cart="addToCart"
                     />
-            </div>
+                </div>
         </div>
     </div>
 
@@ -197,27 +215,146 @@ export default {
             searchQuery,
             toggleTag,
             addToCart,
+            priceRange,
         };
     }
 };
 </script>
 <style scoped>
-.product-name{
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 200px;
+.container{
+    max-width: 1400px;
+    width: 95%;
+    margin: 0 auto;
+    padding-top: 1rem;
+    background-color:lightskyblue ;
+    border-radius: 2rem;
+}
+.section-title{
+    font-size: 2rem;
+    color:#2c3e50;
+    margin-bottom: 2rem;
+}
+.filter-title{
+    font-size: 1.2rem;
+    color:#2c3e50;
+    margin-bottom: 1rem;
+}
+.filter-container{
+    width: 100%;
+    border-radius: 1rem;
+    padding: 0.5rem;
+    background-color:aliceblue;
+}
+.tag-container{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap:0.75rem;
+    margin-bottom: 1rem;
+}
+.tag-btn{
+    font-size: 1rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.mainArea{
+    justify-content: center;
+    flex-wrap: nowrap;
+}
+.search-bar {
+    max-width: 600px;
+    margin: 1.5rem auto;
+}
+.search-input {
+    max-width: 100%;
+    font-size: 1.1rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 2rem;
+    border: 1px solid #e0e0e0;
+}
+.price-filter {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.price-label {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
     display: block;
 }
 
+.price-slider {
+    width: 100%;
+    margin: 1rem 0;
+}
+
+.price-value {
+    font-size: 2rem;
+    color:royalblue;
+}
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+.product-info{
+    padding: 1.5rem;
+}
+.product-name{
+    font-size: 1.2rem;
+    line-height: 1.5;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+@media (max-width: 1200px) {
+
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .section-title {
+        font-size: 2rem;
+    }
+}
+
 @media (max-width: 768px) {
-    .product-name{
-        max-width: 150px;
+    .container {
+        padding:1rem;
+    }
+    
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 1rem;
+    }
+    
+    .section-title {
+        font-size: 1.75rem;
+    }
+    
+    .tag-btn {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
     }
 }
 @media (max-width: 576px) {
-    .product-name{
-        max-width: 100px;
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+        gap: 0.75rem;
+    }
+    .search-input{
+        padding: 0.5rem 1rem;
     }
 }
 </style>

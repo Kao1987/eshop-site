@@ -74,11 +74,11 @@
                     <i class="fas fa-shopping-cart me-2"></i>加入購物車
                 </button>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary btn-lg flex-grow-1">
+                    <!-- <button class="btn btn-outline-primary btn-lg flex-grow-1">
                     <i class="far fa-heart me-2"></i>加入收藏
-                    </button>
+                    </button> -->
                     <button class="btn btn-outline-secondary btn-lg flex-grow-1" @click="goBack">
-                    <i class="fas fa-arrow-left me-2"></i>返回
+                    <i class="fas fa-arrow-left me-2"></i>返回商品列表
                     </button>
                 </div>
                 </div>
@@ -197,6 +197,11 @@ export default {
 </script>
 
 <style scoped>
+.container{
+    max-width: 1400px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
 .product-detail-page {
 background-color: #f8fafc;
 min-height: 100vh;

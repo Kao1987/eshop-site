@@ -87,14 +87,17 @@ export default {
 
 <style scoped>
 .product-card {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    padding: 1rem;
-    border-radius: 8px;
+    width:100%;
+    margin: 0 auto;
+    border-radius: 1rem;
     transition: transform 0.3s ease;
     background: white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+}
+.product-card:hover{
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 .product-name {
     font-size: 1rem;
@@ -104,16 +107,22 @@ export default {
     text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 100%;
+    justify-content: center;
 }
 .product-name:hover {
     cursor: pointer;
 }
-
+.product-image-wrapper{
+    position:relative ;
+    padding-top: 1rem;
+    overflow: hidden;
+    margin:10px;
+}
 .product-image {
-    width: 100px;
-    height: 100px;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    margin-bottom: 10px;
+    transition: transform 0.3s ease;
 }
 .btn-primary {
     background-color: #007bff;
