@@ -120,6 +120,10 @@ app.use((req, res, next) => {
     next();
   });
 
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+});
+
 // 伺服器啟動函數
 const startServer = async () => {
     try {
