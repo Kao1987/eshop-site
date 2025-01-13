@@ -109,7 +109,7 @@
                         </div>
                 </div>
                 <div class="product-details">
-                    <div class="rank-name">{{ index + 1 }}. {{ product.name }}</div>
+                    <div class="product-name">{{ index + 1 }}. {{ product.name }}</div>
                     <div class="sales-count">賣出 {{ product.sales_count }}件</div>
                 </div>
             </div>
@@ -142,7 +142,7 @@
                             </div>
                     </div>
                     <div class="product-details">
-                        <div class="rank-name">{{ index + 1 }}. {{ product.name }}</div>
+                        <div class="product-name">{{ index + 1 }}. {{ product.name }}</div>
                         <div class="sales-count">賣出 {{ product.sales_count }}件</div>
                     </div>
                 </div>
@@ -153,22 +153,28 @@
     <div class="section-divider"></div>
 
     <!-- 特價商品倒數計時 -->
-    <div class="countdown-special-offers mt-4" v-if="processedSpecialOffers.length > 0">
+    <div class="sales-ranking mt-4" v-if="processedSpecialOffers.length > 0">
         <h2>特價倒數計時商品</h2>
         <div class="product-list">
-                <div v-for="(offer, index) in processedSpecialOffers" 
-                :key="index" class="product-item">
+            <div v-for="(offer, index) in processedSpecialOffers" :key="index" class="product-item">
                 <div class="product-thumbnail-wrapper">
                     <img :src="$getImageUrl(offer.image,'product')" 
                         class="product-thumbnail" 
-                        @error="handleImageError">
+                        @error="handleSpecialOfferImageError">
+                    <div class="product-overlay">
+                        <button class="view-details-btn"
+                                @click="viewDetailsById(offer.product_id)"
+                                :disabled="!offer.product_id">
+                            查看詳情
+                        </button>
+                    </div>
                 </div>
                 <div class="product-details">
                     <div class="product-name">{{ offer.name }}</div>
-                    <div class="price">特價 {{ offer.price }}元</div>
-                    <div class="countdown-timer">
-                        倒數{{ formatTime(offer.countdown) }}
-                    </div>
+                    <div class="price" style="color:red;">特價 {{ formatPrice(offer.price) }}元</div>
+                    <div class="countdown-timer" :class="offer.status">
+                        {{ offer.status === 'upcoming' ? '即將開始' : '剩餘時間' }}
+                        倒數{{ formatTime(offer.countdown) }}</div>
                 </div>
             </div>
         </div>
@@ -193,9 +199,6 @@ const FALLBACK_DATA = {
 
 export default {
     name: 'HomePage',
-    beforeUnmount() {
-                this.clearCountdownIntervals();
-            },
     data() {
         return {
             isPageLoading: true,
@@ -233,17 +236,7 @@ export default {
             if(this.isPageLoading){
                 window.location.reload();
             }
-        }, 15000);
-        this.loadHomePageData()
-        .then(()=>{
-            this.isPageLoading = false;
-        })
-        .catch((error)=>{
-            console.error('載入首頁資料失敗',error);
-        })
-        .finally(()=>{
-            clearTimeout(this.loadingTimeout);
-        });
+        }, 10000);
         // console.log('環境變數:', {
         //     API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
         //     CAROUSEL_IMAGE_URL: process.env.VUE_APP_CAROUSEL_IMAGE_BASE_URL,
@@ -251,7 +244,7 @@ export default {
         // });
         try{
             await this.loadHomePageData();
-            if(this.carouselImages.length && this.carouselImages.length > 0){
+            if(this.carouselImages.length > 0){
                 await this.$nextTick();
                 this.initializeCarousel();
             }
@@ -262,6 +255,9 @@ export default {
             this.startCountdown();
         }catch(error){
             console.error('讀取首頁資料失敗',error);
+        }finally{
+            this.isPageLoading = false;
+            clearTimeout(this.loadingTimeout);
         }
     },
     methods: {
@@ -272,19 +268,22 @@ export default {
                 this.carouselImages = FALLBACK_DATA.carouselImages;
             }
         },
+        handleSpecialOfferImageError(e) {
+        if (!e || !e.target) return;
+        e.target.onerror = null;
+            e.target.src = '/img/wrong.png';
+        },
         handleCarouselImageError(e){
             if (!e || !e.target) return;
-            if (e.target.src.includes('happynewyear.png')) {
-                return;
-            }
+            if (e.target.src.includes('happynewyear.png')) return;
             e.target.onerror = null;
-            e.target.src = './static/img/happynewyear.png'
+            e.target.src = '/static/img/happynewyear.png'
         },
         async loadHomePageData(){
             try{
                 await this.loadProductsData();
                 this.randomProducts = this.getRandomProducts(5);
-                this.loadCarouselData(),
+                await this.loadCarouselData();
 
                 setTimeout(() => {
                     this.loadSalesData();
@@ -410,32 +409,58 @@ export default {
         startCountdown(){
             this.clearCountdownIntervals();
             if(!this.specialOffers || this.specialOffers.length === 0) return;
-    
-            this.specialOffers.forEach((offer, index)=>{
-                if (!offer.countdown) return;
+            
+            const updateAllCountdowns = ()=>{
+                const now = Date.now();
+                this.specialOffers = this.specialOffers.map(offer => {
+                    const startTime = new Date(offer.start_time).getTime();
+                    const endTime = offer.end_time ? new Date(offer.end_time).getTime()
+                                    : startTime + offer.duration * 1000;
 
-                const interval = setInterval(()=> {
-                    if (offer.countdown > 0) {
-                        this.specialOffers[index] = {
-                        ...offer,
-                        countdown: offer.countdown - 1,
-                        };
-                    } else {
-                        clearInterval(interval);
+                    let remainingTime = 0;
+                    let status = 'active';
+
+                    if(now < startTime){
+                        remainingTime = startTime - now;
+                        status = 'upcoming';
+                    }else if(now >= endTime && now <=endTime){
+                        remainingTime = endTime - now;
+                        status = 'active';
+                    }else{
+                        remainingTime = 0;
+                        status = 'ended';
                     }
-        }, 1000);
-                    this.countdownIntervals.push(interval);
-            });
+                    return {
+                        ...offer,
+                        countdown: Math.floor(remainingTime / 1000),
+                        status,
+                    };
+                });
+            };
+            updateAllCountdowns();
+            const interval = setInterval(updateAllCountdowns, 1000);
+            this.countdownIntervals.push(interval);
         },
         clearCountdownIntervals() {
             this.countdownIntervals.forEach(interval => clearInterval(interval));
             this.countdownIntervals = [];
         },
         formatTime(seconds) {
-            const hours = Math.floor(seconds / 3600);
+            if(seconds <= 0) return '已結束';
+
+            const days = Math.floor(seconds / (24*3600));
+            const hours = Math.floor((seconds % (24*3600)) / 3600);
             const minutes = Math.floor((seconds % 3600) / 60);
             const remainingSeconds = seconds % 60;
-            return `${hours}時${minutes}分${remainingSeconds}秒`;
+            if(days > 0){
+                return `${days}天${hours}時${minutes}分${remainingSeconds}秒`;
+            }else if(hours > 0){
+                return `${hours}時${minutes}分${remainingSeconds}秒`;
+            }else if(minutes > 0){
+                return `${minutes}分${remainingSeconds}秒`;
+            }else{
+                return `${remainingSeconds}秒`;
+            }
         },
         getProductImage(productId) {
             const product = this.products.find(p => p.id === Number(productId));
@@ -485,35 +510,38 @@ export default {
 
             }
         },
+        formatPrice(price) {
+            if (!price && price !== 0) return '0';
+            return price.toLocaleString('zh-TW', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        },
     },
     beforeUnmount(){
+        this.clearCountdownIntervals();
         if(this.isPageLoading){
             clearTimeout(this.loadingTimeout);
         }
     },
     computed:{
         processedSpecialOffers() {
-            if (!this.specialOffers || !this.products) return [];
-
-            const now = new Date().getTime();
-
+            const now = Date.now();
             return [...this.specialOffers]
             .filter(offer => {
                 const startTime = new Date(offer.start_time).getTime();
-                const endTime = startTime + (offer.duration * 1000);
-                return now >= startTime && now <= endTime;
+                const endTime = new Date(offer.end_time).getTime();
+                return( 
+                    ((now >= startTime && now <= endTime) || now<startTime) 
+                    && offer.countdown > 0 
+                    && offer.price >0
+                );
             })
-            .map(offer => {
-                const product = this.products.find(p => p.id === offer.product_id);
-                const startTime = new Date(offer.start_time).getTime();
-                const remainingTime = Math.max(0,
-                 startTime + (offer.duration * 1000) - now);
-                return {
-                    ...offer,
-                    name: product ? product.name : '未知商品',
-                    image: product ? product.image : '/img/wrong.png',
-                    countdown:Math.floor(remainingTime / 1000)
-                };
+            .sort((a,b)=> {
+                if(a.status !==b.status){
+                    return a.status === 'active' ? -1 : 1;
+                }
+                return a.countdown - b.countdown;
             });
         },
     }
@@ -707,7 +735,8 @@ export default {
 }
 
 .product-name {
-    font-size: 1rem;      /* 16px */
+    text-align: center;
+    font-size: 1.5rem;   
     line-height: 1.5;
     margin-bottom: 0.5rem;
     font-weight: bold;    /* 新增粗體 */
@@ -772,7 +801,7 @@ export default {
     padding: 1rem;
 }
 
-.product-item {
+.countdown-special-offers .product-item {
     width: 100%;
     margin: 0;
     background: white;
@@ -782,6 +811,32 @@ export default {
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
+}
+
+/* 如有額外需要一致的圖片與文字區塊樣式，亦可同步調整 */
+.countdown-special-offers .product-thumbnail-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 100%;  /* 維持1:1比例 */
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+.countdown-special-offers .product-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.countdown-special-offers .price,
+.countdown-special-offers .countdown-timer {
+    font-size: 1rem;
+    color: #333;
+    margin-top: 0.5rem;
+}
+/* 特別設定倒數時間文字顏色 */
+.countdown-special-offers .countdown-timer {
+    color: #e74c3c;
+    font-weight: bold;
 }
 
 .product-item:hover {
@@ -813,16 +868,10 @@ export default {
     flex-direction: column;
     gap: 0.5rem;
 }
-
-.rank-name {
-    font-size: 1rem;
-    font-weight: 600;
-    line-height: 1.4;
-}
-
 .sales-count {
-    font-size: 0.9rem;
-    color: #666;
+    text-align: center;
+    font-size: 1.2rem;
+    color:crimson;
 }
 
 /* 響應式調整 */
@@ -850,7 +899,7 @@ export default {
         gap: 10px;
     }
     
-    .rank-name {
+    .product-name {
         font-size: 0.9rem;
     }
     
@@ -911,32 +960,6 @@ export default {
     flex-direction: column;
     justify-content: space-between;
 }
-
-/* 響應式設計調整 */
-@media (max-width: 1200px) {
-    .product-grid,
-    .product-list {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 16px;
-    }
-}
-
-@media (max-width: 768px) {
-    .product-grid,
-    .product-list {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 12px;
-    }
-}
-
-@media (max-width: 576px) {
-    .product-grid,
-    .product-list {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 10px;
-    }
-}
-
 /* 統一推薦商品卡片樣式 */
 .product-grid .product-card {
     width: 100%;
@@ -979,37 +1002,69 @@ export default {
     gap: 20px;
     padding: 1rem;
 }
-
-/* 響應式調整 */
-@media (max-width: 768px) {
-    .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 16px;
-    }
+/* 文字大小最佳實踐 */
+.section-title {
+    font-size: 2rem;      /* 32px */
+    margin-bottom: 1rem;
 }
 
-@media (max-width: 576px) {
-    .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 12px;
-    }
+.section-subtitle {
+    font-size: 1.125rem;  /* 18px */
+    margin-bottom: 2rem;
 }
 
+.product-name {
+    font-size: 1rem;      /* 16px */
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+    font-weight: bold;    /* 新增粗體 */
+}
+
+.product-name {
+    font-weight: bold;    /* 新增粗體 */
+}
 /* 響應式設計調整 */
 @media (max-width: 1600px) {
     .homepage.container {
         max-width: 90vw;
     }
 }
-
+@media (max-width: 1200px) {
+    .product-grid,
+    .product-list {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+    }
+    .homepage.container {
+        max-width: 960px;
+    }
+    .carousel-section {
+        max-width: 624px;  /* 960px * 0.65 */
+    }
+}
 @media (max-width: 992px) {
     .homepage.container {
         max-width: 95vw;
         padding: 0 10px;
     }
+    .homepage.container {
+        max-width: 720px;
+    }
+    .carousel-section {
+        max-width: 720px; 
+    }
+    .carousel-image-container {
+        padding-top: 48%; 
+    }
 }
 
 @media (max-width: 768px) {
+    .section-title {
+        font-size: 1.75rem;  /* 28px */
+    }
+    .section-subtitle {
+        font-size: 1rem;     /* 16px */
+    }
     .homepage.container {
         width: 100%;
         max-width: 100%;
@@ -1019,16 +1074,32 @@ export default {
     .carousel-image-container {
         padding-top: 57.33%; /* 81.9% * 0.7 = 57.33% */
     }
+    .product-grid,
+    .product-list {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+    }
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 16px;
+    }
 }
 
 @media (max-width: 576px) {
     .homepage.container {
+        width: 100%;
         padding: 0 5px;
     }
     
     .carousel-image-container {
         padding-top: 66.25%; /* 94.64% * 0.7 = 66.25% */
     }
+    .product-grid,
+    .product-list {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+    }
+
 }
 
 /* 新增分隔線樣式 */
@@ -1062,77 +1133,6 @@ export default {
     }
 }
 
-@media (max-width: 1200px) {
-    .homepage.container {
-        max-width: 960px;
-    }
-    .carousel-section {
-        max-width: 624px;  /* 960px * 0.65 */
-    }
-}
 
-@media (max-width: 992px) {
-    .homepage.container {
-        max-width: 720px;
-    }
-    .carousel-section {
-        max-width: 720px;  /* 平板尺寸下佔滿寬度 */
-    }
-    .carousel-image-container {
-        padding-top: 48%;  /* 調整圖片比例 */
-    }
-}
 
-@media (max-width: 768px) {
-    .homepage.container {
-        max-width: 540px;
-        padding: 0 10px;
-    }
-    .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 16px;
-    }
-}
-
-@media (max-width: 576px) {
-    .homepage.container {
-        width: 100%;
-        padding: 0 8px;
-    }
-    .carousel-image-container {
-        padding-top: 56%;  /* 手機版保持 16:9 比例 */
-    }
-}
-
-/* 文字大小最佳實踐 */
-.section-title {
-    font-size: 2rem;      /* 32px */
-    margin-bottom: 1rem;
-}
-
-.section-subtitle {
-    font-size: 1.125rem;  /* 18px */
-    margin-bottom: 2rem;
-}
-
-.product-name {
-    font-size: 1rem;      /* 16px */
-    line-height: 1.5;
-    margin-bottom: 0.5rem;
-    font-weight: bold;    /* 新增粗體 */
-}
-
-.rank-name {
-    font-weight: bold;    /* 新增粗體 */
-}
-
-/* 響應式文字大小 */
-@media (max-width: 768px) {
-    .section-title {
-        font-size: 1.75rem;  /* 28px */
-    }
-    .section-subtitle {
-        font-size: 1rem;     /* 16px */
-    }
-}
 </style>

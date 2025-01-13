@@ -226,7 +226,7 @@ export default {
     width: 95%;
     margin: 0 auto;
     padding-top: 1rem;
-    background-color:lightskyblue ;
+    background-color:aliceblue;
     border-radius: 2rem;
 }
 .section-title{
@@ -243,7 +243,12 @@ export default {
     width: 100%;
     border-radius: 1rem;
     padding: 0.5rem;
-    background-color:aliceblue;
+    background-color:#f0f8ff;
+}
+.product-container{
+    background-color: #f0f8ff;
+    padding: 1rem;
+    border-radius: 1rem;
 }
 .tag-container{
     display: flex;

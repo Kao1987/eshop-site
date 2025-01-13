@@ -7,14 +7,14 @@
         </div>
 
         <div class="image-grid mb-4">
-            <div v-for="image in carouselImages" 
+            <div v-for="(image,index) in carouselImages" 
                 :key="image.id" 
                 class="image-card"
             >
                 <div class="image-wrapper">
                     <img :src="$getImageUrl(image.url, 'carousel')"
-                            @load="onImgLoad(event,index)" 
-                            @error="onImgError(event,index)"
+                            @load="onImgLoad($event,index)" 
+                            @error="onImgError($event,index)"
                             class="carousel-image"
                             alt="輪播圖片"
                     >                    

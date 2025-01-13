@@ -156,13 +156,14 @@ const startServer = async () => {
         process.exit(1);
     }
 };
+// // 雜湊比對
 // const bcrypt = require('bcryptjs');
 
 // // 從資料庫撈出來的雜湊值
-// const hashedFromDB = "6	test1224@test.com	$2a$10$9vK82f4dmRJKEhRoYvB6Ou//dsMkjpD7QQwp0j.teWzg0NF5.m8p.";
+// const hashedFromDB = "$2a$10$pTLqWIoLjFWtJ0aPySSKeerwkANaqeLiOZ0PBCKW/GyNSFxtJpu.u";
 
 // // 你聲稱要登入的密碼
-// const plainPassword = "test1224";
+// const plainPassword = "test1225";
 
 // (async () => {
 //   const isMatch = await bcrypt.compare(plainPassword, hashedFromDB);
@@ -170,11 +171,11 @@ const startServer = async () => {
 // })();
 // // 雜湊驗算測試
 // (async () => {
-//   const newHash = await bcrypt.hash("test1224", 10);
-//   console.log(newHash);  // 得到 $2a$10$xxxx....
+//   const newHash = await bcrypt.hash("test1225", 10);
+//   console.log(newHash);
 // })();
 
 // 啟動伺服器
-startServer();
+startServer();  
 
 module.exports = app;

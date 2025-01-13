@@ -78,6 +78,14 @@ export default {
 </script>
 
 <style scoped>
+*{
+  box-sizing: border-box;
+}
+html,body{
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
 body{
   margin: 0;
   padding: 0;

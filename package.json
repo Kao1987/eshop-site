@@ -48,6 +48,7 @@
     "eslint-plugin-vue": "^9.32.0",
     "gh-pages": "^6.2.0",
     "nodemon": "^3.1.9",
+    "prettier": "^3.4.2",
     "webpack": "^5.97.0"
   },
   "eslintConfig": {

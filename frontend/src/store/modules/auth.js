@@ -34,7 +34,7 @@ export default {
                 ApiService.setHeader('Authorization','');
 
                 const response = await ApiService.userAPI.login(credentials);
-                console.log('完整登入回應:', response);
+                // console.log('完整登入回應:', response);
                 if (!response || !response.data) {
                     throw new Error('伺服器回應格式錯誤');
                 }
@@ -46,7 +46,7 @@ export default {
                     throw new Error('登入失敗');
                 }
                 const { data } = response;
-                console.log('Login Response Data:', data);
+                // console.log('Login Response Data:', data);
 
                 if (!data.token) {
                     throw new Error('無法取得用戶資料或 token');
@@ -56,15 +56,15 @@ export default {
                 
                 localStorage.setItem('authToken', token);
                 localStorage.setItem('user', JSON.stringify(user));
-                console.log('authToken stored:', token); 
-                console.log('Stored Token:', token);
-                console.log('Stored User:', user);
+                // console.log('authToken stored:', token); 
+                // console.log('Stored Token:', token);
+                // console.log('Stored User:', user);
                 commit('login', user);
                 
                 ApiService.setHeader('Authorization', `Bearer ${token}`);
                 return response;
             } catch (error) {
-                console.error('登入失敗:', error);
+                // console.error('登入失敗:', error);
                 throw error;
             }
         },
@@ -85,7 +85,7 @@ export default {
                     }
                     throw new Error('Token 驗證失敗');
             } catch (error) {
-                console.error('Token 驗證失敗:', error);
+                // console.error('Token 驗證失敗:', error);
                 commit('logout');
                 return false;
             }

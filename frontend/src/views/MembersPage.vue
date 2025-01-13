@@ -1,26 +1,33 @@
 <!-- frontend/src/views/MembersPage.vue -->
 <template>
-    <div class="member-page bg-light">
+    <div class="member-page">
         <div class="container py-4">
             <!-- 會員資訊卡片 -->
             <div class="member-profile mb-4">
                 <div class="profile-header d-flex align-items-center">
-                    <div class="avatar-circle me-3">
+                    <div class="avatar-circle me-3 position-relative">
                         <span class="initials">{{ getUserInitials }}</span>
                     </div>
-                    <div>
-                        <h2 class="mb-1">{{ userInfo.name }}</h2>
-                        <p class="text-muted mb-0">{{ userInfo.email }}</p>
-                        <button class="btn btn-secondary mt-2" @click="openEditModal"> 
-                            <i class="fas fa-edit me-2"></i>
-                            編輯個人資料
-                        </button>
+                    <div class="profile-info">
+                        <p class="member-data">會員帳號 ： {{ userInfo.email }}</p>
+                        <div class="button-group">
+                            <button class="btn btn-secondary me-2" @click="openEditModal"> 
+                                <i class="fas fa-edit me-2"></i>
+                                編輯個人資料
+                            </button>
+                            <!-- 登出按鈕 -->
+                            <div>
+                                <button class="btn btn-outline-danger" @click="handleLogout">
+                                    <i class="fas fa-sign-out-alt me-2"></i>登出
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- 主要內容區塊 -->
-            <div class="content-tabs mb-4">
+            <div class="content-tabs mb-4 main-content">
                 <ul class="nav nav-pills mb-3" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#profile">
@@ -38,27 +45,62 @@
                         </button>
                     </li>
                 </ul>
-
                 <div class="tab-content">
                     <!-- 個人資料頁籤 -->
                     <div class="tab-pane fade show active" id="profile">
-                        <div class="card">
+                        <div class="content-card">
                             <div class="card-body">
-                                <div class="info-group mb-3">
-                                    <label class="text-muted">會員姓名</label>
-                                    <p class="mb-0">{{ userInfo.name }}</p>
-                                </div>
-                                <div class="info-group mb-3">
-                                    <label class="text-muted">電子信箱</label>
-                                    <p class="mb-0">{{ userInfo.email }}</p>
-                                </div>
-                                <div class="info-group mb-3">
-                                    <label class="text-muted">聯絡電話</label>
-                                    <p class="mb-0">{{ userInfo.phone }}</p>
-                                </div>
-                                <div class="info-group">
-                                    <label class="text-muted">聯絡地址</label>
-                                    <p class="mb-0">{{ userInfo.address }}</p>
+                                <div class="content-grid">
+                                    <!-- 左側資料 -->
+                                    <div class="content-section" > 
+                                        <!-- 會員姓名 -->
+                                            <div class="info-block">
+                                                <div class="info-icon bg-primary-soft">
+                                                    <i class="fas fa-user text-primary"></i>
+                                                </div>
+                                                <div class="info-content">
+                                                    <label>會員姓名:</label>
+                                                    <p class="mb-0">{{ userInfo.name }}</p>
+                                                </div>
+                                            </div>
+                                        <!-- 聯絡電話 -->
+                                            <div class="info-block">
+                                                <div class="info-icon bg-success-soft">
+                                                    <i class="fas fa-phone text-success"></i>
+                                                </div>
+                                                <div class="info-content">
+                                                    <label>聯絡電話:</label>
+                                                    <p class="mb-0">{{ userInfo.phone }}</p>
+                                                </div>
+                                            </div>
+                                    </div> 
+                                    <!-- 分隔線 -->
+                                    <div class="content-divider">
+                                        <div class="vertical-divider"></div>
+                                    </div>
+                                    <!-- 右側資料 -->
+                                    <div class="content-section">
+                                        <!-- 電子信箱 -->
+                                        <div class="info-block">
+                                            <div class="info-icon bg-primary-soft">
+                                                <i class="fas fa-envelope text-purple"></i>
+                                            </div>
+                                            <div class="info-content">
+                                                <label>電子信箱:</label>
+                                                <p class="mb-0">{{ userInfo.email }}</p>
+                                            </div>
+                                        </div>
+                                        <!-- 聯絡地址 -->
+                                            <div class="info-block">
+                                                <div class="info-icon bg-warning-soft">
+                                                    <i class="fas fa-map-marker-alt text-warning"></i>
+                                                </div>
+                                                <div class="info-content">
+                                                    <label>聯絡地址:</label>
+                                                    <p class="mb-0">{{ userInfo.address }}</p>
+                                                </div>
+                                            </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -97,7 +139,7 @@
                     </div>
                     <!-- 收件地址頁籤 -->
                     <div class="tab-pane fade" id="addresses">
-                        <div class="card">
+                        <div class="content-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-3">
                                     <button class="btn btn-primary" @click="addRecipient">
@@ -110,13 +152,16 @@
                                         class="address-item mb-3 p-3 rounded"
                                     >
                                         <div class="address-content">
-                                            <h6 class="mb-2">{{ recipient.name }}</h6>
+                                            <h6 class="mb-2">收件人姓名 ： 
+                                                    {{ recipient.name }}</h6>
                                             <p class="mb-1">
                                                 <i class="fas fa-phone me-2 text-muted"></i>
+                                                聯絡電話 ： 
                                                 {{ recipient.phone }}
                                             </p>
                                             <p class="mb-0">
                                                 <i class="fas fa-map-marker-alt me-2 text-muted"></i>
+                                                收件地址 ： 
                                                 {{ recipient.address }}
                                             </p>
                                         </div>
@@ -165,7 +210,7 @@
                     </div>
                     <!-- 訂單記錄頁籤 -->
                     <div class="tab-pane fade" id="orders">
-                        <div class="card">
+                        <div class="content-card">
                             <div class="card-body">
                                 <div class="order-list">
                                     <div v-for="(order, index) in orders" 
@@ -208,13 +253,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- 登出按鈕 -->
-            <div class="text-center">
-                <button class="btn btn-outline-danger" @click="handleLogout">
-                    <i class="fas fa-sign-out-alt me-2"></i>登出
-                </button>
             </div>
         </div>
     </div>
@@ -474,6 +512,7 @@ export default {
         openEditModal(){
             this.editUserInfo = {...this.userInfo};
             const modal = new Modal(this.$refs.editModal);
+            this.$refs.editModal.removeAttribute('aria-hidden');
             modal.show();
         },
         async saveUserInfo(){
@@ -501,54 +540,277 @@ export default {
 
 </script>
 <style scoped>
+.container{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    width: 100%;
+}
+.content-grid{
+    display: grid;
+    grid-template-columns:repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+    gap: clamp(1rem, 2vw, 2rem);
+    padding: clamp(1rem, 2vw, 1.5rem);
+    justify-content: center;
+    align-items: center;
+}
+.content-section{
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 2vw, 1.5rem);
+}
+.content-divider{
+    display:none;
+}
+.main-content{
+    background-color:lightsteelblue;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(1rem, 2vw, 1.5rem);
+
+}
+.content-card{
+    padding: clamp(1rem, 2vw, 1.5rem);
+    background-color:lightsteelblue;
+    border-radius: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border:none;
+    height: 100%;
+}
+
+.member-data{
+    color: #fff;
+    font-size: clamp(1.2rem, 4vw, 2rem);
+    margin-bottom: 1rem;
+}
 .member-page {
     min-height: 100vh;
 }
-
-.member-profile {
-    background: white;
-    border-radius: 1rem;
-    padding: 2rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.avatar-circle {
-    width: 64px;
-    height: 64px;
-    background: #e9ecef;
-    border-radius: 50%;
+.profile-info .button-group{
+    white-space: nowrap;
     display: flex;
+    flex-wrap: nowrap;
     align-items: center;
+}
+.profile-card{
+    display: flex;
     justify-content: center;
-}
-
-.initials {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #6c757d;
-}
-
-.nav-pills .nav-link {
-    color: #495057;
-    border-radius: 0.5rem;
-    padding: 0.75rem 1.5rem;
-}
-
-.nav-pills .nav-link.active {
-    background-color: #0d6efd;
-    color: white;
-}
-
-.card {
-    border: none;
+    border:none;
     border-radius: 1rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background:linear-gradient(to bottom, #f8f9fa, #ffffff);
+    transition: all 0.3s ease;
+}
+.info-content{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.info-content p{
+    font-size: clamp(1rem, 2vw, 1.1rem);
+    color: #212529;
+    margin:0;
+    line-height: 1.5;
+    word-break: break-word;
+}
+.info-content label{
+    font-size: clamp(0.8rem, 2vw, 1rem);
+    color: #6c757d;
+    
+}
+.info-list{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.info-item{
+    display:grid;
+    grid-template-columns: 120px 1fr;
+    padding: 1rem;
+    background:#f8f9fa;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
 }
 
+.info-label{
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+.info-value{
+    color: #2c3e50;
+    font-weight: 500;
+}
+.info-content .info-value{
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #2c3e50;
+    margin:0;
+    line-height: 1.5;
+}
+.info-block{
+    display: grid;
+    grid-template-columns:auto 1fr;
+    align-items: center;
+    padding: clamp(1rem, 2vw, 1.5rem);
+    gap: 1rem;
+    background:#f8f9fa;
+    border-radius: 0.8rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e9ecef;
+    height: 100%;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+}
+.info-block:hover{
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
 .info-group label {
     font-size: 0.875rem;
     margin-bottom: 0.25rem;
 }
+.info-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+    padding: 1rem;
+}
+.vertical-divider{
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(
+        to bottom,
+        transparent,
+        rgba(0,0,0,0.1),
+        transparent
+    );
+    margin: 0 auto;
+}
+.info-icon{
+    width: clamp(50px, 5vw, 70px);
+    height: clamp(50px, 5vw, 70px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+.form-group{
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+.form-label{
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6c757d;
+}
+.form-input{
+    padding: 0.75rem 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    color: #2c3e50;
+    transition: all 0.3s ease;
+}
+.form-input:focus{
+    border-color: #4b6cb7;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(75,108,183,0.25);
+}
+.member-profile {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background:linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+    color:white;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease;
+}
+.member-profile:hover{
+    transform: translateY(-5px);
+}
+.avatar-circle {
+    width: 80px;
+    height: 80px;
+    background:rgba(255,255,255,0.2);
+    border: 3px solid rgba(255,255,255,0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1.5rem;
+}
+
+.initials {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color:white;
+    text-shadow: 1 2px 4px rgba(0,0,0,0.1);
+}
+.profile-info .member-data{
+    color:rgba(255,255,255,0.9);
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.nav-pills .nav-link {
+    color: #495057;
+    border-radius: 0.75rem;
+    padding: 1rem 2rem;
+    margin: 0 0.5rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    background:#f8f9fa;
+    justify-content: center;
+    align-items: center;
+}
+.nav-pills{
+    justify-content: center;
+    align-items: center;
+}
+.nav-pills .nav-link.active {
+    background-color: #4b6cb7;
+    color: white;
+    box-shadow: 0 4px 10px rgba(75,108,183,0.3);
+}
+
+.nav-pills .nav-link:hover:not(.active) {
+    background:#e9ecef;
+    transform:translateY(-3px);
+}
+.card {
+    background:#fff;
+    border: none;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.card-content{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.card-title{
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 1rem;
+}
+.address-item{
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background:#f8f9fa;
+    border-radius: 0.8rem;
+    transition: all 0.3s ease;
+}
+
 
 .address-item {
     display: flex;
@@ -565,9 +827,11 @@ export default {
 }
 
 .order-item {
-    border: 1px solid #e9ecef;
-    border-radius: 0.5rem;
+    border:none;
+    border-radius: 1rem;
     margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
 }
 
 .order-header {
@@ -576,13 +840,28 @@ export default {
     align-items: center;
     padding: 1rem;
     cursor: pointer;
-    background: #f8f9fa;
-    border-radius: 0.5rem;
+    background:white;
+    border-radius: 1rem;
+}
+
+.order-header:hover{
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transform:translateY(-3px);
 }
 
 .order-details {
     padding: 1rem;
     border-top: 1px solid #e9ecef;
+    background:#f8f9fa;
+    border-bottom-left-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+}
+.product-img{
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .order-product {
@@ -606,33 +885,125 @@ export default {
 .product-total {
     font-weight: 600;
 }
-
+.btn{
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+.btn-primary{
+    background-color:#4b6cb7;
+    color:white;
+}
+.btn-primary:hover{
+    background:#3b5998;
+    transform: translateY(-2px);
+}
+.btn-secondary{
+    background-color:#f8f9fa;
+    color:#4a4a4a;
+    border: 1px solid #6c757d;
+}
+.btn-secondary:hover{
+    background-color:#e9ecef;
+    transform: translateY(-2px);
+}
 .btn-link {
     color: inherit;
     text-decoration: none;
     padding: 0.25rem;
 }
 
+.order-item{
+    border:1px solid #e0e0e0;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    overflow: hidden;
+}
+.order-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding:1rem;
+    background-color:#f8f9fa;
+    cursor: pointer;
+}
+.order-details{
+    padding: 1rem;
+    border-top: 1px solid #e9ecef;
+}
 .btn-link:hover {
     color: #0d6efd;
 }
+.bg-primary-soft,
+.bg-success-soft,
+.bg-warning-soft {
+    background: rgba(75, 108, 183, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1.5rem;
+}
 
 @media (max-width: 768px) {
+    .nav-pills{
+        flex-wrap: nowrap;
+        justify-content: center;
+        align-items: center;
+    }
+    .content-grid{
+        display: block;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+    }
+    .info-block{
+        width: 100%;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    .content-divider{
+        display: none;
+    }
     .member-profile {
-        padding: 1rem;
+        padding: 1.5rem;
     }
 
     .nav-pills .nav-link {
-        padding: 0.5rem 1rem;
+        white-space: nowrap;
+        padding: 0.75rem 1rem;
+        margin: 0 0.25rem;
+        font-size: 0.9rem;
     }
 
     .avatar-circle {
-        width: 48px;
-        height: 48px;
+        width: 60px;
+        height: 60px;
     }
 
     .initials {
         font-size: 1.25rem;
+    }
+    .left-column::after{
+        content: '';
+        display: block;
+        width: 100%;
+        height: 1px;
+        background: linear-gradient(
+            to right,
+            transparent,
+            rgba(0,0,0,0.1),
+            transparent
+        );
+        margin: 1.5rem 0;
+    }
+}
+@media (min-width: 1024px) {
+    .content-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
     }
 }
 </style>

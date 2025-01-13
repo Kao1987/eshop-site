@@ -216,5 +216,7 @@ text-align: center;
 input[type="number"]{
     width:80px;
 }
-
+.table{
+    white-space: nowrap;
+}
 </style>
