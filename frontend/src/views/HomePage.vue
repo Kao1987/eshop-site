@@ -109,8 +109,11 @@
                         </div>
                 </div>
                 <div class="product-details">
-                    <div class="product-name">{{ index + 1 }}. {{ product.name }}</div>
-                    <div class="sales-count">賣出 {{ product.sales_count }}件</div>
+                    <div class="range-name">銷售排行第
+                        <span class="range-number" :class="rankClass[index + 1]">{{ index + 1 }}</span>名
+                    </div>
+                        <div class="product-name">{{ product.name }}</div>
+                    <div class="sales-count">賣出 {{ product.sales_count }} 件</div>
                 </div>
             </div>
         </div>
@@ -142,8 +145,11 @@
                             </div>
                     </div>
                     <div class="product-details">
-                        <div class="product-name">{{ index + 1 }}. {{ product.name }}</div>
-                        <div class="sales-count">賣出 {{ product.sales_count }}件</div>
+                        <div class="range-name">銷售排行第
+                            <span class="range-number" :class="rankClass[index + 1]">{{ index + 1 }}</span>名
+                        </div>
+                        <div class="product-name">{{ product.name }}</div>
+                        <div class="sales-count">賣出 {{ product.sales_count }} 件</div>
                     </div>
                 </div>
             </div>
@@ -228,6 +234,11 @@ export default {
             },
             randomProducts:null,
             carouselImages: [...FALLBACK_DATA.carouselImages],
+            rankClass: {
+                '1': 'gold',
+                '2': 'silver',
+                '3': 'bronze',
+            },
 
         }
     },
@@ -734,14 +745,56 @@ export default {
     padding: 1.5rem;
 }
 
+.range-name {
+    white-space: nowrap;
+    text-align: center;
+    font-size: 1.5rem;   
+    margin-bottom: 0.5rem;
+    font-weight: bold;    /* 新增粗體 */
+}
+.range-number {
+    font-weight: bold;
+    color: white;
+    background-color: #3498db;  
+    padding: 0.4rem 0.8rem;   
+    border-radius: 1rem;        
+    min-width: 2rem;         
+    display: inline-block;    
+    text-align: center;       
+    margin: 0 0.3rem;         
+    line-height: 1.2; 
+    box-sizing: border-box;         
+}
+.range-number.gold {
+    background-color: #f1c40f;
+    background-image: linear-gradient(145deg, #f1c40f, #ffd700);
+}
+
+.range-number.silver {
+    background-color: #bdc3c7;
+    background-image: linear-gradient(145deg, #bdc3c7, #c0c0c0);
+}
+
+.range-number.bronze {
+    background-color: #cd7f32;
+    background-image: linear-gradient(145deg, #cd7f32, #d4a068);
+}
+
 .product-name {
     text-align: center;
     font-size: 1.5rem;   
     line-height: 1.5;
     margin-bottom: 0.5rem;
-    font-weight: bold;    /* 新增粗體 */
+    font-weight: bold;    
+    white-space: wrap;
+    background-color: linear-gradient(145deg,rgba(66,185,131,0.1),rgba(52,152,219,0.1));
+    border-radius: 0.5rem;
+    transition: background-color 0.3s ease;
 }
-
+.product-card:hover .product-name,
+.product-item:hover .product-name {
+    background: linear-gradient(145deg, rgba(66, 185, 131, 0.15), rgba(52, 152, 219, 0.15));
+}
 .product-tag {
     display: inline-block;
     padding: 0.3rem 0.8rem;
@@ -764,6 +817,16 @@ export default {
     
     .product-name {
         font-size: 1rem;
+        white-space: nowrap;
+    }
+    .range-name {
+        font-size: 1.2rem;
+        white-space: nowrap;
+
+    }
+    .range-number {
+        font-size: 1rem;
+        padding: 0.3rem 0.6rem;
     }
     .carousel-image-container {
         padding-top: 90%;
@@ -784,6 +847,10 @@ export default {
     
     .product-grid {
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+    .range-number {
+        font-size: 0.8rem;
+        padding: 0.2rem 0.5rem;
     }
 }
 
@@ -1022,6 +1089,7 @@ export default {
 
 .product-name {
     font-weight: bold;    /* 新增粗體 */
+    white-space: wrap;
 }
 /* 響應式設計調整 */
 @media (max-width: 1600px) {
