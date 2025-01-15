@@ -1115,9 +1115,6 @@ export default {
         max-width: 95vw;
         padding: 0 10px;
     }
-    .homepage.container {
-        max-width: 720px;
-    }
     .carousel-section {
         max-width: 720px; 
     }
