@@ -170,12 +170,29 @@ export default {
         };
     },
     async mounted() {
-        await this.loadDashboardData();
-        this.$nextTick(() => {
-            this.renderSalesChart();
-        });
+        try{
+            await this.loadDashboardData();
+            console.log('Today:',this.getLocalDateStr());
+            this.$nextTick(() => {
+                this.renderSalesChart();
+            });
+        }catch(error){
+            console.error('加載儀表板數據時出錯：', error);
+        }
     },
     methods: {
+        getLocalDateStr(inputDate){
+            const baseDate = inputDate ? new Date(inputDate) : new Date();
+            // const y =baseDate.getFullYear();
+            // const m =String(baseDate.getMonth() + 1).padStart(2, '0');
+            // const d =String(baseDate.getDate()).padStart(2, '0');
+            // return `${y}-${m}-${d}`;
+            return baseDate.toLocaleDateString('zh-TW', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).replace(/\//g, '-');
+        },
         async loadDashboardData() {
             try {
                 const [orderResponse, membersResponse, productsResponse] = await Promise.all([
@@ -190,18 +207,20 @@ export default {
                 this.products = products;
 
                 // 計算今日數據
-                const today = new Date();
-                const todayStr = today.toISOString().split('T')[0];
-                this.todayOrders = orders.filter(order => order.order_date.split('T')[0] === todayStr).length;
+                const todayStr = this.getLocalDateStr(); 
+                this.todayOrders = orders.filter(order =>{
+                    const orderDate = this.getLocalDateStr(order.order_date);
+                    return orderDate === todayStr;
+                }).length;
 
                 // 計算銷售金額
                 const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                yesterday.setDate(yesterday.getDate()-1);
+                const yesterdayStr = this.getLocalDateStr(yesterday);
 
                 const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate()-7);
+                const sevenDaysAgoStr = this.getLocalDateStr(sevenDaysAgo);
 
                 this.todaySales = orders
                     .filter(order => order.order_date.split('T')[0] === todayStr)
@@ -234,7 +253,7 @@ export default {
                 // 計算會員數據
                 this.todayNewMembers = members.filter(member => {
                     if (member.created_at) {
-                        const memberDate = new Date(member.created_at).toISOString().split('T')[0];
+                        const memberDate = this.getLocalDateStr(member.created_at);
                         return memberDate === todayStr;
                     }
                     return false;
@@ -291,29 +310,6 @@ export default {
                                 }
                             }
                         },
-                        // scales: {
-                        //     x: {
-                        //         grid: {
-                        //             display: false
-                        //         },
-                        //         ticks: {
-                        //             maxRotation: 45,
-                        //             minRotation: 45
-                        //         }
-                        //     },
-                        //     y: {
-                        //         beginAtZero: true,
-                        //         ticks: {
-                        //             callback: function(value) {
-                        //                 return new Intl.NumberFormat('zh-TW', {
-                        //                     style: 'currency',
-                        //                     currency: 'TWD',
-                        //                     minimumFractionDigits: 0
-                        //                 }).format(value);
-                        //             }
-                        //         }
-                        //     }
-                        // }
                     }
                 });
             }else{
@@ -338,8 +334,8 @@ export default {
             }
         },
         updateDashboardData(newOrder){
-            const today = new Date();
-            const todayStr = today.Date(newOrder.created_at);
+            const todayStr = this.getLocalDateStr(); 
+
             if(newOrder.order_date.split('T')[0] === todayStr){
                 this.todayOrders++;
                 this.todaySales += Number(newOrder.total);

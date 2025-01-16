@@ -1,9 +1,10 @@
 <template>
-    <div class="marquee">
-        <span>2024.09.01，注意！本公司不會主動通知帳務問題，若有相關疑問請洽客服！小心詐騙！</span>
-    </div>
-
-  <NotificationComponent/>
+  <div class="notification-portal">
+    <NotificationComponent/>
+  </div>
+  <div class="marquee">
+      <span>2024.09.01，注意！本公司不會主動通知帳務問題，若有相關疑問請洽客服！小心詐騙！</span>
+  </div>
   <MainHeader /> 
       <!-- 懸浮按鈕與彈窗 -->
       <div class="floating-button" @click="toggleModal">
@@ -106,6 +107,14 @@ body{
   flex-grow:1;
   padding: 10px;
   overflow: auto;
+}
+.notification-portal{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
+  pointer-events: none;
 }
 .marquee{
   width: 100%; /* 跑馬燈的寬度 */

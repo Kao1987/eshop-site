@@ -23,6 +23,12 @@ exports.getAllOrders = async (req, res) => {
         WHERE order_id = ?
         `,[order.id]);
       order.items = items;
+      if (order.order_date) {
+        order.order_date = new Date(order.order_date).toLocaleString('zh-Tw',{
+          timeZone:'Asia/Taipei',
+          hour12:false,
+        });
+      }
 
       order.total = Math.round(order.total);
       order.items.forEach(item =>{
@@ -51,7 +57,7 @@ exports.getOrderById = async (req, res) => {
       JOIN products p ON oi.product_id = p.id
       WHERE oi.order_id = ?`,[id]);
 
-      order.created_at = new Date(order.created_at).toLocaleString('zh-TW',{
+      order.order_date = new Date(order.order_date).toLocaleString('zh-TW',{
         year:'numeric',
         month:'2-digit',
         day:'2-digit',
@@ -80,7 +86,7 @@ exports.createOrder = async (req, res) => {
     const  {user_id, items, total} = req.body;
     // 插入訂單表
     const [orderResult] = await connection.query(
-      'INSERT INTO orders (user_id, total, status) VALUES (?, ?, ?)',
+      'INSERT INTO orders (user_id, total, status order_date) VALUES (?, ?, ?,NOW())',
       [user_id,total,'pending']);
     const orderId = orderResult.insertId;
     // 構建orderItemData

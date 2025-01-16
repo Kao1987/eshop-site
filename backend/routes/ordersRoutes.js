@@ -11,26 +11,6 @@ router.use(auth);
 // 獲取所有訂單
 router.get('/', ordersController.getAllOrders);
 
-// router.get('/', async (req, res) => {
-//     try {
-//         const orders = await db.query(
-//             'SELECT * FROM orders WHERE user_id = ?', 
-//             [req.user.id]
-//         );
-        
-//         res.json({ 
-//             success: true, 
-//             data: orders[0] 
-//         });
-//     } catch (error) {
-//         console.error('獲取訂單錯誤:', error);
-//         res.status(500).json({ 
-//             success: false, 
-//             message: error.message 
-//         });
-//     }
-// });
-
 // 根據 ID 獲取單個訂單
 router.get('/:id', ordersController.getOrderById);
 
